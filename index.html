@@ -3,348 +3,392 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Sipariş Listesi</title>
+    <title>Akıllı Fiyat & Sipariş Listesi</title>
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         :root {
-            --primary: #4f46e5; /* Modern Mor/Mavi */
-            --secondary: #e0e7ff;
-            --text: #1f2937;
-            --bg: #f3f4f6;
-            --white: #ffffff;
-            --price: #059669; /* Zümrüt Yeşili */
+            --primary: #2563eb; /* Kurumsal Mavi */
+            --light-bg: #f8fafc;
+            --border: #e2e8f0;
+            --text: #334155;
+            --dark-text: #0f172a;
+            --success: #16a34a;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        * { box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; }
+        
+        body { 
+            margin: 0; 
+            background: var(--light-bg); 
+            color: var(--text);
+            padding-bottom: 100px; /* Alt bar için boşluk */
+        }
 
-        body { background-color: var(--bg); color: var(--text); padding-bottom: 80px; }
-
-        /* --- ÜST KISIM (HEADER & UPLOAD) --- */
-        .header {
-            background: var(--white);
-            padding: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            text-align: center;
+        /* --- ÜST KONTROL PANELİ --- */
+        .control-panel {
+            background: white;
+            padding: 20px 5%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
-        .upload-area {
-            border: 2px dashed #cbd5e1;
-            border-radius: 12px;
-            padding: 30px;
-            margin: 20px auto;
-            max-width: 600px;
+        .upload-btn {
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: 0.3s;
-            background: #f8fafc;
-        }
-
-        .upload-area:hover { border-color: var(--primary); background: var(--secondary); }
-        .upload-icon { font-size: 2rem; color: var(--primary); margin-bottom: 10px; }
-        .upload-text { font-weight: 600; color: #64748b; }
-        
-        #fileInput { display: none; }
-
-        /* --- ARAMA KUTUSU --- */
-        .search-box {
-            margin: 15px auto;
-            max-width: 600px;
-            display: none; /* Dosya yüklenince açılacak */
-        }
-        .search-box input {
-            width: 100%;
-            padding: 12px 20px;
-            border-radius: 50px;
-            border: 1px solid #cbd5e1;
-            outline: none;
-            font-size: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        /* --- ÜRÜN LİSTESİ (GRID) --- */
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 0 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .card {
-            background: var(--white);
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-
-        .card-img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            background: #e2e8f0;
-        }
-
-        .card-body { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        
-        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 5px; color: var(--text); }
-        .card-price { font-size: 1.25rem; font-weight: 800; color: var(--price); margin-bottom: 15px; }
-
-        /* --- ADET KONTROLLERİ --- */
-        .qty-control {
+            font-weight: 500;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            background: #f1f5f9;
-            border-radius: 8px;
-            padding: 5px;
-        }
-
-        .btn-qty {
-            width: 35px;
-            height: 35px;
-            border: none;
-            background: var(--white);
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--primary);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            gap: 8px;
             transition: 0.2s;
         }
+        .upload-btn:hover { background: #1d4ed8; }
 
-        .btn-qty:active { transform: scale(0.95); background: var(--secondary); }
+        .search-wrapper {
+            position: relative;
+            flex-grow: 1;
+            max-width: 400px;
+        }
+        .search-wrapper input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            background: #f1f5f9;
+        }
+        .search-wrapper i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
 
-        .input-qty {
+        /* --- MODERN TABLO --- */
+        .table-container {
+            width: 90%;
+            margin: 30px auto;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden; /* Köşeleri yuvarlatır */
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        thead {
+            background: #f1f5f9;
+            border-bottom: 2px solid var(--border);
+        }
+
+        th {
+            padding: 16px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            font-weight: 700;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+            color: var(--dark-text);
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: #f8fafc; }
+
+        /* Ürün Adı Stili */
+        .product-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        /* Fiyat ve Toplam Stili */
+        .price-cell {
+            font-family: 'Consolas', monospace;
+            font-weight: 600;
+            color: #475569;
+        }
+        .total-cell {
+            font-family: 'Consolas', monospace;
+            font-weight: 700;
+            color: var(--success);
+            font-size: 1.1rem;
+        }
+
+        /* --- ADET GİRİŞ ALANI (+ - Input) --- */
+        .qty-wrapper {
+            display: flex;
+            align-items: center;
+            background: #e2e8f0;
+            border-radius: 6px;
+            width: fit-content;
+            overflow: hidden;
+        }
+
+        .qty-btn {
+            background: transparent;
+            border: none;
+            width: 32px;
+            height: 32px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #475569;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .qty-btn:hover { background: #cbd5e1; }
+        .qty-btn:active { background: #94a3b8; }
+
+        .qty-input {
             width: 50px;
             text-align: center;
             border: none;
             background: transparent;
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-weight: bold;
+            font-size: 1rem;
             outline: none;
+            color: var(--dark-text);
+            -moz-appearance: textfield;
         }
+        .qty-input::-webkit-outer-spin-button,
+        .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-        /* --- ALT TOPLAM ÇUBUĞU --- */
-        .footer-bar {
+        /* --- ALT BİLGİ ÇUBUĞU (FOOTER) --- */
+        .bottom-bar {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            background: var(--white);
-            border-top: 1px solid #e2e8f0;
-            padding: 15px 30px;
+            background: white;
+            border-top: 1px solid var(--border);
+            padding: 15px 5%;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
-            box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05);
-            z-index: 99;
+            gap: 30px;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+            z-index: 999;
         }
 
-        .total-label { font-size: 0.9rem; color: #64748b; }
-        .total-amount { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
-        
-        .btn-order {
-            background: var(--primary);
-            color: white;
-            padding: 10px 25px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
+        .grand-total-label { font-size: 0.9rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
+        .grand-total-amount { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
+
+        /* Mobilde Tablo Kaydırma */
+        @media (max-width: 768px) {
+            .table-container { overflow-x: auto; }
+            .control-panel { flex-direction: column; align-items: stretch; }
         }
 
-        /* --- ÖRNEK TABLO GÖSTERİMİ --- */
-        .info-box {
-            background: #fffbeb;
-            border: 1px solid #fcd34d;
-            color: #92400e;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            margin-top: 10px;
-            display: inline-block;
+        /* Boş Durum */
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #94a3b8;
         }
-
+        .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>Modern Sipariş Listesi</h1>
-        
-        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-            <div class="upload-icon">📂</div>
-            <div class="upload-text">Excel Dosyası Yüklemek İçin Tıkla</div>
-            <div style="font-size: 0.8rem; color:#94a3b8; margin-top:5px;">.xlsx veya .xls formatı</div>
-            <input type="file" id="fileInput" accept=".xlsx, .xls" onchange="handleFile(this)">
+    <div class="control-panel">
+        <div class="brand" style="font-weight:800; font-size:1.2rem; color:var(--dark-text);">
+            <i class="fa-solid fa-layer-group" style="color:var(--primary);"></i> Ürün Listesi
         </div>
 
-        <div class="info-box">
-            💡 Excel tablonuzda 1. satırda şu başlıklar olmalıdır: <br>
-            <b>UrunAdi</b> | <b>Fiyat</b> | <b>Resim</b> (Opsiyonel)
+        <div class="search-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" placeholder="Ürün adı ara..." onkeyup="filterTable()">
         </div>
 
-        <div class="search-box" id="searchContainer">
-            <input type="text" id="searchInput" placeholder="Ürün ara..." onkeyup="filterProducts()">
-        </div>
+        <label class="upload-btn">
+            <i class="fa-solid fa-file-excel"></i> Excel Yükle
+            <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" hidden onchange="handleFile(this)">
+        </label>
     </div>
 
-    <div class="container" id="productGrid">
-        </div>
+    <div class="table-container">
+        <table id="productTable">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>ÜRÜN ADI</th>
+                    <th style="width: 120px; text-align: right;">BİRİM FİYAT</th>
+                    <th style="width: 140px; text-align: center;">ADET</th>
+                    <th style="width: 150px; text-align: right;">TOPLAM</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr class="empty-state-row">
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <i class="fa-regular fa-folder-open"></i>
+                            <p>Henüz bir liste yüklenmedi.<br>Lütfen sağ üstten Excel dosyası seçin.</p>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-    <div class="footer-bar">
+    <div class="bottom-bar">
         <div>
-            <div class="total-label">GENEL TOPLAM</div>
-            <div class="total-amount" id="grandTotal">0.00 TL</div>
+            <span class="grand-total-label">GENEL TOPLAM</span>
+            <div class="grand-total-amount" id="grandTotal">0,00 ₺</div>
         </div>
-        <button class="btn-order" onclick="alert('Sipariş özeti oluşturulabilir veya WhatsApp\'a gönderilebilir!')">Siparişi Tamamla</button>
     </div>
 
     <script>
-        let products = []; // Tüm ürünler burada tutulacak
-        let cart = {};     // Sepet (Hangi üründen kaç tane var)
+        let products = []; // Tüm veriyi burada tutacağız
 
-        // --- DOSYA YÜKLEME İŞLEMLERİ ---
+        // --- DOSYA OKUMA ---
         function handleFile(input) {
             const file = input.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-
+            
             reader.onload = function(e) {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
-
+                
                 // İlk sayfayı al
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-
-                // Excel'i JSON'a çevir
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                
+                // Veriyi JSON'a çevir
                 const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-                // Veriyi işle ve ekrana bas
-                processData(jsonData);
+                
+                loadTable(jsonData);
             };
-
+            
             reader.readAsArrayBuffer(file);
         }
 
-        function processData(data) {
-            products = data.map((item, index) => {
-                // Excel sütun isimlerini eşleştiriyoruz (Büyük küçük harf duyarlılığını azaltmak için)
-                // Kullanıcı "Ürün Adı" da yazsa "UrunAdi" da yazsa anlasın diye.
-                return {
-                    id: index,
-                    name: item['UrunAdi'] || item['Ürün Adı'] || item['URUN'] || 'İsimsiz Ürün',
-                    price: parseFloat(item['Fiyat'] || item['FIYAT'] || 0),
-                    image: item['Resim'] || item['ResimLink'] || '', // Resim yoksa boş kalacak
-                    stock: item['Stok'] || 999
-                };
-            });
+        // --- TABLOYU DOLDURMA ---
+        function loadTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = ""; // Temizle
+            products = []; // Sıfırla
 
-            // Arama kutusunu göster
-            document.getElementById('searchContainer').style.display = 'block';
-            
-            // Ürünleri Çiz
-            renderProducts(products);
-        }
+            if(data.length === 0) return;
 
-        // --- LİSTELEME İŞLEMLERİ ---
-        function renderProducts(list) {
-            const grid = document.getElementById('productGrid');
-            grid.innerHTML = "";
-
-            if (list.length === 0) {
-                grid.innerHTML = "<p style='text-align:center; width:100%; color:#666;'>Ürün bulunamadı.</p>";
-                return;
-            }
-
-            list.forEach(product => {
-                // Resim kontrolü (Excel'de resim yoksa varsayılan resim)
-                const imgUrl = product.image ? product.image : `https://via.placeholder.com/300x200?text=${encodeURIComponent(product.name)}`;
+            data.forEach((row, index) => {
+                // Excel sütun eşleştirmesi (Büyük/Küçük harf duyarlı olmasın diye)
+                // Olası isimler: "Ürün", "UrunAdi", "Name", "Fiyat", "Price", "Adet", "Stok", "Qty"
                 
-                // Mevcut sepet miktarını bul
-                const currentQty = cart[product.id] || 0;
+                let name = row['UrunAdi'] || row['Ürün Adı'] || row['ÜRÜN'] || row['Name'] || 'İsimsiz Ürün';
+                let price = parseFloat(row['Fiyat'] || row['FIYAT'] || row['Price'] || 0);
+                let qty = parseInt(row['Adet'] || row['ADET'] || row['Stok'] || row['Qty'] || 0);
 
-                const cardHTML = `
-                    <div class="card">
-                        <img src="${imgUrl}" class="card-img" alt="${product.name}">
-                        <div class="card-body">
-                            <div>
-                                <div class="card-title">${product.name}</div>
-                                <div class="card-price">${product.price.toLocaleString('tr-TR')} TL</div>
-                            </div>
-                            
-                            <div class="qty-control">
-                                <button class="btn-qty" onclick="updateQty(${product.id}, -1)">-</button>
-                                <input type="number" class="input-qty" id="qty-${product.id}" value="${currentQty}" 
-                                       onchange="manualQty(${product.id}, this.value)" min="0">
-                                <button class="btn-qty" onclick="updateQty(${product.id}, 1)">+</button>
-                            </div>
+                // Ürün objesini listeye ekle
+                products.push({ id: index, name, price, qty });
+
+                // Satır HTML'ini oluştur
+                const tr = document.createElement('tr');
+                tr.className = 'product-row';
+                tr.innerHTML = `
+                    <td style="color:#94a3b8; font-size:0.8rem;">${index + 1}</td>
+                    <td><div class="product-name">${name}</div></td>
+                    <td style="text-align: right;" class="price-cell">${formatMoney(price)}</td>
+                    <td style="text-align: center;">
+                        <div class="qty-wrapper" style="margin: 0 auto;">
+                            <button class="qty-btn" onclick="updateQty(${index}, -1)">−</button>
+                            <input type="number" class="qty-input" id="qty-${index}" value="${qty}" onchange="manualQty(${index}, this.value)" min="0">
+                            <button class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
                         </div>
-                    </div>
+                    </td>
+                    <td style="text-align: right;" class="total-cell" id="total-${index}">
+                        ${formatMoney(price * qty)}
+                    </td>
                 `;
-                grid.innerHTML += cardHTML;
+                tbody.appendChild(tr);
             });
+
+            calculateGrandTotal();
         }
 
-        // --- ADET GÜNCELLEME VE HESAPLAMA ---
-        
-        // Butonla (+ / -) güncelleme
-        function updateQty(id, change) {
-            const input = document.getElementById(`qty-${id}`);
-            let newVal = parseInt(input.value) + change;
+        // --- ADET GÜNCELLEME ---
+        function updateQty(index, change) {
+            const product = products[index];
+            let newQty = product.qty + change;
+            if (newQty < 0) newQty = 0;
             
-            if (newVal < 0) newVal = 0; // Eksiye düşmesin
+            // Veriyi ve Input'u güncelle
+            product.qty = newQty;
+            document.getElementById(`qty-${index}`).value = newQty;
             
-            input.value = newVal;
-            manualQty(id, newVal); // Hesaplamayı tetikle
+            updateRowTotal(index);
         }
 
-        // Klavye ile manuel giriş
-        function manualQty(id, value) {
-            let qty = parseInt(value);
-            if (isNaN(qty) || qty < 0) qty = 0;
+        function manualQty(index, value) {
+            let val = parseInt(value);
+            if (isNaN(val) || val < 0) val = 0;
             
-            cart[id] = qty; // Sepeti güncelle
-            calculateTotal();
+            products[index].qty = val;
+            updateRowTotal(index);
         }
 
-        // Toplam Tutarı Hesapla
-        function calculateTotal() {
+        // --- HESAPLAMALAR ---
+        function updateRowTotal(index) {
+            const p = products[index];
+            const total = p.price * p.qty;
+            
+            // Satır toplamını güncelle (Animasyon eklenebilir)
+            const cell = document.getElementById(`total-${index}`);
+            cell.innerText = formatMoney(total);
+            
+            calculateGrandTotal();
+        }
+
+        function calculateGrandTotal() {
             let total = 0;
+            products.forEach(p => total += (p.price * p.qty));
             
-            products.forEach(p => {
-                const qty = cart[p.id] || 0;
-                total += p.price * qty;
+            document.getElementById('grandTotal').innerText = formatMoney(total);
+        }
+
+        // --- YARDIMCI FONKSİYONLAR ---
+        function formatMoney(amount) {
+            return amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
+        }
+
+        function filterTable() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('.product-row');
+            
+            rows.forEach((row, i) => {
+                const name = products[i].name.toLowerCase();
+                if (name.includes(term)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
             });
-
-            document.getElementById('grandTotal').innerText = total.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + " TL";
         }
-
-        // --- ARAMA FONKSİYONU ---
-        function filterProducts() {
-            const searchText = document.getElementById('searchInput').value.toLowerCase();
-            
-            const filtered = products.filter(p => 
-                p.name.toLowerCase().includes(searchText)
-            );
-            
-            renderProducts(filtered);
-        }
-
     </script>
 </body>
 </html>

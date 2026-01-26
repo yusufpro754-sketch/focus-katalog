@@ -77,58 +77,8 @@
         .qty-btn:active { background: #e2e8f0; }
         .qty-val { width: 45px; text-align: center; background: transparent; border: none; font-weight: bold; outline: none; font-size: 1rem; }
 
-        /* --- MOBİL ÖZEL AYARLAR --- */
-        @media (max-width: 768px) {
+    @media (max-width: 768px) {
             .btn span { display: none; }
-            /* Mobilde bu butonların yazıları görünsün */
-            .btn-excel span, .btn-add span, #globalSaveBtn span { display: inline-block; }
-
-            thead { display: none; } 
-            table, tbody { display: block; width: 100%; }
-            
-            /* Kategori Başlığı: Mobilde Görünmesi İçin Zorla */
-            .cat-row { 
-                display: block !important; 
-                width: 100%; 
-                margin-top: 15px; 
-                margin-bottom: 5px; 
-            }
-            .cat-row td { 
-                display: flex !important; 
-                width: 100%; 
-                border-radius: 8px; 
-                justify-content: space-between; 
-                padding: 12px 15px; 
-                background: #1e293b !important; /* Renk zorlama */
-                color: white !important;
-            }
-
-            /* Ürün Satırı */
-            tr:not(.cat-row) {
-                display: flex; flex-wrap: wrap; background: white; margin-bottom: 0; 
-                border-bottom: 1px solid var(--border); padding: 15px 5px; position: relative;
-                align-items: center;
-            }
-
-            /* 1. Satır: Ürün İsmi */
-            td:nth-child(1) { width: 100%; padding: 0 0 10px 0; border: none; display: block; }
-            td:nth-child(1) .input-clean { font-size: 1rem; color: var(--dark); padding: 0; width: 90%; }
-
-            /* 2. Satır: Fiyat - Adet - Toplam */
-            td:nth-child(2) { width: 35%; padding: 0; border: none; display:block; }
-            td:nth-child(3) { width: 35%; padding: 0; border: none; display: flex; justify-content: center; }
-            td:nth-child(4) { width: 30%; padding: 0; border: none; text-align: right; display:block; }
-
-            /* Silme Butonu */
-            td:last-child { position: absolute; top: 12px; right: 0; padding: 0; border: none; width: auto; display:block; }
-
-            .price-input { text-align: left; font-size: 0.95rem; }
-            .currency { display: none; }
-            .qty-wrapper { transform: scale(0.95); }
-            
-            .brand-logo { font-size: 1.1rem; }
-        }
-
         /* FOOTER */
         .footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; z-index: 100; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
         .total-amount { font-size: 1.4rem; font-weight: 800; color: var(--primary); }

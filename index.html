@@ -5,114 +5,242 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Özel Ürün Paneli</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #222; color: #fff; padding: 20px; }
-        
-        /* Şifre Ekranı Stili */
-        #login-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 80vh;
+        /* ========================================
+           TEMEL TASARIM VE STİL AYARLARI (CSS)
+           ========================================
+        */
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: #222; /* Koyu arka plan */
+            color: #fff; 
+            padding: 20px; 
+            margin: 0;
         }
-        input[type="password"] { padding: 10px; font-size: 1rem; border-radius: 5px; border: none; }
-        button { padding: 10px 20px; font-size: 1rem; cursor: pointer; background: #e74c3c; color: white; border: none; border-radius: 5px; margin-top: 10px; }
+        
+        /* --- GİRİŞ EKRANI TASARIMI --- */
+        #login-screen {
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 80vh; /* Ekranın %80'ini kapla */
+        }
+        
+        input[type="password"] { 
+            padding: 12px; 
+            font-size: 1.1rem; 
+            border-radius: 6px; 
+            border: none; 
+            outline: none; 
+            text-align: center;
+            width: 200px;
+            margin-bottom: 15px;
+        }
+        
+        button { 
+            padding: 10px 25px; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            background: #e74c3c; /* Kırmızı buton */
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            transition: 0.3s;
+            font-weight: bold;
+        }
+        
+        button:hover { 
+            background: #c0392b; /* Üzerine gelince koyulaş */
+        }
 
-        /* Ana İçerik (Başta gizli) */
-        #main-content { display: none; }
+        /* --- ANA İÇERİK (Başlangıçta Gizli) --- */
+        #main-content { 
+            display: none; 
+        }
 
-        h1 { text-align: center; color: #f1c40f; margin-bottom: 30px; }
+        h1 { 
+            text-align: center; 
+            color: #f1c40f; /* Sarı başlık */
+            margin-bottom: 30px; 
+            border-bottom: 1px solid #444;
+            padding-bottom: 15px;
+        }
 
+        /* --- ÜRÜN KARTLARI IZGARA YAPISI --- */
         .container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            max-width: 1200px;
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive */
+            gap: 20px; 
+            max-width: 1200px; 
             margin: 0 auto;
         }
 
+        /* --- KART TASARIMI --- */
         .card {
-            background: #333;
-            border-radius: 10px;
-            overflow: hidden;
-            display: flex;
+            background: #333; 
+            border-radius: 10px; 
+            overflow: hidden; 
+            display: flex; 
             border: 1px solid #444;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
         }
 
-        .card img {
-            width: 100px;
-            height: 100%;
-            object-fit: cover;
-            background: #555;
+        .card:hover {
+            transform: translateY(-3px); /* Hover efekti */
+            border-color: #f1c40f;
         }
 
-        .card-body { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
-        .card-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; color: #fff; }
-        .card-price { color: #2ecc71; font-size: 1.3rem; font-weight: bold; }
-        .card-stock { color: #bbb; font-size: 0.9rem; margin-top: 5px; }
+        .card img { 
+            width: 110px; 
+            height: 100%; 
+            object-fit: cover; 
+            background: #555; 
+        }
+
+        .card-body { 
+            padding: 15px; 
+            flex-grow: 1; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+        }
+
+        .card-title { 
+            font-size: 1.2rem; 
+            font-weight: bold; 
+            margin-bottom: 8px; 
+            color: #fff; 
+        }
+
+        .card-stock { 
+            color: #bbb; 
+            font-size: 0.95rem; 
+            margin-bottom: 8px; 
+        }
+
+        .card-price { 
+            color: #2ecc71; /* Yeşil fiyat */
+            font-size: 1.4rem; 
+            font-weight: bold; 
+        }
+
+        /* Hata ve Yükleme Mesajları */
+        .msg-box {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #ccc;
+            margin-top: 50px;
+        }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <h2 style="color:white;">Panele Giriş</h2>
-        <input type="password" id="passwordInput" placeholder="Şifreyi Giriniz">
+        <h2 style="color:#ecf0f1; margin-bottom:15px;">Panele Giriş</h2>
+        <input type="password" id="passwordInput" placeholder="Şifrenizi Girin">
         <button onclick="checkPassword()">Giriş Yap</button>
-        <p id="error-msg" style="color:red; display:none; margin-top:10px;">Hatalı Şifre!</p>
+        <p id="error-msg" style="color:#e74c3c; display:none; margin-top:15px; font-weight:bold;">Hatalı Şifre!</p>
     </div>
 
     <div id="main-content">
         <h1>Ürün Stok & Fiyat Paneli</h1>
-        <div class="container" id="urunVitrin"></div>
+        <div class="container" id="urunVitrin">
+            </div>
     </div>
 
     <script>
         // --- AYARLAR ---
-        const SECRET_PASS = "1234"; // BURAYA İSTEDİĞİN BASİT ŞİFREYİ YAZ
-        const SHEET_URL = 'SENIN_GOOGLE_SHEET_CSV_LINKIN'; // BURAYA CSV LİNKİNİ YAPIŞTIR
+        
+        // Panele giriş şifresi (Burayı değiştirebilirsin)
+        const SECRET_PASS = "1234"; 
+        
+        // Senin verdiğin GOOGLE SHEET CSV Linki (Otomatik eklendi)
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT5h4pxPpj9zeIvAu7JotsLKTTqwfEkgvJNbVVQc5oBu--9g4TSl2RPlpD-D1HFEIkTkyn7u1K8oqIv/pub?output=csv'; 
+        
         // ----------------
 
+        // Şifre Kontrol Fonksiyonu
         function checkPassword() {
             const input = document.getElementById('passwordInput').value;
+            
+            // Eğer şifre doğruysa
             if(input === SECRET_PASS) {
+                // Giriş ekranını gizle, ana ekranı göster
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
-                verileriGetir(); // Şifre doğruysa verileri çekmeye başla
+                
+                // Verileri çekmeye başla
+                verileriGetir(); 
             } else {
+                // Şifre yanlışsa hata mesajı göster
                 document.getElementById('error-msg').style.display = 'block';
             }
         }
 
+        // Google Sheets'ten Veri Çeken Ana Fonksiyon
         async function verileriGetir() {
             const vitrin = document.getElementById('urunVitrin');
+            
+            // Kullanıcıya yükleniyor mesajı ver
+            vitrin.innerHTML = '<div class="msg-box">Veriler güncelleniyor, lütfen bekleyin...</div>';
+            
             try {
+                // Linke istek at
                 const response = await fetch(SHEET_URL);
+                
+                // Gelen cevabı metne çevir
                 const data = await response.text();
-                const rows = data.split('\n').slice(1);
+                
+                // Satırlara böl (Yeni satır karakterine göre)
+                // slice(1) diyerek en üstteki başlık satırını (UrunAdi, Fiyat vb.) atlıyoruz
+                const rows = data.split('\n').slice(1); 
+                
+                // Önce vitrini temizle
+                vitrin.innerHTML = ''; 
 
+                // Her bir satırı döngüye al
                 rows.forEach(row => {
-                    const columns = row.split(',');
+                    // CSV satırını virgüllerden parçala
+                    // (Basit parçalama bazen tırnak içinde virgül varsa hata verebilir, 
+                    // bu regex daha güvenli bir ayırma yapar)
+                    const columns = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    
+                    // Eğer satır boşsa veya eksikse atla
                     if (columns.length < 2) return;
 
-                    const urunAdi = columns[0];
-                    const fiyat = columns[1];
-                    const stok = columns[2];
-                    const resim = columns[3] || 'https://via.placeholder.com/150';
+                    // Gelen verideki tırnak işaretlerini temizleyen yardımcı fonksiyon
+                    const clean = (text) => text ? text.replace(/^"|"$/g, '').trim() : '';
 
-                    // Tasarımı biraz daha "Panel" havasında yaptım (Liste şeklinde)
+                    // Sütunları değişkenlere ata (Senin tablodaki sıraya göre)
+                    const urunAdi = clean(columns[0]);   // A Sütunu
+                    const fiyat = clean(columns[1]);     // B Sütunu
+                    const stok = clean(columns[2]);      // C Sütunu
+                    // D Sütunu (Resim yoksa varsayılan gri resim kullan)
+                    const resim = clean(columns[3]) || 'https://via.placeholder.com/150/555555/ffffff?text=Resim+Yok';
+
+                    // HTML Kartını oluştur ve sayfaya ekle
                     vitrin.innerHTML += `
                         <div class="card">
-                            <img src="${resim}" alt="${urunAdi}">
+                            <img src="${resim}" alt="${urunAdi}" onerror="this.src='https://via.placeholder.com/150/555555/ffffff?text=Hata'">
                             <div class="card-body">
                                 <div class="card-title">${urunAdi}</div>
-                                <div class="card-stock">Depo Mevcudu: ${stok}</div>
+                                <div class="card-stock">📦 Stok: ${stok} Adet</div>
                                 <div class="card-price">${fiyat} TL</div>
                             </div>
                         </div>
                     `;
                 });
+
+                // Eğer hiç ürün yoksa mesaj ver
+                if(rows.length === 0) {
+                    vitrin.innerHTML = '<div class="msg-box">Listede henüz ürün yok.</div>';
+                }
+
             } catch (error) {
-                alert('Veri çekilemedi. İnternet bağlantısını kontrol edin.');
+                // Bir hata olursa (Link bozuksa veya internet yoksa)
+                console.error(error);
+                vitrin.innerHTML = '<div class="msg-box" style="color:#e74c3c;">Hata: Veriler alınamadı.<br>Lütfen linki kontrol edin veya internet bağlantınıza bakın.</div>';
             }
         }
     </script>

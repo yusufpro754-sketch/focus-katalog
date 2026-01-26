@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Canlı Sistem v5</title>
+    <title>Focus Medikal - Canlı Sistem</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -18,24 +18,27 @@
         .header { background: var(--white); padding: 15px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
         .header-content { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
         
-        .top-row { display: flex; justify-content: space-between; align-items: center; }
-        .brand-logo { font-family: 'Montserrat', sans-serif; font-size: 1.4rem; font-weight: 800; background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        /* Üst Satır (Logo, Yayınla Butonu, Giriş) */
+        .top-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
         
-        /* ADMIN PANELİ */
+        .brand-container { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
+        .brand-logo { font-family: 'Montserrat', sans-serif; font-size: 1.4rem; font-weight: 800; background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap; }
+        
+        /* YAYINLA BUTONU (Artık Her Zaman Görünür Yerde) */
+        #saveBtn { background: #f59e0b; color: white; animation: pulse 2s infinite; display: none; padding: 8px 15px; border-radius: 6px; border:none; font-weight: 700; cursor: pointer; align-items: center; gap: 5px; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3); }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* ADMIN PANELİ (GİZLİ ARAÇLAR) */
         .admin-panel { display: none; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
         
         .btn { padding: 0 16px; height: 40px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; color: white; transition: 0.2s; font-size: 0.85rem; }
         .btn:active { transform: scale(0.98); }
-        .btn span { display: inline-block; }
         
-        .btn-login { background: white; color: #64748b; border: 1px solid #cbd5e1; }
-        .btn-save { background: #f59e0b; animation: pulse 2s infinite; display: none; }
+        .btn-login { background: white; color: #64748b; border: 1px solid #cbd5e1; margin-left: auto; }
         .btn-add { background: var(--primary); }
         .btn-excel { background: #10b981; }
         .btn-export { background: #6366f1; }
         .btn-reset { background: var(--danger); }
-
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
         /* ARAMA */
         .search-box { width: 100%; position: relative; }
@@ -68,60 +71,32 @@
         /* MOBİL GÖRÜNÜM (MODERN LİSTE) */
         @media (max-width: 768px) {
             .btn span { display: none; }
-            .btn-excel span, .btn-add span, .btn-save span { display: inline-block; }
+            .btn-excel span, .btn-add span { display: inline-block; }
             
-            thead { display: none; } /* Başlıkları gizle */
-            
-            /* Tabloyu blok yapıya çevir */
+            thead { display: none; } 
             table, tbody, tr { display: block; width: 100%; }
-            
             .cat-row td { border-radius: 8px; margin-top: 20px; text-align: center; display: block; width: 100%; }
 
-            /* Ürün Satırı */
             tr:not(.cat-row) {
-                background: white; 
-                margin-bottom: 0; 
-                border-bottom: 1px solid var(--border);
-                padding: 15px 5px;
-                position: relative;
-                display: flex;
-                flex-wrap: wrap;
-                align-items: center;
+                background: white; margin-bottom: 0; border-bottom: 1px solid var(--border); padding: 15px 5px;
+                position: relative; display: flex; flex-wrap: wrap; align-items: center;
             }
 
-            /* 1. Satır: Ürün İsmi */
-            td:nth-child(1) { 
-                width: 100%; 
-                padding: 0 0 10px 0; 
-                border: none; 
-            }
-            td:nth-child(1) .input-clean { 
-                font-size: 1rem; 
-                color: var(--dark); 
-                padding: 0; 
-                width: 90%; /* Sil butonu için yer aç */
-            }
+            td:nth-child(1) { width: 100%; padding: 0 0 10px 0; border: none; }
+            td:nth-child(1) .input-clean { font-size: 1rem; color: var(--dark); padding: 0; width: 90%; }
 
-            /* 2. Satır: Fiyat - Adet - Toplam (Yan Yana) */
             td:nth-child(2) { width: 35%; padding: 0; border: none; } /* Fiyat */
             td:nth-child(3) { width: 35%; padding: 0; border: none; display: flex; justify-content: center; } /* Adet */
             td:nth-child(4) { width: 30%; padding: 0; border: none; text-align: right; } /* Toplam */
 
-            /* Silme Butonu (Sağ Üst Köşe) */
-            td:last-child { 
-                position: absolute; 
-                top: 12px; 
-                right: 0; 
-                padding: 0; 
-                border: none;
-                width: auto;
-            }
+            td:last-child { position: absolute; top: 12px; right: 0; padding: 0; border: none; width: auto; }
 
-            /* Mobilde input ayarları */
             .price-input { text-align: left; font-size: 0.95rem; }
-            .currency { right: auto; left: 60px; display: none; } /* Mobilde TL simgesini gizle karışmasın */
-            
+            .currency { right: auto; left: 60px; display: none; }
             .qty-wrapper { transform: scale(0.9); transform-origin: center; }
+            
+            /* Logo Mobilde Küçülsün */
+            .brand-logo { font-size: 1.1rem; }
         }
 
         /* FOOTER */
@@ -149,9 +124,16 @@
     <div class="header">
         <div class="header-content">
             <div class="top-row">
-                <div class="brand-logo"><i class="fa-solid fa-notes-medical"></i> FOCUS MEDİKAL</div>
+                <div class="brand-container">
+                    <div class="brand-logo"><i class="fa-solid fa-notes-medical"></i> FOCUS MEDİKAL</div>
+                    
+                    <button id="saveBtn" onclick="saveToCloud()">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> YAYINLA
+                    </button>
+                </div>
+                
                 <button class="btn btn-login" onclick="loginToggle()">
-                    <i class="fa-solid fa-lock"></i> <span id="loginText">Yönetici Girişi</span>
+                    <i class="fa-solid fa-lock"></i> <span id="loginText">Yönetici</span>
                 </button>
             </div>
 
@@ -161,9 +143,6 @@
             </div>
             
             <div class="admin-panel" id="adminControls">
-                <button class="btn btn-save" id="saveBtn" onclick="saveToCloud()">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> <span>YAYINLA</span>
-                </button>
                 <button class="btn btn-add" onclick="openModal()">
                     <i class="fa-solid fa-plus"></i> <span>Ekle</span>
                 </button>
@@ -219,6 +198,7 @@
 
     <script>
         // ==========================================
+        // BURASI SENİN ÇALIŞAN LINKIN
         const API_URL = 'https://script.google.com/macros/s/AKfycbyy608HSPOFFU6EcizLPxyDRzoVY342QRBuDh2ym8KCaNaYckHEg-S0opxYNA10GivI/exec'; 
         // ==========================================
 
@@ -234,14 +214,14 @@
             if (isAdmin) {
                 isAdmin = false;
                 document.getElementById('adminControls').style.display = 'none';
-                document.getElementById('loginText').innerText = "Yönetici Girişi";
+                document.getElementById('loginText').innerText = "Yönetici";
                 renderTable();
             } else {
                 let pass = prompt("Yönetici Şifresi:");
                 if (pass === "nur27") {
                     isAdmin = true;
                     document.getElementById('adminControls').style.display = 'flex';
-                    document.getElementById('loginText').innerText = "Çıkış Yap";
+                    document.getElementById('loginText').innerText = "Çıkış";
                     renderTable();
                 } else if (pass !== null) {
                     alert("Hatalı Şifre!");
@@ -261,7 +241,7 @@
             document.getElementById('loading').style.display = 'none';
         }
 
-        // --- EXCEL OKUMA (AKILLI BİRLEŞTİRME) ---
+        // --- EXCEL OKUMA (MERGE/BİRLEŞTİRME SİSTEMİ) ---
         function processExcel(input) {
             const file = input.files[0];
             if (!file) return;
@@ -271,9 +251,7 @@
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
-                
-                // NOT: Artık silmek için sormuyoruz, direkt EKLEME/GÜNCELLEME yapıyoruz.
-                parseRowsMerge(rows);
+                parseRowsMerge(rows); // Ekleme fonksiyonunu çağır
             };
             reader.readAsArrayBuffer(file);
             input.value = "";
@@ -299,7 +277,7 @@
                     return;
                 }
 
-                // Ürün Ayrıştırma
+                // Ürün Yakalama
                 let pName = row[0];
                 if (!pName || typeof pName !== 'string') return;
 
@@ -311,24 +289,22 @@
                     if(validNums.length === 1) {
                         pPrice = validNums[0];
                     } else if (validNums.length >= 2) {
-                        validNums.pop(); // Toplamı at
+                        validNums.pop(); // Toplam
                         pPrice = validNums.pop(); // Fiyat
                         if(validNums.length > 0) pQty = validNums[0];
                     }
                 }
 
-                // --- MERGE MANTIĞI (ÖNEMLİ KISIM) ---
+                // *** BİRLEŞTİRME MANTIĞI ***
                 const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.trim().toLowerCase());
 
                 if (existingIndex > -1) {
-                    // Ürün Zaten Var -> GÜNCELLE
+                    // Ürün Varsa -> Fiyat ve Adeti Güncelle
                     productData[existingIndex].price = pPrice || productData[existingIndex].price;
                     productData[existingIndex].qty = pQty > 0 ? pQty : productData[existingIndex].qty;
-                    // Kategoriyi de güncellemek istersen:
-                    // productData[existingIndex].category = currentCat;
                     updatedCount++;
                 } else {
-                    // Ürün Yok -> EKLE
+                    // Ürün Yoksa -> Yeni Ekle
                     productData.push({
                         id: Date.now() + Math.random(),
                         category: currentCat,
@@ -341,7 +317,7 @@
             });
 
             alert(`${addedCount} yeni ürün eklendi.\n${updatedCount} ürün güncellendi.`);
-            document.getElementById('saveBtn').style.display = 'flex';
+            document.getElementById('saveBtn').style.display = 'flex'; // Butonu görünür yap
             renderTable();
         }
 
@@ -433,10 +409,9 @@
             let newVal = (item.qty || 0) + delta;
             if (newVal < 0) newVal = 0;
             item.qty = newVal;
-            // Tabloyu yeniden çizmeye gerek yok, DOM'u güncelle
-            // (Performans için sadece input değerini değiştiriyoruz)
-            renderTable(); 
-            // Veya sadece ilgili satırı update edebilirdik ama toplam hesaplama için render güvenli
+            renderTable();
+            // Adet değişimi kritik değilse saveBtn'i burada açmayabilirsin, ama ben açıyorum:
+            // document.getElementById('saveBtn').style.display = 'flex';
         }
 
         function calculateTotal() {
@@ -446,7 +421,12 @@
 
         // --- KAYDET ---
         async function saveToCloud() {
-            if(!isAdmin) return;
+            // Eğer admin değilse şifre sor, öyle kaydet
+            if(!isAdmin) {
+                let pass = prompt("Kaydetmek için yönetici şifresi:");
+                if(pass !== "nur27") { alert("Şifre yanlış!"); return; }
+            }
+
             const btn = document.getElementById('saveBtn');
             const original = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';

@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Sipariş Paneli</title>
+    <title>Focus Medikal - Akıllı Panel</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -11,7 +11,8 @@
 
     <style>
         :root {
-            --primary: #0ea5e9; /* Medikal Mavi */
+            --primary: #0ea5e9;
+            --secondary: #6366f1; /* İndirme butonu rengi */
             --dark: #0f172a;
             --bg: #f8fafc;
             --white: #ffffff;
@@ -22,7 +23,7 @@
 
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 120px; }
         
-        /* --- HEADER & LOGO --- */
+        /* HEADER */
         .header {
             background: var(--white); padding: 15px 30px; 
             border-bottom: 1px solid var(--border);
@@ -31,109 +32,78 @@
         }
 
         .brand-logo {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: -1px;
+            font-family: 'Montserrat', sans-serif; font-size: 1.5rem; font-weight: 800;
             background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             display: flex; align-items: center; gap: 10px;
         }
 
-        .actions { display: flex; gap: 10px; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
         .btn {
-            padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer;
-            font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.2s; font-size: 0.9rem;
+            padding: 10px 15px; border-radius: 8px; border: none; cursor: pointer;
+            font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.2s; font-size: 0.85rem; color: white;
         }
-        .btn-excel { background: #10b981; color: white; } /* Yeşil */
-        .btn-excel:hover { background: #059669; }
         
-        .btn-add { background: var(--primary); color: white; } /* Mavi */
-        .btn-add:hover { background: #0284c7; }
+        .btn-add { background: var(--primary); }
+        .btn-import { background: #10b981; } /* Yeşil */
+        .btn-export { background: var(--secondary); } /* Mor */
+        .btn-reset { background: #ef4444; } /* Kırmızı */
 
-        /* --- TABLO --- */
+        .btn:hover { filter: brightness(1.1); }
+
+        /* TABLO */
         .container { max-width: 1200px; margin: 30px auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid var(--border); }
         table { width: 100%; border-collapse: collapse; }
         
-        th { background: #f1f5f9; padding: 15px; text-align: left; font-size: 0.8rem; color: var(--text-gray); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        td { padding: 10px 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        th { background: #f1f5f9; padding: 15px; text-align: left; font-size: 0.8rem; color: var(--text-gray); font-weight: 700; text-transform: uppercase; }
+        td { padding: 8px 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         
-        /* Kategori Başlığı */
-        .cat-row td { 
-            background: var(--category-bg); color: white; font-weight: bold; 
-            padding: 12px 20px; letter-spacing: 1px; font-size: 0.95rem;
-        }
+        .cat-row td { background: var(--category-bg); color: white; font-weight: bold; padding: 10px 20px; font-size: 0.9rem; letter-spacing: 1px; }
 
-        /* --- INPUT GRUPLARI (₺ İŞARETİ İÇİN) --- */
-        .input-group {
-            position: relative; display: flex; align-items: center; width: 100%;
-        }
+        /* INPUT GRUPLARI */
+        .input-group { position: relative; width: 100%; }
         .input-group input {
-            width: 100%; padding: 8px 30px 8px 10px; /* Sağdan boşluk bırak */
-            border: 1px solid transparent; border-radius: 6px; 
-            font-size: 1rem; outline: none; background: transparent; transition: 0.2s;
-            font-weight: 600; color: var(--dark);
+            width: 100%; padding: 8px 25px 8px 8px; border: 1px solid transparent; 
+            border-radius: 6px; font-size: 0.95rem; outline: none; background: transparent; font-weight: 600; color: var(--dark);
         }
-        .input-group input:focus { background: white; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
-        
-        .currency-symbol {
-            position: absolute; right: 10px; color: var(--text-gray); font-size: 0.9rem; pointer-events: none;
-        }
+        .input-group input:focus { background: white; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.1); }
+        .currency { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: var(--text-gray); font-size: 0.8rem; pointer-events: none; }
 
-        /* Adet Butonları */
-        .qty-wrapper { display: flex; align-items: center; justify-content: center; background: #f8fafc; border-radius: 6px; padding: 2px; width: fit-content; margin: 0 auto; border: 1px solid var(--border); }
-        .qty-btn { width: 28px; height: 28px; border: none; background: white; border-radius: 4px; cursor: pointer; color: var(--primary); font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .qty-btn:hover { background: #e2e8f0; }
-        .qty-val { width: 50px; text-align: center; background: transparent; border: none; font-weight: bold; outline: none; }
+        /* ADET KONTROLLERİ */
+        .qty-wrapper { display: flex; align-items: center; justify-content: center; background: #f8fafc; border-radius: 6px; padding: 2px; border: 1px solid var(--border); width: fit-content; margin: 0 auto; }
+        .qty-btn { width: 26px; height: 26px; border: none; background: white; border-radius: 4px; cursor: pointer; color: var(--primary); font-weight: bold; }
+        .qty-val { width: 45px; text-align: center; background: transparent; border: none; font-weight: bold; outline: none; }
 
         /* FOOTER */
         .footer {
             position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px 40px;
-            border-top: 1px solid var(--border); display: flex; justify-content: flex-end; align-items: center;
+            border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 100;
         }
-        .total-box { text-align: right; }
-        .total-label { font-size: 0.85rem; color: var(--text-gray); font-weight: 600; text-transform: uppercase; }
+        .save-status { color: #10b981; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 5px; opacity: 0; transition: 0.5s; }
         .total-amount { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
 
-        /* --- MODAL (ÜRÜN EKLEME PENCERESİ) --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 200;
-            backdrop-filter: blur(3px);
-        }
-        .modal {
-            background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-        }
-        .modal h3 { margin-top: 0; color: var(--dark); }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 0.9rem; color: var(--text-gray); margin-bottom: 5px; }
-        .form-control { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; outline: none; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-        .btn-cancel { background: #ef4444; color: white; }
+        /* MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 200; backdrop-filter: blur(2px); }
+        .modal { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
+        .form-control { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 6px; }
 
-        /* Boş Durum */
-        .empty-state { text-align: center; padding: 60px; color: #94a3b8; }
+        .empty-state { text-align: center; padding: 50px; color: #94a3b8; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="brand-logo">
-            <i class="fa-solid fa-notes-medical"></i> FOCUS MEDİKAL
-        </div>
+        <div class="brand-logo"><i class="fa-solid fa-notes-medical"></i> FOCUS MEDİKAL</div>
         <div class="actions">
-            <button class="btn btn-add" onclick="openModal()">
-                <i class="fa-solid fa-plus"></i> Ürün Ekle
-            </button>
-            <label class="btn btn-excel">
-                <i class="fa-solid fa-file-excel"></i> Excel Yükle
-                <input type="file" id="fileInput" hidden accept=".xlsx, .xls, .csv" onchange="processExcel(this)">
+            <button class="btn btn-add" onclick="openModal()"><i class="fa-solid fa-plus"></i> Ekle</button>
+            <label class="btn btn-import">
+                <i class="fa-solid fa-file-arrow-up"></i> Excel Yükle
+                <input type="file" hidden accept=".xlsx, .xls" onchange="processExcel(this)">
             </label>
+            <button class="btn btn-export" onclick="exportToExcel()"><i class="fa-solid fa-file-arrow-down"></i> İndir</button>
+            <button class="btn btn-reset" onclick="resetAll()"><i class="fa-solid fa-trash"></i> Sıfırla</button>
         </div>
     </div>
 
@@ -141,28 +111,21 @@
         <table id="mainTable">
             <thead>
                 <tr>
-                    <th width="45%">ÜRÜN ADI</th>
+                    <th width="40%">ÜRÜN ADI</th>
                     <th width="20%" style="text-align:right;">BİRİM FİYAT</th>
-                    <th width="15%" style="text-align:center;">ADET</th>
+                    <th width="20%" style="text-align:center;">ADET</th>
                     <th width="20%" style="text-align:right;">TOPLAM</th>
-                    <th width="5%"></th> </tr>
-            </thead>
-            <tbody id="tableBody">
-                <tr>
-                    <td colspan="5">
-                        <div class="empty-state">
-                            <i class="fa-solid fa-clipboard-list" style="font-size:3rem; margin-bottom:15px; opacity:0.3;"></i>
-                            <p>Liste boş. Excel yükleyin veya "Ürün Ekle" butonuyla ekleme yapın.</p>
-                        </div>
-                    </td>
+                    <th width="5%"></th>
                 </tr>
-            </tbody>
+            </thead>
+            <tbody id="tableBody"></tbody>
         </table>
     </div>
 
     <div class="footer">
-        <div class="total-box">
-            <div class="total-label">GENEL TOPLAM</div>
+        <div class="save-status" id="saveMsg"><i class="fa-solid fa-check-circle"></i> Kaydedildi</div>
+        <div style="text-align:right;">
+            <div style="font-size:0.8rem; color:#64748b; font-weight:600;">GENEL TOPLAM</div>
             <div class="total-amount" id="grandTotal">0,00 ₺</div>
         </div>
     </div>
@@ -170,42 +133,60 @@
     <div class="modal-overlay" id="addModal">
         <div class="modal">
             <h3>Yeni Ürün Ekle</h3>
+            <select id="newCat" class="form-control"></select>
+            <input type="text" id="newCatText" class="form-control" placeholder="Yeni Kategori Adı" style="display:none;">
+            <div style="text-align:right; margin-bottom:10px; font-size:0.8rem; color:var(--primary); cursor:pointer;" onclick="toggleCatInput()">+ Yeni Kategori</div>
             
-            <div class="form-group">
-                <label>Kategori</label>
-                <select id="newCat" class="form-control">
-                    <option value="GENEL">GENEL</option>
-                    </select>
-                <input type="text" id="newCatText" class="form-control" placeholder="Veya yeni kategori yazın..." style="margin-top:5px; display:none;">
-                <small style="color:#3b82f6; cursor:pointer;" onclick="toggleCatInput()">+ Yeni Kategori Oluştur</small>
-            </div>
-
-            <div class="form-group">
-                <label>Ürün Adı</label>
-                <input type="text" id="newName" class="form-control" placeholder="Örn: Güneş Kremi">
-            </div>
-
-            <div class="form-group">
-                <label>Birim Fiyat</label>
-                <input type="number" id="newPrice" class="form-control" placeholder="0.00">
-            </div>
-
-            <div class="form-group">
-                <label>Stok / Adet</label>
-                <input type="number" id="newQty" class="form-control" value="1">
-            </div>
-
-            <div class="modal-actions">
-                <button class="btn btn-cancel" onclick="closeModal()">İptal</button>
-                <button class="btn btn-add" onclick="addNewProduct()">Ekle</button>
+            <input type="text" id="newName" class="form-control" placeholder="Ürün Adı">
+            <input type="number" id="newPrice" class="form-control" placeholder="Fiyat">
+            <input type="number" id="newQty" class="form-control" value="1" placeholder="Adet">
+            
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:15px;">
+                <button class="btn" style="background:#94a3b8;" onclick="closeModal()">İptal</button>
+                <button class="btn btn-add" onclick="addNewProduct()">Kaydet</button>
             </div>
         </div>
     </div>
 
     <script>
-        let productData = []; // Veri Deposu
+        let productData = []; 
 
-        // --- EXCEL İŞLEME (GELİŞMİŞ SÜTUN TESPİTİ) ---
+        // --- SAYFA YÜKLENDİĞİNDE ---
+        window.onload = function() {
+            loadLocal(); // Hafızadaki veriyi getir
+        };
+
+        // --- LOCAL STORAGE (KAYIT SİSTEMİ) ---
+        function saveLocal() {
+            localStorage.setItem('focusMedikalData', JSON.stringify(productData));
+            showSaveMsg();
+        }
+
+        function loadLocal() {
+            const saved = localStorage.getItem('focusMedikalData');
+            if (saved) {
+                productData = JSON.parse(saved);
+                renderTable();
+            } else {
+                renderTable(); // Boş tablo çiz
+            }
+        }
+
+        function resetAll() {
+            if(confirm("Tüm liste silinecek ve hafıza temizlenecek. Emin misin?")) {
+                productData = [];
+                localStorage.removeItem('focusMedikalData');
+                renderTable();
+            }
+        }
+
+        function showSaveMsg() {
+            const msg = document.getElementById('saveMsg');
+            msg.style.opacity = '1';
+            setTimeout(() => { msg.style.opacity = '0'; }, 1500);
+        }
+
+        // --- EXCEL YÜKLEME ---
         function processExcel(input) {
             const file = input.files[0];
             if (!file) return;
@@ -215,79 +196,75 @@
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                
-                // Header:1 diyerek satır dizisi olarak alıyoruz
                 const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                
+                // Mevcut veriyi temizlemeden önce sorabiliriz ama şimdilik üzerine yazıyoruz
+                if(productData.length > 0 && !confirm("Mevcut listenin üzerine yazılacak, onaylıyor musun?")) return;
+                
                 parseRowsSmart(rows);
             };
             reader.readAsArrayBuffer(file);
+            input.value = ""; // Aynı dosyayı tekrar seçebilmek için
         }
 
         function parseRowsSmart(rows) {
             productData = [];
             let currentCategory = "GENEL LİSTE";
             
-            // Sütun indekslerini bulmak için değişkenler
-            let nameIdx = -1, priceIdx = -1, stockIdx = -1;
-
-            // 1. ADIM: BAŞLIK SATIRINI BULMAYA ÇALIŞ
-            // İlk 10 satırı tara, içinde "Fiyat", "Stok" geçen satırı bul.
-            for(let i=0; i<Math.min(rows.length, 10); i++) {
-                const row = rows[i].map(cell => String(cell).toLowerCase());
-                
-                // Eğer satırda hem "fiyat" hem "stok" (veya adet) geçiyorsa bu başlık satırıdır
-                if (row.some(c => c.includes('fiyat')) && row.some(c => c.includes('stok') || c.includes('adet'))) {
-                    // İndeksleri kaydet
-                    nameIdx = row.findIndex(c => c.includes('ürün') || c.includes('urun') || c.includes('ad'));
-                    priceIdx = row.findIndex(c => c.includes('fiyat') || c.includes('tutar'));
-                    stockIdx = row.findIndex(c => c.includes('stok') || c.includes('adet') || c.includes('miktar'));
-                    break; // Başlığı bulduk, döngüden çık
-                }
-            }
-
-            // Eğer başlık bulunamadıysa varsayılanları dene (Manuel atama)
-            if (priceIdx === -1) priceIdx = 2; // Genelde C sütunu
-            if (stockIdx === -1) stockIdx = 1; // Genelde B sütunu
-            if (nameIdx === -1) nameIdx = 0;   // Genelde A sütunu
-
-            // 2. ADIM: VERİLERİ OKU
-            rows.forEach((row, index) => {
+            // Basit Başlık Tespiti
+            let priceIdx = 2, stockIdx = 1, nameIdx = 0;
+            
+            // Excel'i Tara
+            rows.forEach((row) => {
                 if (row.length === 0) return;
-
-                const cellFirst = row[0]; // Genelde Kategori başlığı ilk hücrede olur
                 
-                // Kategori Kontrolü: Eğer satırda sadece 1 tane metin varsa ve sayı yoksa kategoridir.
+                // Başlık Satırlarını Atla
+                const rowStr = row.join(" ").toLowerCase();
+                if(rowStr.includes("fiyat") && rowStr.includes("ürün")) return;
+
+                const firstCell = row[0];
                 const hasNumber = row.some(c => typeof c === 'number');
-                if (!hasNumber && typeof cellFirst === 'string' && cellFirst.length > 2) {
-                    currentCategory = cellFirst.toUpperCase();
-                    if (!productData.some(p => p.type === 'category' && p.title === currentCategory)) {
-                         productData.push({ type: 'category', title: currentCategory });
-                    }
-                    return; // Bu satırı geç
+
+                // Kategori mi? (Sayı yok ve metin var)
+                if (!hasNumber && typeof firstCell === 'string' && firstCell.length > 2) {
+                    currentCategory = firstCell.toUpperCase();
+                    // Kategori başlığını veri olarak ekleme, sadece değişkende tut
+                    // Ürünleri o kategoriyle kaydedeceğiz.
+                    return;
                 }
 
-                // Ürün Okuma
-                const name = row[nameIdx];
-                // Sayısal değerleri güvenli al
-                const price = parseFloat(row[priceIdx]) || 0;
-                const qty = parseInt(row[stockIdx]) || 0;
+                // Ürün mü? (Metin ve Sayı var)
+                // Sütunları tahmin et: Genelde en uzun metin Ürün Adı'dır.
+                // En büyük sayı genelde Fiyat, daha küçük tamsayı Stok olabilir ama karışık.
+                // Basit mantık: Manuel sütun sırasına güvenelim veya kullanıcıdan bekleyelim.
+                // Otomatik algılama için:
+                
+                let pName = row[0];
+                let pPrice = 0;
+                let pQty = 0;
 
-                if (name && typeof name === 'string') {
-                    // Başlık satırının kendisini listeye eklememek için kontrol
-                    if (name.toLowerCase().includes('ürün') || name.toLowerCase().includes('fiyat')) return;
-
+                // Satır içindeki sayıları bul
+                const numbers = row.filter(c => typeof c === 'number');
+                if (numbers.length > 0) {
+                     // Genelde büyük olan fiyattır (basit varsayım)
+                     pPrice = Math.max(...numbers);
+                     // Diğer sayı stok olabilir
+                     pQty = numbers.find(n => n !== pPrice) || 0;
+                }
+                
+                if (pName && typeof pName === 'string') {
                     productData.push({
-                        type: 'product',
-                        name: name,
-                        price: price,
-                        qty: qty,
-                        category: currentCategory
+                        id: Date.now() + Math.random(), // Unique ID
+                        category: currentCategory,
+                        name: pName,
+                        price: pPrice || 0,
+                        qty: pQty || 0
                     });
                 }
             });
 
+            saveLocal(); // Kaydet
             renderTable();
-            updateCategoryDropdown();
         }
 
         // --- TABLO ÇİZİMİ ---
@@ -295,185 +272,184 @@
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = "";
 
-            if(productData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Liste boş.</td></tr>`;
+            if (productData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Liste Boş.</td></tr>`;
+                document.getElementById('grandTotal').innerText = "0,00 ₺";
                 return;
             }
 
-            // Verileri Kategoriye göre sıralı tutmak için basit bir filtreleme yapmıyoruz,
-            // zaten okurken sırayla ekledik.
+            // Kategorilere göre grupla
+            const grouped = {};
+            productData.forEach(p => {
+                if(!grouped[p.category]) grouped[p.category] = [];
+                grouped[p.category].push(p);
+            });
 
-            productData.forEach((item, index) => {
-                if (item.type === 'category') {
+            // Grupları çiz
+            Object.keys(grouped).forEach(cat => {
+                // Başlık
+                const trCat = document.createElement('tr');
+                trCat.className = 'cat-row';
+                trCat.innerHTML = `<td colspan="5">${cat}</td>`;
+                tbody.appendChild(trCat);
+
+                // Ürünler
+                grouped[cat].forEach(item => {
                     const tr = document.createElement('tr');
-                    tr.className = 'cat-row';
-                    tr.innerHTML = `<td colspan="5">${item.title}</td>`;
-                    tbody.appendChild(tr);
-                } else {
-                    const tr = document.createElement('tr');
-                    
-                    // Adet ve Fiyat 0 ise boş gelsin
-                    const displayPrice = item.price === 0 ? '' : item.price;
-                    const displayQty = item.qty === 0 ? '' : item.qty;
+                    const priceDisp = item.price === 0 ? '' : item.price;
+                    const qtyDisp = item.qty === 0 ? '' : item.qty;
 
                     tr.innerHTML = `
                         <td>
                             <div class="input-group">
-                                <input type="text" value="${item.name}" onchange="updateItem(${index}, 'name', this.value)">
+                                <input type="text" value="${item.name}" oninput="updateItem(${item.id}, 'name', this.value)">
                             </div>
                         </td>
                         <td>
                             <div class="input-group">
-                                <input type="number" style="text-align:right;" value="${displayPrice}" placeholder="0" 
-                                       oninput="updateItem(${index}, 'price', this.value)">
-                                <span class="currency-symbol">₺</span>
+                                <input type="number" style="text-align:right;" value="${priceDisp}" placeholder="0" oninput="updateItem(${item.id}, 'price', this.value)">
+                                <span class="currency">₺</span>
                             </div>
                         </td>
                         <td>
                             <div class="qty-wrapper">
-                                <button class="qty-btn" onclick="changeQty(${index}, -1)">−</button>
-                                <input type="number" class="qty-val" value="${displayQty}" placeholder="0"
-                                       oninput="updateItem(${index}, 'qty', this.value)">
-                                <button class="qty-btn" onclick="changeQty(${index}, 1)">+</button>
+                                <button class="qty-btn" onclick="updateQty(${item.id}, -1)">−</button>
+                                <input type="number" class="qty-val" value="${qtyDisp}" placeholder="0" oninput="updateItem(${item.id}, 'qty', this.value)">
+                                <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
                             </div>
                         </td>
-                        <td style="text-align:right; font-weight:bold; color:var(--primary);" id="total-${index}">
+                        <td style="text-align:right; font-weight:bold; color:var(--primary);">
                             ${formatMoney(item.price * item.qty)}
                         </td>
                         <td style="text-align:center;">
-                            <i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="deleteItem(${index})"></i>
+                            <i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="deleteItem(${item.id})"></i>
                         </td>
                     `;
                     tbody.appendChild(tr);
-                }
+                });
             });
 
-            calculateGrandTotal();
+            calculateTotal();
         }
 
-        // --- VERİ GÜNCELLEME ---
-        function updateItem(index, field, value) {
-            const item = productData[index];
-            if (field === 'price' || field === 'qty') {
-                item[field] = parseFloat(value) || 0;
-            } else {
-                item[field] = value;
+        // --- GÜNCELLEME İŞLEMLERİ ---
+        function updateItem(id, field, value) {
+            const item = productData.find(p => p.id === id);
+            if (item) {
+                if (field === 'price' || field === 'qty') {
+                    item[field] = parseFloat(value) || 0;
+                } else {
+                    item[field] = value;
+                }
+                saveLocal(); // Her harfte kaydet
+                
+                // Performans için tüm tabloyu çizmek yerine sadece toplamları güncelleyebiliriz ama
+                // modern tarayıcılar bu boyutta hızlıdır. Basit tutuyoruz.
+                if(field !== 'name') renderTable(); // Fiyat/Adet değişince toplam değişir, tabloyu yenile
             }
-            
-            // Satır toplamı güncelle
-            const totalEl = document.getElementById(`total-${index}`);
-            if(totalEl) totalEl.innerText = formatMoney(item.price * item.qty);
-            
-            calculateGrandTotal();
         }
 
-        function changeQty(index, delta) {
-            const item = productData[index];
-            let newVal = (item.qty || 0) + delta;
-            if (newVal < 0) newVal = 0;
-            item.qty = newVal;
-            renderTable(); // Basitlik için yeniden çiz
-        }
-
-        function deleteItem(index) {
-            if(confirm('Bu satırı silmek istediğine emin misin?')) {
-                productData.splice(index, 1);
+        function updateQty(id, delta) {
+            const item = productData.find(p => p.id === id);
+            if (item) {
+                let newVal = (item.qty || 0) + delta;
+                if (newVal < 0) newVal = 0;
+                item.qty = newVal;
+                saveLocal();
                 renderTable();
             }
         }
 
-        function calculateGrandTotal() {
-            let total = 0;
-            productData.forEach(p => {
-                if(p.type === 'product') total += (p.price * p.qty);
-            });
+        function deleteItem(id) {
+            if(confirm("Silmek istiyor musun?")) {
+                productData = productData.filter(p => p.id !== id);
+                saveLocal();
+                renderTable();
+            }
+        }
+
+        function calculateTotal() {
+            const total = productData.reduce((sum, p) => sum + (p.price * p.qty), 0);
             document.getElementById('grandTotal').innerText = formatMoney(total);
         }
 
+        // --- EXCEL ÇIKTISI (EXPORT) ---
+        function exportToExcel() {
+            if(productData.length === 0) { alert("İndirilecek veri yok."); return; }
+
+            // Veriyi Excel formatına hazırla
+            const exportList = productData.map(p => ({
+                "Kategori": p.category,
+                "Ürün Adı": p.name,
+                "Birim Fiyat": p.price,
+                "Adet": p.qty,
+                "Toplam Tutar": p.price * p.qty
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(exportList);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Siparis Listesi");
+            
+            // Dosya ismi tarihli olsun
+            const date = new Date().toLocaleDateString('tr-TR').replace(/\./g, '-');
+            XLSX.writeFile(workbook, `Focus_Medikal_Siparis_${date}.xlsx`);
+        }
+
+        // --- MODAL VE YARDIMCILAR ---
         function formatMoney(amount) {
             return amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
         }
 
-        // --- MODAL & YENİ ÜRÜN EKLEME ---
         function openModal() {
-            document.getElementById('addModal').style.display = 'flex';
-            updateCategoryDropdown();
-        }
-
-        function closeModal() {
-            document.getElementById('addModal').style.display = 'none';
-        }
-
-        function toggleCatInput() {
             const select = document.getElementById('newCat');
-            const input = document.getElementById('newCatText');
-            if(input.style.display === 'none') {
-                input.style.display = 'block';
-                select.style.display = 'none';
-                input.value = "";
-                input.focus();
-            } else {
-                input.style.display = 'none';
-                select.style.display = 'block';
-            }
-        }
-
-        function updateCategoryDropdown() {
-            const select = document.getElementById('newCat');
-            // Mevcut kategorileri bul (unique)
-            const categories = [...new Set(productData.filter(p => p.type === 'category').map(p => p.title))];
-            
+            // Mevcut kategorileri bul
+            const cats = [...new Set(productData.map(p => p.category))];
             select.innerHTML = `<option value="GENEL LİSTE">GENEL LİSTE</option>`;
-            categories.forEach(c => {
-                select.innerHTML += `<option value="${c}">${c}</option>`;
-            });
+            cats.forEach(c => select.innerHTML += `<option value="${c}">${c}</option>`);
+            
+            document.getElementById('addModal').style.display = 'flex';
+        }
+        function closeModal() { document.getElementById('addModal').style.display = 'none'; }
+        
+        function toggleCatInput() {
+            const input = document.getElementById('newCatText');
+            const select = document.getElementById('newCat');
+            if(input.style.display === 'none') {
+                input.style.display = 'block'; select.style.display = 'none'; input.focus();
+            } else {
+                input.style.display = 'none'; select.style.display = 'block';
+            }
         }
 
         function addNewProduct() {
             const catSelect = document.getElementById('newCat');
             const catInput = document.getElementById('newCatText');
-            
-            let category = catInput.style.display === 'block' ? catInput.value.toUpperCase() : catSelect.value;
+            let cat = catInput.style.display === 'block' ? catInput.value : catSelect.value;
+            if(!cat) cat = "GENEL LİSTE";
+
             const name = document.getElementById('newName').value;
             const price = parseFloat(document.getElementById('newPrice').value) || 0;
             const qty = parseInt(document.getElementById('newQty').value) || 0;
 
-            if(!name) { alert("Ürün adı giriniz"); return; }
-            if(!category) category = "GENEL LİSTE";
-
-            // Eğer kategori listede yoksa önce kategori başlığı olarak ekle
-            const catExists = productData.some(p => p.type === 'category' && p.title === category);
-            if (!catExists) {
-                productData.push({ type: 'category', title: category });
+            if(name) {
+                productData.push({
+                    id: Date.now(),
+                    category: cat.toUpperCase(),
+                    name: name,
+                    price: price,
+                    qty: qty
+                });
+                saveLocal();
+                renderTable();
+                closeModal();
+                // Temizle
+                document.getElementById('newName').value = "";
+                document.getElementById('newPrice').value = "";
+                document.getElementById('newQty').value = "1";
+            } else {
+                alert("Ürün adı gerekli!");
             }
-
-            // Ürünü ekle (Doğru kategorinin altına eklemek için sıralama mantığı gerekebilir ama şimdilik sona ekliyoruz, renderTable düzeltir)
-            // Daha akıllı ekleme: Kategoriyi bul, onun son ürününe ekle.
-            // Kolay yöntem: Veriyi ekle, sonra kategorilere göre yeniden sırala.
-            
-            productData.push({
-                type: 'product',
-                name: name,
-                price: price,
-                qty: qty,
-                category: category
-            });
-
-            // Listeyi Kategorilere Göre Sırala
-            // productData.sort(...) karmaşık olabilir, basitçe renderda düzeltiyoruz.
-
-            // En basiti: Yeni veri eklendi, tabloyu güncelle.
-            // (Not: Kategori başlıkları ile ürünler karışmasın diye basit bir sort yapılabilir ama şimdilik sona eklesin)
-            
-            closeModal();
-            renderTable();
-            
-            // Temizle
-            document.getElementById('newName').value = "";
-            document.getElementById('newPrice').value = "";
-            document.getElementById('newQty').value = "1";
         }
-
     </script>
 </body>
 </html>

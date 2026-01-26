@@ -3,246 +3,348 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Özel Ürün Paneli</title>
+    <title>Modern Sipariş Listesi</title>
+    
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    
     <style>
-        /* ========================================
-           TEMEL TASARIM VE STİL AYARLARI (CSS)
-           ========================================
-        */
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background: #222; /* Koyu arka plan */
-            color: #fff; 
-            padding: 20px; 
-            margin: 0;
+        :root {
+            --primary: #4f46e5; /* Modern Mor/Mavi */
+            --secondary: #e0e7ff;
+            --text: #1f2937;
+            --bg: #f3f4f6;
+            --white: #ffffff;
+            --price: #059669; /* Zümrüt Yeşili */
         }
-        
-        /* --- GİRİŞ EKRANI TASARIMI --- */
-        #login-screen {
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            height: 80vh; /* Ekranın %80'ini kapla */
-        }
-        
-        input[type="password"] { 
-            padding: 12px; 
-            font-size: 1.1rem; 
-            border-radius: 6px; 
-            border: none; 
-            outline: none; 
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+        body { background-color: var(--bg); color: var(--text); padding-bottom: 80px; }
+
+        /* --- ÜST KISIM (HEADER & UPLOAD) --- */
+        .header {
+            background: var(--white);
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
             text-align: center;
-            width: 200px;
-            margin-bottom: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        
-        button { 
-            padding: 10px 25px; 
-            font-size: 1rem; 
-            cursor: pointer; 
-            background: #e74c3c; /* Kırmızı buton */
-            color: white; 
-            border: none; 
-            border-radius: 6px; 
+
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px auto;
+            max-width: 600px;
+            cursor: pointer;
             transition: 0.3s;
-            font-weight: bold;
+            background: #f8fafc;
         }
+
+        .upload-area:hover { border-color: var(--primary); background: var(--secondary); }
+        .upload-icon { font-size: 2rem; color: var(--primary); margin-bottom: 10px; }
+        .upload-text { font-weight: 600; color: #64748b; }
         
-        button:hover { 
-            background: #c0392b; /* Üzerine gelince koyulaş */
+        #fileInput { display: none; }
+
+        /* --- ARAMA KUTUSU --- */
+        .search-box {
+            margin: 15px auto;
+            max-width: 600px;
+            display: none; /* Dosya yüklenince açılacak */
+        }
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px;
+            border-radius: 50px;
+            border: 1px solid #cbd5e1;
+            outline: none;
+            font-size: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        /* --- ANA İÇERİK (Başlangıçta Gizli) --- */
-        #main-content { 
-            display: none; 
-        }
-
-        h1 { 
-            text-align: center; 
-            color: #f1c40f; /* Sarı başlık */
-            margin-bottom: 30px; 
-            border-bottom: 1px solid #444;
-            padding-bottom: 15px;
-        }
-
-        /* --- ÜRÜN KARTLARI IZGARA YAPISI --- */
+        /* --- ÜRÜN LİSTESİ (GRID) --- */
         .container {
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive */
-            gap: 20px; 
-            max-width: 1200px; 
-            margin: 0 auto;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
         }
 
-        /* --- KART TASARIMI --- */
         .card {
-            background: #333; 
-            border-radius: 10px; 
-            overflow: hidden; 
-            display: flex; 
-            border: 1px solid #444;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            background: var(--white);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
             transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
         }
 
-        .card:hover {
-            transform: translateY(-3px); /* Hover efekti */
-            border-color: #f1c40f;
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+
+        .card-img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background: #e2e8f0;
         }
 
-        .card img { 
-            width: 110px; 
-            height: 100%; 
-            object-fit: cover; 
-            background: #555; 
+        .card-body { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 5px; color: var(--text); }
+        .card-price { font-size: 1.25rem; font-weight: 800; color: var(--price); margin-bottom: 15px; }
+
+        /* --- ADET KONTROLLERİ --- */
+        .qty-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 5px;
         }
 
-        .card-body { 
-            padding: 15px; 
-            flex-grow: 1; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-        }
-
-        .card-title { 
-            font-size: 1.2rem; 
-            font-weight: bold; 
-            margin-bottom: 8px; 
-            color: #fff; 
-        }
-
-        .card-stock { 
-            color: #bbb; 
-            font-size: 0.95rem; 
-            margin-bottom: 8px; 
-        }
-
-        .card-price { 
-            color: #2ecc71; /* Yeşil fiyat */
-            font-size: 1.4rem; 
-            font-weight: bold; 
-        }
-
-        /* Hata ve Yükleme Mesajları */
-        .msg-box {
-            text-align: center;
+        .btn-qty {
+            width: 35px;
+            height: 35px;
+            border: none;
+            background: var(--white);
+            border-radius: 6px;
+            cursor: pointer;
             font-size: 1.2rem;
-            color: #ccc;
-            margin-top: 50px;
+            font-weight: bold;
+            color: var(--primary);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            transition: 0.2s;
         }
+
+        .btn-qty:active { transform: scale(0.95); background: var(--secondary); }
+
+        .input-qty {
+            width: 50px;
+            text-align: center;
+            border: none;
+            background: transparent;
+            font-size: 1.1rem;
+            font-weight: 600;
+            outline: none;
+        }
+
+        /* --- ALT TOPLAM ÇUBUĞU --- */
+        .footer-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: var(--white);
+            border-top: 1px solid #e2e8f0;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05);
+            z-index: 99;
+        }
+
+        .total-label { font-size: 0.9rem; color: #64748b; }
+        .total-amount { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+        
+        .btn-order {
+            background: var(--primary);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* --- ÖRNEK TABLO GÖSTERİMİ --- */
+        .info-box {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            color: #92400e;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
-        <h2 style="color:#ecf0f1; margin-bottom:15px;">Panele Giriş</h2>
-        <input type="password" id="passwordInput" placeholder="Şifrenizi Girin">
-        <button onclick="checkPassword()">Giriş Yap</button>
-        <p id="error-msg" style="color:#e74c3c; display:none; margin-top:15px; font-weight:bold;">Hatalı Şifre!</p>
+    <div class="header">
+        <h1>Modern Sipariş Listesi</h1>
+        
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">📂</div>
+            <div class="upload-text">Excel Dosyası Yüklemek İçin Tıkla</div>
+            <div style="font-size: 0.8rem; color:#94a3b8; margin-top:5px;">.xlsx veya .xls formatı</div>
+            <input type="file" id="fileInput" accept=".xlsx, .xls" onchange="handleFile(this)">
+        </div>
+
+        <div class="info-box">
+            💡 Excel tablonuzda 1. satırda şu başlıklar olmalıdır: <br>
+            <b>UrunAdi</b> | <b>Fiyat</b> | <b>Resim</b> (Opsiyonel)
+        </div>
+
+        <div class="search-box" id="searchContainer">
+            <input type="text" id="searchInput" placeholder="Ürün ara..." onkeyup="filterProducts()">
+        </div>
     </div>
 
-    <div id="main-content">
-        <h1>Ürün Stok & Fiyat Paneli</h1>
-        <div class="container" id="urunVitrin">
-            </div>
+    <div class="container" id="productGrid">
+        </div>
+
+    <div class="footer-bar">
+        <div>
+            <div class="total-label">GENEL TOPLAM</div>
+            <div class="total-amount" id="grandTotal">0.00 TL</div>
+        </div>
+        <button class="btn-order" onclick="alert('Sipariş özeti oluşturulabilir veya WhatsApp\'a gönderilebilir!')">Siparişi Tamamla</button>
     </div>
 
     <script>
-        // --- AYARLAR ---
-        
-        // Panele giriş şifresi (Burayı değiştirebilirsin)
-        const SECRET_PASS = "1234"; 
-        
-        // Senin verdiğin GOOGLE SHEET CSV Linki (Otomatik eklendi)
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT5h4pxPpj9zeIvAu7JotsLKTTqwfEkgvJNbVVQc5oBu--9g4TSl2RPlpD-D1HFEIkTkyn7u1K8oqIv/pub?output=csv'; 
-        
-        // ----------------
+        let products = []; // Tüm ürünler burada tutulacak
+        let cart = {};     // Sepet (Hangi üründen kaç tane var)
 
-        // Şifre Kontrol Fonksiyonu
-        function checkPassword() {
-            const input = document.getElementById('passwordInput').value;
-            
-            // Eğer şifre doğruysa
-            if(input === SECRET_PASS) {
-                // Giriş ekranını gizle, ana ekranı göster
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
-                
-                // Verileri çekmeye başla
-                verileriGetir(); 
-            } else {
-                // Şifre yanlışsa hata mesajı göster
-                document.getElementById('error-msg').style.display = 'block';
-            }
+        // --- DOSYA YÜKLEME İŞLEMLERİ ---
+        function handleFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                // İlk sayfayı al
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+
+                // Excel'i JSON'a çevir
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                // Veriyi işle ve ekrana bas
+                processData(jsonData);
+            };
+
+            reader.readAsArrayBuffer(file);
         }
 
-        // Google Sheets'ten Veri Çeken Ana Fonksiyon
-        async function verileriGetir() {
-            const vitrin = document.getElementById('urunVitrin');
+        function processData(data) {
+            products = data.map((item, index) => {
+                // Excel sütun isimlerini eşleştiriyoruz (Büyük küçük harf duyarlılığını azaltmak için)
+                // Kullanıcı "Ürün Adı" da yazsa "UrunAdi" da yazsa anlasın diye.
+                return {
+                    id: index,
+                    name: item['UrunAdi'] || item['Ürün Adı'] || item['URUN'] || 'İsimsiz Ürün',
+                    price: parseFloat(item['Fiyat'] || item['FIYAT'] || 0),
+                    image: item['Resim'] || item['ResimLink'] || '', // Resim yoksa boş kalacak
+                    stock: item['Stok'] || 999
+                };
+            });
+
+            // Arama kutusunu göster
+            document.getElementById('searchContainer').style.display = 'block';
             
-            // Kullanıcıya yükleniyor mesajı ver
-            vitrin.innerHTML = '<div class="msg-box">Veriler güncelleniyor, lütfen bekleyin...</div>';
-            
-            try {
-                // Linke istek at
-                const response = await fetch(SHEET_URL);
+            // Ürünleri Çiz
+            renderProducts(products);
+        }
+
+        // --- LİSTELEME İŞLEMLERİ ---
+        function renderProducts(list) {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = "";
+
+            if (list.length === 0) {
+                grid.innerHTML = "<p style='text-align:center; width:100%; color:#666;'>Ürün bulunamadı.</p>";
+                return;
+            }
+
+            list.forEach(product => {
+                // Resim kontrolü (Excel'de resim yoksa varsayılan resim)
+                const imgUrl = product.image ? product.image : `https://via.placeholder.com/300x200?text=${encodeURIComponent(product.name)}`;
                 
-                // Gelen cevabı metne çevir
-                const data = await response.text();
-                
-                // Satırlara böl (Yeni satır karakterine göre)
-                // slice(1) diyerek en üstteki başlık satırını (UrunAdi, Fiyat vb.) atlıyoruz
-                const rows = data.split('\n').slice(1); 
-                
-                // Önce vitrini temizle
-                vitrin.innerHTML = ''; 
+                // Mevcut sepet miktarını bul
+                const currentQty = cart[product.id] || 0;
 
-                // Her bir satırı döngüye al
-                rows.forEach(row => {
-                    // CSV satırını virgüllerden parçala
-                    // (Basit parçalama bazen tırnak içinde virgül varsa hata verebilir, 
-                    // bu regex daha güvenli bir ayırma yapar)
-                    const columns = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    
-                    // Eğer satır boşsa veya eksikse atla
-                    if (columns.length < 2) return;
-
-                    // Gelen verideki tırnak işaretlerini temizleyen yardımcı fonksiyon
-                    const clean = (text) => text ? text.replace(/^"|"$/g, '').trim() : '';
-
-                    // Sütunları değişkenlere ata (Senin tablodaki sıraya göre)
-                    const urunAdi = clean(columns[0]);   // A Sütunu
-                    const fiyat = clean(columns[1]);     // B Sütunu
-                    const stok = clean(columns[2]);      // C Sütunu
-                    // D Sütunu (Resim yoksa varsayılan gri resim kullan)
-                    const resim = clean(columns[3]) || 'https://via.placeholder.com/150/555555/ffffff?text=Resim+Yok';
-
-                    // HTML Kartını oluştur ve sayfaya ekle
-                    vitrin.innerHTML += `
-                        <div class="card">
-                            <img src="${resim}" alt="${urunAdi}" onerror="this.src='https://via.placeholder.com/150/555555/ffffff?text=Hata'">
-                            <div class="card-body">
-                                <div class="card-title">${urunAdi}</div>
-                                <div class="card-stock">📦 Stok: ${stok} Adet</div>
-                                <div class="card-price">${fiyat} TL</div>
+                const cardHTML = `
+                    <div class="card">
+                        <img src="${imgUrl}" class="card-img" alt="${product.name}">
+                        <div class="card-body">
+                            <div>
+                                <div class="card-title">${product.name}</div>
+                                <div class="card-price">${product.price.toLocaleString('tr-TR')} TL</div>
+                            </div>
+                            
+                            <div class="qty-control">
+                                <button class="btn-qty" onclick="updateQty(${product.id}, -1)">-</button>
+                                <input type="number" class="input-qty" id="qty-${product.id}" value="${currentQty}" 
+                                       onchange="manualQty(${product.id}, this.value)" min="0">
+                                <button class="btn-qty" onclick="updateQty(${product.id}, 1)">+</button>
                             </div>
                         </div>
-                    `;
-                });
-
-                // Eğer hiç ürün yoksa mesaj ver
-                if(rows.length === 0) {
-                    vitrin.innerHTML = '<div class="msg-box">Listede henüz ürün yok.</div>';
-                }
-
-            } catch (error) {
-                // Bir hata olursa (Link bozuksa veya internet yoksa)
-                console.error(error);
-                vitrin.innerHTML = '<div class="msg-box" style="color:#e74c3c;">Hata: Veriler alınamadı.<br>Lütfen linki kontrol edin veya internet bağlantınıza bakın.</div>';
-            }
+                    </div>
+                `;
+                grid.innerHTML += cardHTML;
+            });
         }
+
+        // --- ADET GÜNCELLEME VE HESAPLAMA ---
+        
+        // Butonla (+ / -) güncelleme
+        function updateQty(id, change) {
+            const input = document.getElementById(`qty-${id}`);
+            let newVal = parseInt(input.value) + change;
+            
+            if (newVal < 0) newVal = 0; // Eksiye düşmesin
+            
+            input.value = newVal;
+            manualQty(id, newVal); // Hesaplamayı tetikle
+        }
+
+        // Klavye ile manuel giriş
+        function manualQty(id, value) {
+            let qty = parseInt(value);
+            if (isNaN(qty) || qty < 0) qty = 0;
+            
+            cart[id] = qty; // Sepeti güncelle
+            calculateTotal();
+        }
+
+        // Toplam Tutarı Hesapla
+        function calculateTotal() {
+            let total = 0;
+            
+            products.forEach(p => {
+                const qty = cart[p.id] || 0;
+                total += p.price * qty;
+            });
+
+            document.getElementById('grandTotal').innerText = total.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + " TL";
+        }
+
+        // --- ARAMA FONKSİYONU ---
+        function filterProducts() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            
+            const filtered = products.filter(p => 
+                p.name.toLowerCase().includes(searchText)
+            );
+            
+            renderProducts(filtered);
+        }
+
     </script>
 </body>
 </html>

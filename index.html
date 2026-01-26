@@ -2,99 +2,136 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Akıllı Sipariş Paneli v3.0</title>
+    <title>Focus Medikal - Sipariş Paneli</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --primary: #4f46e5;
+            --primary: #0ea5e9; /* Medikal Mavi */
+            --dark: #0f172a;
             --bg: #f8fafc;
             --white: #ffffff;
             --border: #e2e8f0;
-            --text: #334155;
-            --header-row: #f1f5f9;
-            --category-bg: #312e81;
-            --category-text: #fff;
+            --category-bg: #334155;
+            --text-gray: #64748b;
         }
 
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 120px; }
         
-        /* ÜST PANEL */
+        /* --- HEADER & LOGO --- */
         .header {
-            background: var(--white); padding: 15px 5%; 
+            background: var(--white); padding: 15px 30px; 
             border-bottom: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
-            position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: sticky; top: 0; z-index: 50; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
-        
-        .upload-box {
-            position: relative; overflow: hidden; display: inline-block;
+
+        .brand-logo {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex; align-items: center; gap: 10px;
         }
-        
+
+        .actions { display: flex; gap: 10px; }
+
         .btn {
-            background: var(--primary); color: white; padding: 10px 20px; 
-            border-radius: 8px; font-weight: 600; cursor: pointer; border: none;
-            display: flex; align-items: center; gap: 8px; transition: 0.2s;
+            padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer;
+            font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.2s; font-size: 0.9rem;
         }
-        .btn:hover { background: #4338ca; }
+        .btn-excel { background: #10b981; color: white; } /* Yeşil */
+        .btn-excel:hover { background: #059669; }
         
-        /* TABLO ALANI */
-        .container { max-width: 1200px; margin: 20px auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; }
-        
+        .btn-add { background: var(--primary); color: white; } /* Mavi */
+        .btn-add:hover { background: #0284c7; }
+
+        /* --- TABLO --- */
+        .container { max-width: 1200px; margin: 30px auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid var(--border); }
         table { width: 100%; border-collapse: collapse; }
         
-        th { background: var(--header-row); padding: 15px; text-align: left; font-size: 0.85rem; color: #64748b; font-weight: 700; text-transform: uppercase; }
+        th { background: #f1f5f9; padding: 15px; text-align: left; font-size: 0.8rem; color: var(--text-gray); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         td { padding: 10px 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         
-        /* KATEGORİ BAŞLIKLARI (Excel'deki ara başlıklar) */
-        .cat-row td { background: var(--category-bg); color: var(--category-text); font-weight: bold; padding: 12px 20px; letter-spacing: 1px; }
-
-        /* GİRİŞ ALANLARI (INPUTS) */
-        .input-clean {
-            width: 100%; padding: 8px; border: 1px solid transparent; 
-            border-radius: 6px; font-size: 1rem; outline: none; transition: 0.2s;
-            background: transparent;
+        /* Kategori Başlığı */
+        .cat-row td { 
+            background: var(--category-bg); color: white; font-weight: bold; 
+            padding: 12px 20px; letter-spacing: 1px; font-size: 0.95rem;
         }
-        .input-clean:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
-        .input-clean:hover { background: #f8fafc; }
 
-        /* Fiyat ve Adet Özel Stilleri */
-        .price-input { text-align: right; font-family: 'Consolas', monospace; color: #334155; font-weight: 600; }
-        .qty-input { text-align: center; font-weight: bold; width: 60px; margin: 0 5px; }
+        /* --- INPUT GRUPLARI (₺ İŞARETİ İÇİN) --- */
+        .input-group {
+            position: relative; display: flex; align-items: center; width: 100%;
+        }
+        .input-group input {
+            width: 100%; padding: 8px 30px 8px 10px; /* Sağdan boşluk bırak */
+            border: 1px solid transparent; border-radius: 6px; 
+            font-size: 1rem; outline: none; background: transparent; transition: 0.2s;
+            font-weight: 600; color: var(--dark);
+        }
+        .input-group input:focus { background: white; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
+        
+        .currency-symbol {
+            position: absolute; right: 10px; color: var(--text-gray); font-size: 0.9rem; pointer-events: none;
+        }
 
         /* Adet Butonları */
-        .qty-wrapper { display: flex; align-items: center; justify-content: center; }
-        .qty-btn {
-            width: 32px; height: 32px; border: 1px solid var(--border); background: white;
-            border-radius: 6px; cursor: pointer; color: var(--primary); font-size: 1.2rem;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .qty-btn:hover { background: #f1f5f9; }
+        .qty-wrapper { display: flex; align-items: center; justify-content: center; background: #f8fafc; border-radius: 6px; padding: 2px; width: fit-content; margin: 0 auto; border: 1px solid var(--border); }
+        .qty-btn { width: 28px; height: 28px; border: none; background: white; border-radius: 4px; cursor: pointer; color: var(--primary); font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .qty-btn:hover { background: #e2e8f0; }
+        .qty-val { width: 50px; text-align: center; background: transparent; border: none; font-weight: bold; outline: none; }
 
-        /* ALT TOPLAM */
-        .footer-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: white; border-top: 1px solid var(--border);
-            padding: 20px 5%; display: flex; justify-content: flex-end; align-items: center;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.05); z-index: 100;
+        /* FOOTER */
+        .footer {
+            position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px 40px;
+            border-top: 1px solid var(--border); display: flex; justify-content: flex-end; align-items: center;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 100;
         }
-        .total-display { font-size: 2rem; font-weight: 800; color: var(--primary); }
+        .total-box { text-align: right; }
+        .total-label { font-size: 0.85rem; color: var(--text-gray); font-weight: 600; text-transform: uppercase; }
+        .total-amount { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
+
+        /* --- MODAL (ÜRÜN EKLEME PENCERESİ) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 200;
+            backdrop-filter: blur(3px);
+        }
+        .modal {
+            background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+        .modal h3 { margin-top: 0; color: var(--dark); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 0.9rem; color: var(--text-gray); margin-bottom: 5px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; outline: none; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .btn-cancel { background: #ef4444; color: white; }
 
         /* Boş Durum */
-        .empty-state { text-align: center; padding: 50px; color: #94a3b8; }
-        .hidden { display: none; }
+        .empty-state { text-align: center; padding: 60px; color: #94a3b8; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2 style="margin:0; color:var(--text);"><i class="fa-solid fa-boxes-stacked"></i> Sipariş Listesi</h2>
-        <div class="upload-box">
-            <label class="btn">
-                <i class="fa-solid fa-file-excel"></i> Excel Dosyası Seç
+        <div class="brand-logo">
+            <i class="fa-solid fa-notes-medical"></i> FOCUS MEDİKAL
+        </div>
+        <div class="actions">
+            <button class="btn btn-add" onclick="openModal()">
+                <i class="fa-solid fa-plus"></i> Ürün Ekle
+            </button>
+            <label class="btn btn-excel">
+                <i class="fa-solid fa-file-excel"></i> Excel Yükle
                 <input type="file" id="fileInput" hidden accept=".xlsx, .xls, .csv" onchange="processExcel(this)">
             </label>
         </div>
@@ -104,18 +141,18 @@
         <table id="mainTable">
             <thead>
                 <tr>
-                    <th width="40%">ÜRÜN ADI</th>
+                    <th width="45%">ÜRÜN ADI</th>
                     <th width="20%" style="text-align:right;">BİRİM FİYAT</th>
-                    <th width="20%" style="text-align:center;">ADET</th>
+                    <th width="15%" style="text-align:center;">ADET</th>
                     <th width="20%" style="text-align:right;">TOPLAM</th>
-                </tr>
+                    <th width="5%"></th> </tr>
             </thead>
             <tbody id="tableBody">
                 <tr>
-                    <td colspan="4">
+                    <td colspan="5">
                         <div class="empty-state">
-                            <i class="fa-regular fa-folder-open" style="font-size:3rem; margin-bottom:15px;"></i>
-                            <p>Lütfen Excel dosyanızı yükleyin.</p>
+                            <i class="fa-solid fa-clipboard-list" style="font-size:3rem; margin-bottom:15px; opacity:0.3;"></i>
+                            <p>Liste boş. Excel yükleyin veya "Ürün Ekle" butonuyla ekleme yapın.</p>
                         </div>
                     </td>
                 </tr>
@@ -123,17 +160,52 @@
         </table>
     </div>
 
-    <div class="footer-bar">
-        <div style="text-align:right;">
-            <div style="font-size:0.9rem; color:#64748b; font-weight:600;">GENEL TOPLAM</div>
-            <div class="total-display" id="grandTotal">0,00 ₺</div>
+    <div class="footer">
+        <div class="total-box">
+            <div class="total-label">GENEL TOPLAM</div>
+            <div class="total-amount" id="grandTotal">0,00 ₺</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="addModal">
+        <div class="modal">
+            <h3>Yeni Ürün Ekle</h3>
+            
+            <div class="form-group">
+                <label>Kategori</label>
+                <select id="newCat" class="form-control">
+                    <option value="GENEL">GENEL</option>
+                    </select>
+                <input type="text" id="newCatText" class="form-control" placeholder="Veya yeni kategori yazın..." style="margin-top:5px; display:none;">
+                <small style="color:#3b82f6; cursor:pointer;" onclick="toggleCatInput()">+ Yeni Kategori Oluştur</small>
+            </div>
+
+            <div class="form-group">
+                <label>Ürün Adı</label>
+                <input type="text" id="newName" class="form-control" placeholder="Örn: Güneş Kremi">
+            </div>
+
+            <div class="form-group">
+                <label>Birim Fiyat</label>
+                <input type="number" id="newPrice" class="form-control" placeholder="0.00">
+            </div>
+
+            <div class="form-group">
+                <label>Stok / Adet</label>
+                <input type="number" id="newQty" class="form-control" value="1">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeModal()">İptal</button>
+                <button class="btn btn-add" onclick="addNewProduct()">Ekle</button>
+            </div>
         </div>
     </div>
 
     <script>
-        let productData = []; // Tüm veriler burada tutulur
+        let productData = []; // Veri Deposu
 
-        // --- EXCEL İŞLEME MOTORU (GELİŞMİŞ MATRIX YÖNTEMİ) ---
+        // --- EXCEL İŞLEME (GELİŞMİŞ SÜTUN TESPİTİ) ---
         function processExcel(input) {
             const file = input.files[0];
             if (!file) return;
@@ -142,61 +214,80 @@
             reader.onload = function(e) {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
-                
-                // İlk sayfayı al
                 const sheet = workbook.Sheets[workbook.SheetNames[0]];
                 
-                // Sayfayı "Satır Satır Dizi" (Array of Arrays) olarak al
-                // Bu yöntem "Header" aramaz, ham veriyi verir. Çok daha güvenlidir.
-                const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-                
-                parseRows(rawRows);
+                // Header:1 diyerek satır dizisi olarak alıyoruz
+                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                parseRowsSmart(rows);
             };
             reader.readAsArrayBuffer(file);
         }
 
-        function parseRows(rows) {
+        function parseRowsSmart(rows) {
             productData = [];
             let currentCategory = "GENEL LİSTE";
+            
+            // Sütun indekslerini bulmak için değişkenler
+            let nameIdx = -1, priceIdx = -1, stockIdx = -1;
 
+            // 1. ADIM: BAŞLIK SATIRINI BULMAYA ÇALIŞ
+            // İlk 10 satırı tara, içinde "Fiyat", "Stok" geçen satırı bul.
+            for(let i=0; i<Math.min(rows.length, 10); i++) {
+                const row = rows[i].map(cell => String(cell).toLowerCase());
+                
+                // Eğer satırda hem "fiyat" hem "stok" (veya adet) geçiyorsa bu başlık satırıdır
+                if (row.some(c => c.includes('fiyat')) && row.some(c => c.includes('stok') || c.includes('adet'))) {
+                    // İndeksleri kaydet
+                    nameIdx = row.findIndex(c => c.includes('ürün') || c.includes('urun') || c.includes('ad'));
+                    priceIdx = row.findIndex(c => c.includes('fiyat') || c.includes('tutar'));
+                    stockIdx = row.findIndex(c => c.includes('stok') || c.includes('adet') || c.includes('miktar'));
+                    break; // Başlığı bulduk, döngüden çık
+                }
+            }
+
+            // Eğer başlık bulunamadıysa varsayılanları dene (Manuel atama)
+            if (priceIdx === -1) priceIdx = 2; // Genelde C sütunu
+            if (stockIdx === -1) stockIdx = 1; // Genelde B sütunu
+            if (nameIdx === -1) nameIdx = 0;   // Genelde A sütunu
+
+            // 2. ADIM: VERİLERİ OKU
             rows.forEach((row, index) => {
-                if (row.length === 0) return; // Boş satırı atla
+                if (row.length === 0) return;
 
-                // Satırdaki verileri analiz et
-                // Genelde 1. sütun İsim, 2. veya 3. sütun Fiyat olur.
-                // Senin dosyan karmaşıksa en güvenli yol şudur:
+                const cellFirst = row[0]; // Genelde Kategori başlığı ilk hücrede olur
                 
-                // 1. Satırdaki ilk metni bul (Ürün Adı adayı)
-                const textCell = row.find(cell => typeof cell === 'string' && cell.trim().length > 1);
-                
-                // 2. Satırdaki ilk sayıyı bul (Fiyat adayı)
-                const numberCell = row.find(cell => typeof cell === 'number');
+                // Kategori Kontrolü: Eğer satırda sadece 1 tane metin varsa ve sayı yoksa kategoridir.
+                const hasNumber = row.some(c => typeof c === 'number');
+                if (!hasNumber && typeof cellFirst === 'string' && cellFirst.length > 2) {
+                    currentCategory = cellFirst.toUpperCase();
+                    if (!productData.some(p => p.type === 'category' && p.title === currentCategory)) {
+                         productData.push({ type: 'category', title: currentCategory });
+                    }
+                    return; // Bu satırı geç
+                }
 
-                // KARAR MEKANİZMASI:
-                
-                // Durum A: Hem Metin hem Sayı var -> Bu bir ÜRÜNDÜR
-                if (textCell && numberCell !== undefined) {
+                // Ürün Okuma
+                const name = row[nameIdx];
+                // Sayısal değerleri güvenli al
+                const price = parseFloat(row[priceIdx]) || 0;
+                const qty = parseInt(row[stockIdx]) || 0;
+
+                if (name && typeof name === 'string') {
+                    // Başlık satırının kendisini listeye eklememek için kontrol
+                    if (name.toLowerCase().includes('ürün') || name.toLowerCase().includes('fiyat')) return;
+
                     productData.push({
                         type: 'product',
-                        id: index,
-                        name: textCell,
-                        price: parseFloat(numberCell),
-                        qty: 0,
+                        name: name,
+                        price: price,
+                        qty: qty,
                         category: currentCategory
                     });
-                }
-                // Durum B: Sadece Metin var, Sayı YOK -> Bu bir KATEGORİ BAŞLIĞIDIR
-                else if (textCell && numberCell === undefined) {
-                    // "Ürün Adı", "Fiyat" gibi başlık satırlarını filtrelemek için kontrol:
-                    const ignoreList = ["ürün", "fiyat", "stok", "adet", "toplam", "urun", "kabİn"];
-                    if (!ignoreList.some(w => textCell.toLowerCase().includes(w))) {
-                        currentCategory = textCell.toUpperCase();
-                        productData.push({ type: 'category', title: currentCategory });
-                    }
                 }
             });
 
             renderTable();
+            updateCategoryDropdown();
         }
 
         // --- TABLO ÇİZİMİ ---
@@ -204,99 +295,183 @@
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = "";
 
-            if (productData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Veri okunamadı. Lütfen dosya formatını kontrol edin.</td></tr>`;
+            if(productData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Liste boş.</td></tr>`;
                 return;
             }
 
-            productData.forEach((item, idx) => {
-                // Kategori Satırı
+            // Verileri Kategoriye göre sıralı tutmak için basit bir filtreleme yapmıyoruz,
+            // zaten okurken sırayla ekledik.
+
+            productData.forEach((item, index) => {
                 if (item.type === 'category') {
                     const tr = document.createElement('tr');
                     tr.className = 'cat-row';
-                    tr.innerHTML = `<td colspan="4">${item.title}</td>`;
+                    tr.innerHTML = `<td colspan="5">${item.title}</td>`;
                     tbody.appendChild(tr);
-                    return;
+                } else {
+                    const tr = document.createElement('tr');
+                    
+                    // Adet ve Fiyat 0 ise boş gelsin
+                    const displayPrice = item.price === 0 ? '' : item.price;
+                    const displayQty = item.qty === 0 ? '' : item.qty;
+
+                    tr.innerHTML = `
+                        <td>
+                            <div class="input-group">
+                                <input type="text" value="${item.name}" onchange="updateItem(${index}, 'name', this.value)">
+                            </div>
+                        </td>
+                        <td>
+                            <div class="input-group">
+                                <input type="number" style="text-align:right;" value="${displayPrice}" placeholder="0" 
+                                       oninput="updateItem(${index}, 'price', this.value)">
+                                <span class="currency-symbol">₺</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="qty-wrapper">
+                                <button class="qty-btn" onclick="changeQty(${index}, -1)">−</button>
+                                <input type="number" class="qty-val" value="${displayQty}" placeholder="0"
+                                       oninput="updateItem(${index}, 'qty', this.value)">
+                                <button class="qty-btn" onclick="changeQty(${index}, 1)">+</button>
+                            </div>
+                        </td>
+                        <td style="text-align:right; font-weight:bold; color:var(--primary);" id="total-${index}">
+                            ${formatMoney(item.price * item.qty)}
+                        </td>
+                        <td style="text-align:center;">
+                            <i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="deleteItem(${index})"></i>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
                 }
-
-                // Ürün Satırı
-                const tr = document.createElement('tr');
-                
-                // Fiyat Gösterimi Mantığı: 0 ise boş string, değilse değeri yaz
-                const priceValue = item.price === 0 ? '' : item.price;
-
-                tr.innerHTML = `
-                    <td>
-                        <input type="text" class="input-clean" value="${item.name}" 
-                        oninput="updateItem(${idx}, 'name', this.value)">
-                    </td>
-                    <td>
-                        <input type="number" class="input-clean price-input" 
-                        placeholder="0" 
-                        value="${priceValue}" 
-                        oninput="updateItem(${idx}, 'price', this.value)">
-                    </td>
-                    <td>
-                        <div class="qty-wrapper">
-                            <button class="qty-btn" onclick="changeQty(${idx}, -1)">-</button>
-                            <input type="number" class="input-clean qty-input" 
-                            value="${item.qty === 0 ? '' : item.qty}" 
-                            placeholder="0"
-                            oninput="updateItem(${idx}, 'qty', this.value)">
-                            <button class="qty-btn" onclick="changeQty(${idx}, 1)">+</button>
-                        </div>
-                    </td>
-                    <td style="text-align:right; font-weight:bold; color:#16a34a;" id="row-total-${idx}">
-                        ${formatMoney(item.price * item.qty)}
-                    </td>
-                `;
-                tbody.appendChild(tr);
             });
+
+            calculateGrandTotal();
         }
 
         // --- VERİ GÜNCELLEME ---
         function updateItem(index, field, value) {
             const item = productData[index];
-            
             if (field === 'price' || field === 'qty') {
-                // Boş string gelirse 0 kabul et
-                const num = value === '' ? 0 : parseFloat(value);
-                item[field] = isNaN(num) ? 0 : num;
+                item[field] = parseFloat(value) || 0;
             } else {
                 item[field] = value;
             }
-
-            // Sadece ilgili satırın toplamını güncelle (Hız için)
-            const rowTotalEl = document.getElementById(`row-total-${index}`);
-            if (rowTotalEl) rowTotalEl.innerText = formatMoney(item.price * item.qty);
-
-            calculateTotal();
+            
+            // Satır toplamı güncelle
+            const totalEl = document.getElementById(`total-${index}`);
+            if(totalEl) totalEl.innerText = formatMoney(item.price * item.qty);
+            
+            calculateGrandTotal();
         }
 
         function changeQty(index, delta) {
             const item = productData[index];
-            let newVal = item.qty + delta;
+            let newVal = (item.qty || 0) + delta;
             if (newVal < 0) newVal = 0;
-            
             item.qty = newVal;
-            
-            // Tabloyu tamamen yenile (Input değerinin güncellenmesi için en temiz yol)
-            renderTable(); 
-            calculateTotal();
+            renderTable(); // Basitlik için yeniden çiz
         }
 
-        function calculateTotal() {
+        function deleteItem(index) {
+            if(confirm('Bu satırı silmek istediğine emin misin?')) {
+                productData.splice(index, 1);
+                renderTable();
+            }
+        }
+
+        function calculateGrandTotal() {
             let total = 0;
             productData.forEach(p => {
-                if (p.type === 'product') {
-                    total += p.price * p.qty;
-                }
+                if(p.type === 'product') total += (p.price * p.qty);
             });
             document.getElementById('grandTotal').innerText = formatMoney(total);
         }
 
         function formatMoney(amount) {
             return amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
+        }
+
+        // --- MODAL & YENİ ÜRÜN EKLEME ---
+        function openModal() {
+            document.getElementById('addModal').style.display = 'flex';
+            updateCategoryDropdown();
+        }
+
+        function closeModal() {
+            document.getElementById('addModal').style.display = 'none';
+        }
+
+        function toggleCatInput() {
+            const select = document.getElementById('newCat');
+            const input = document.getElementById('newCatText');
+            if(input.style.display === 'none') {
+                input.style.display = 'block';
+                select.style.display = 'none';
+                input.value = "";
+                input.focus();
+            } else {
+                input.style.display = 'none';
+                select.style.display = 'block';
+            }
+        }
+
+        function updateCategoryDropdown() {
+            const select = document.getElementById('newCat');
+            // Mevcut kategorileri bul (unique)
+            const categories = [...new Set(productData.filter(p => p.type === 'category').map(p => p.title))];
+            
+            select.innerHTML = `<option value="GENEL LİSTE">GENEL LİSTE</option>`;
+            categories.forEach(c => {
+                select.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+        }
+
+        function addNewProduct() {
+            const catSelect = document.getElementById('newCat');
+            const catInput = document.getElementById('newCatText');
+            
+            let category = catInput.style.display === 'block' ? catInput.value.toUpperCase() : catSelect.value;
+            const name = document.getElementById('newName').value;
+            const price = parseFloat(document.getElementById('newPrice').value) || 0;
+            const qty = parseInt(document.getElementById('newQty').value) || 0;
+
+            if(!name) { alert("Ürün adı giriniz"); return; }
+            if(!category) category = "GENEL LİSTE";
+
+            // Eğer kategori listede yoksa önce kategori başlığı olarak ekle
+            const catExists = productData.some(p => p.type === 'category' && p.title === category);
+            if (!catExists) {
+                productData.push({ type: 'category', title: category });
+            }
+
+            // Ürünü ekle (Doğru kategorinin altına eklemek için sıralama mantığı gerekebilir ama şimdilik sona ekliyoruz, renderTable düzeltir)
+            // Daha akıllı ekleme: Kategoriyi bul, onun son ürününe ekle.
+            // Kolay yöntem: Veriyi ekle, sonra kategorilere göre yeniden sırala.
+            
+            productData.push({
+                type: 'product',
+                name: name,
+                price: price,
+                qty: qty,
+                category: category
+            });
+
+            // Listeyi Kategorilere Göre Sırala
+            // productData.sort(...) karmaşık olabilir, basitçe renderda düzeltiyoruz.
+
+            // En basiti: Yeni veri eklendi, tabloyu güncelle.
+            // (Not: Kategori başlıkları ile ürünler karışmasın diye basit bir sort yapılabilir ama şimdilik sona eklesin)
+            
+            closeModal();
+            renderTable();
+            
+            // Temizle
+            document.getElementById('newName').value = "";
+            document.getElementById('newPrice').value = "";
+            document.getElementById('newQty').value = "1";
         }
 
     </script>

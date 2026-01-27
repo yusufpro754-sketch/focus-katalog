@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V29 (Direct Fix)</title>
+    <title>Focus Medikal - Panel V30 (Fixed)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -78,6 +78,9 @@
         .badge-info { background: #e0f2fe; color: #0369a1; }
         .badge-inc { background: #dcfce7; color: #166534; }
         .badge-dec { background: #fee2e2; color: #991b1b; }
+        
+        /* Log Notu Stili */
+        .log-note { display: block; margin-top: 4px; font-size: 0.8rem; color: #f59e0b; font-style: italic; font-weight: 600; }
 
         @media (max-width: 768px) {
             .btn span { display: none; }
@@ -316,12 +319,12 @@
             if(logData.length > 5000) logData.pop(); 
         }
 
-        // --- YENİ EKLENEN ÖZELLİK: LOGA NOT EKLEME (APPEND MODE) ---
         function editLogDesc(index) {
             const currentDesc = logData[index].action;
-            const note = prompt("Bu işleme eklemek istediğiniz notu yazın:");
+            const note = prompt("Bu işleme eklenecek notu yazın:");
             if(note && note.trim() !== "") {
                 const timestamp = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+                // Notu özel bir formatta ekliyoruz
                 logData[index].action = currentDesc + ` [Not (${timestamp}): ${note}]`;
                 saveToCloud();
                 openLogModal();
@@ -340,6 +343,14 @@
                     if(log.action.includes("Eklendi") || log.action.includes("girişi")) actionClass = "badge-inc";
                     if(log.action.includes("Silindi")) actionClass = "badge-dec";
                     
+                    // Notu renkli göstermek için HTML düzenleme
+                    let displayText = log.action;
+                    if(displayText.includes("[Not")) {
+                        // [Not ... ] kısmını span içine al
+                        displayText = displayText.replace(/\[Not/g, '<span class="log-note">[Not');
+                        displayText = displayText.replace(/\]$/g, ']</span>');
+                    }
+
                     const editBtn = isAdmin ? `<i class="fa-solid fa-pen-to-square" style="cursor:pointer; color:#94a3b8;" onclick="editLogDesc(${index})"></i>` : '';
 
                     const row = `
@@ -347,7 +358,7 @@
                             <td style="padding:10px;">${log.date}</td>
                             <td style="padding:10px;"><span class="badge badge-admin">${log.user}</span></td>
                             <td style="padding:10px;">
-                                <span class="${actionClass}" style="padding:2px 5px; border-radius:3px;">${log.action}</span>
+                                <span class="${actionClass}" style="padding:2px 5px; border-radius:3px;">${displayText}</span>
                             </td>
                             <td style="text-align:center;">${editBtn}</td>
                         </tr>
@@ -583,29 +594,25 @@
             return parseFloat(clean) || 0;
         }
 
-        // --- EXCEL PARSER: Sütun Bazlı Kesin Okuma ---
+        // --- V30: KESİN SÜTUN PARSER ---
         function parseRowsMerge(rows) {
             let added = 0; let updated = 0;
             let currentCat = "GENEL LİSTE";
-            
-            // Başlık satırlarını temizle
             const blacklist = ["ÜRÜN", "STOK", "FİYAT", "TOPLAM", "ADET", "TUTAR", "HUMAY", "TABLOSU"];
 
             rows.forEach(row => {
                 if(!row || row.length === 0) return;
 
-                // Senin dosyanın yapısına göre kesin adresler:
-                // A Sütunu (Index 0): Ürün Adı
-                // B Sütunu (Index 1): Stok Adedi
-                // C Sütunu (Index 2): Fiyat
-                
-                // Verileri güvenli çek ve temizle
-                let colA = (row[0] || "").toString().trim(); 
-                let colB = (row[1] || "").toString().trim(); 
-                let colC = (row[2] || "").toString().trim(); 
+                // Senin Dosya Formatın:
+                // Col 0 -> A Sütunu -> Ürün Adı
+                // Col 1 -> B Sütunu -> Stok Adedi
+                // Col 2 -> C Sütunu -> Fiyat
 
-                // 1. KATEGORİ Mİ? (A boş, C dolu ve yazıysa)
-                // C sütununda "KABİN ÜRÜNLERİ" yazıyor ama sayı değil
+                let colA = (row[0] || "").toString().trim();
+                let colB = (row[1] || "").toString().trim();
+                let colC = (row[2] || "").toString().trim();
+
+                // 1. KATEGORİ Mİ? (A boş, C dolu ve yazı)
                 if (colA === "" && colC !== "") {
                     // C sütunu sayı değilse kategoridir
                     if (isNaN(cleanPrice(colC))) {
@@ -616,12 +623,14 @@
 
                 // 2. ÜRÜN MÜ? (A dolu)
                 if (colA !== "") {
-                    // Başlık satırı kontrolü
+                    // Başlık satırıysa geç
                     if (blacklist.some(w => colA.toUpperCase().includes(w))) return;
 
                     let pName = colA;
-                    let pStock = cleanPrice(colB); // B sütununu sayıya çevir
-                    let pPrice = cleanPrice(colC); // C sütununu sayıya çevir (ÖNEMLİ: Artık sıralama yok, direkt C'yi alıyor)
+                    // BURASI ÇOK ÖNEMLİ: Asla sıralama yok.
+                    // B Sütunu kesin STOK, C Sütunu kesin FİYAT.
+                    let pStock = cleanPrice(colB); 
+                    let pPrice = cleanPrice(colC); 
 
                     const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.toLowerCase());
                     if (existingIndex > -1) {
@@ -635,6 +644,7 @@
                 }
             });
 
+            // Yeni kategorileri aç
             const allCats = [...new Set(productData.map(p => p.category))];
             allCats.forEach(c => openCategories.add(c));
 

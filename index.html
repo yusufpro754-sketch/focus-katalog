@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V28 (Final Fix)</title>
+    <title>Focus Medikal - Panel V29 (Direct Fix)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -316,17 +316,15 @@
             if(logData.length > 5000) logData.pop(); 
         }
 
+        // --- YENİ EKLENEN ÖZELLİK: LOGA NOT EKLEME (APPEND MODE) ---
         function editLogDesc(index) {
-            // Log listesi ters sıralı (unshift ile ekleniyor), ama ekranda 0. eleman en yeni.
-            // Doğru indexi bulmak önemli.
-            // HTML renderlarken data-id verelim daha güvenli olsun.
-            // Ama basitlik için prompt kullanalım:
             const currentDesc = logData[index].action;
-            const newDesc = prompt("Yeni açıklama:", currentDesc);
-            if(newDesc !== null && newDesc !== currentDesc) {
-                logData[index].action = newDesc;
-                saveToCloud(); // Sessizce kaydet
-                openLogModal(); // Tabloyu yenile
+            const note = prompt("Bu işleme eklemek istediğiniz notu yazın:");
+            if(note && note.trim() !== "") {
+                const timestamp = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+                logData[index].action = currentDesc + ` [Not (${timestamp}): ${note}]`;
+                saveToCloud();
+                openLogModal();
             }
         }
 
@@ -342,7 +340,6 @@
                     if(log.action.includes("Eklendi") || log.action.includes("girişi")) actionClass = "badge-inc";
                     if(log.action.includes("Silindi")) actionClass = "badge-dec";
                     
-                    // Düzenleme butonu (Sadece Admin için veya herkes için)
                     const editBtn = isAdmin ? `<i class="fa-solid fa-pen-to-square" style="cursor:pointer; color:#94a3b8;" onclick="editLogDesc(${index})"></i>` : '';
 
                     const row = `
@@ -572,63 +569,72 @@
             input.value = "";
         }
 
-        // --- DÜZELTİLMİŞ EXCEL PARSER (V28) ---
+        function cleanPrice(str) {
+            if(typeof str === 'number') return str;
+            if(!str) return 0;
+            let clean = str.toString().replace(/[^0-9.,]/g, '');
+            if(clean.includes(',') && clean.includes('.')) {
+                clean = clean.replace(/\./g, '').replace(',', '.');
+            } else if(clean.includes(',')) {
+                clean = clean.replace(',', '.');
+            } else if(clean.includes('.') && clean.split('.')[1].length === 3) {
+                 clean = clean.replace(/\./g, '');
+            }
+            return parseFloat(clean) || 0;
+        }
+
+        // --- EXCEL PARSER: Sütun Bazlı Kesin Okuma ---
         function parseRowsMerge(rows) {
             let added = 0; let updated = 0;
             let currentCat = "GENEL LİSTE";
             
+            // Başlık satırlarını temizle
+            const blacklist = ["ÜRÜN", "STOK", "FİYAT", "TOPLAM", "ADET", "TUTAR", "HUMAY", "TABLOSU"];
+
             rows.forEach(row => {
-                if(row.length === 0) return;
-                const str = row.join(" ").toLowerCase();
-                if(str.includes("fiyat") && str.includes("ürün")) return;
-                if(str.includes("toplam") && str.length < 50) return;
+                if(!row || row.length === 0) return;
 
-                const nums = row.filter(c => typeof c === 'number');
-                const texts = row.filter(c => typeof c === 'string' && c.trim().length > 0);
+                // Senin dosyanın yapısına göre kesin adresler:
+                // A Sütunu (Index 0): Ürün Adı
+                // B Sütunu (Index 1): Stok Adedi
+                // C Sütunu (Index 2): Fiyat
                 
-                if (nums.length === 0 && texts.length > 0) {
-                    currentCat = texts[0].toUpperCase().trim();
-                    return;
-                }
+                // Verileri güvenli çek ve temizle
+                let colA = (row[0] || "").toString().trim(); 
+                let colB = (row[1] || "").toString().trim(); 
+                let colC = (row[2] || "").toString().trim(); 
 
-                let pName = row[0];
-                if (!pName || typeof pName !== 'string') return;
-                let pPrice = 0, pQty = 0;
-                
-                if (nums.length > 0) {
-                    nums.sort((a,b) => a-b);
-                    const validNums = nums.filter(n => n < 10000000); 
-                    
-                    if(validNums.length === 1) { 
-                        pPrice = validNums[0]; 
-                    }
-                    // --- KRİTİK HATA DÜZELTMESİ BURADA ---
-                    else if (validNums.length === 2) {
-                        // Eğer sadece 2 sayı varsa (Fiyat ve Stok), büyüğünü SİLME!
-                        // Büyüğü Fiyat, Küçüğü Stoktur.
-                        pPrice = validNums[1]; // Büyük olan (Fiyat)
-                        pQty = validNums[0];   // Küçük olan (Stok)
-                    }
-                    else if (validNums.length >= 3) {
-                        // Eğer 3 sayı varsa (Stok, Fiyat, Toplam), En büyüğünü sil (Toplam)
-                        validNums.pop(); 
-                        pPrice = validNums.pop(); // Kalanların büyüğü Fiyat
-                        if(validNums.length > 0) pQty = validNums[0]; // Kalan Stok
+                // 1. KATEGORİ Mİ? (A boş, C dolu ve yazıysa)
+                // C sütununda "KABİN ÜRÜNLERİ" yazıyor ama sayı değil
+                if (colA === "" && colC !== "") {
+                    // C sütunu sayı değilse kategoridir
+                    if (isNaN(cleanPrice(colC))) {
+                        currentCat = colC.toUpperCase();
+                        return;
                     }
                 }
 
-                const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.trim().toLowerCase());
-                if (existingIndex > -1) {
-                    productData[existingIndex].price = pPrice || productData[existingIndex].price;
-                    productData[existingIndex].qty = pQty > 0 ? pQty : productData[existingIndex].qty;
-                    updated++;
-                } else {
-                    productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pName, price: pPrice || 0, qty: pQty || 0 });
-                    added++;
+                // 2. ÜRÜN MÜ? (A dolu)
+                if (colA !== "") {
+                    // Başlık satırı kontrolü
+                    if (blacklist.some(w => colA.toUpperCase().includes(w))) return;
+
+                    let pName = colA;
+                    let pStock = cleanPrice(colB); // B sütununu sayıya çevir
+                    let pPrice = cleanPrice(colC); // C sütununu sayıya çevir (ÖNEMLİ: Artık sıralama yok, direkt C'yi alıyor)
+
+                    const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.toLowerCase());
+                    if (existingIndex > -1) {
+                        productData[existingIndex].price = pPrice || productData[existingIndex].price;
+                        productData[existingIndex].qty = pStock > 0 ? pStock : productData[existingIndex].qty;
+                        updated++;
+                    } else {
+                        productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pName, price: pPrice || 0, qty: pStock || 0 });
+                        added++;
+                    }
                 }
             });
 
-            // Otomatik olarak yeni kategorileri AÇIK hale getir
             const allCats = [...new Set(productData.map(p => p.category))];
             allCats.forEach(c => openCategories.add(c));
 

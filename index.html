@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V16 (Smart Log)</title>
+    <title>Focus Medikal - Panel V17 (Smart Excel Fix)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -79,7 +79,7 @@
         .log-table td { font-size: 0.85rem; border-bottom: 1px solid #e2e8f0; }
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
         .badge-admin { background: #dbeafe; color: #1e40af; }
-        .badge-info { background: #e0f2fe; color: #0369a1; } /* Genel Bilgi */
+        .badge-info { background: #e0f2fe; color: #0369a1; }
         .badge-inc { background: #dcfce7; color: #166534; }
         .badge-dec { background: #fee2e2; color: #991b1b; }
 
@@ -242,12 +242,11 @@
     </div>
 
     <script>
-        // GÜNCELLENMİŞ API LİNKİ
         const API_URL = 'https://script.google.com/macros/s/AKfycbzVyMRnnAtxPGEzezy2Vjj07UmrHS7M-0id6KNi7QhGLbgxnfycMjBstyYFaPtn8SMr/exec'; 
 
         let productData = [];
         let logData = []; 
-        let originalState = {}; // Değişiklikleri kıyaslamak için başlangıç verisi
+        let originalState = {}; 
         let isAdmin = false;
         let currentUser = "Misafir"; 
         let openCategories = new Set(); 
@@ -291,7 +290,7 @@
                 }
 
                 productData.forEach(p => { if(!p.id) p.id = Date.now() + Math.random(); });
-                storeOriginalState(); // Veriler gelince ilk halini kaydet
+                storeOriginalState();
 
                 const cats = [...new Set(productData.map(p => p.category))];
                 cats.forEach(c => openCategories.add(c));
@@ -304,7 +303,7 @@
         function storeOriginalState() {
             originalState = {};
             productData.forEach(p => {
-                originalState[p.id] = { ...p }; // Derin kopya
+                originalState[p.id] = { ...p }; 
             });
         }
 
@@ -348,7 +347,6 @@
         }
         function closeLogModal() { document.getElementById('logModal').style.display = 'none'; }
 
-        /* SAVE & LOGIC */
         function openSaveModal() {
             document.getElementById('saveNote').value = "";
             document.getElementById('saveModal').style.display = 'flex';
@@ -359,11 +357,10 @@
             const note = document.getElementById('saveNote').value.trim();
             closeSaveModal();
             
-            // DEĞİŞİKLİKLERİ HESAPLA
             let changesCount = 0;
             productData.forEach(p => {
                 const old = originalState[p.id];
-                if (!old) return; // Yeni eklenenler zaten loglandı
+                if (!old) return;
                 if (old.qty !== p.qty || old.price !== p.price || old.name !== p.name) {
                     changesCount++;
                 }
@@ -391,7 +388,6 @@
             }
 
             let displayList = productData;
-            
             const grouped = {};
             productData.forEach(p => {
                 if (p.name.toLowerCase().includes(term)) {
@@ -431,7 +427,6 @@
                     const pVal = item.price === 0 ? '' : item.price;
                     const qVal = item.qty === 0 ? '' : item.qty;
                     const trashHTML = isAdmin ? `<td class="trash-cell" style="text-align:center;"><i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="deleteItem(${item.id}, '${item.name}')"></i></td>` : '<td></td>';
-                    
                     const handleHTML = isAdmin ? `<i class="fa-solid fa-grip-lines drag-handle"></i>` : '';
 
                     tr.innerHTML = `
@@ -461,7 +456,6 @@
             calculateTotal();
         }
 
-        /* DRAG DROP (SESSİZ) */
         function handleDragStart(e) {
             draggedItem = this;
             this.classList.add('dragging');
@@ -479,7 +473,6 @@
                 if(fromIndex > -1 && toIndex > -1) {
                     const item = productData.splice(fromIndex, 1)[0];
                     productData.splice(toIndex, 0, item);
-                    // LOG YOK (Sessiz)
                     document.getElementById('globalSaveBtn').style.display = 'flex';
                 }
             }
@@ -488,7 +481,6 @@
         function handleDragEnd(e) { this.classList.remove('dragging'); renderTable(); }
         function toggleCategory(cat) { if (openCategories.has(cat)) openCategories.delete(cat); else openCategories.add(cat); renderTable(); }
 
-        /* DATA UPDATES (SESSİZ - Sadece Buton Açar) */
         function updateData(id, field, value) {
             if (!isAdmin && (field === 'name' || field === 'price')) return;
             const item = productData.find(p => p.id === id);
@@ -508,7 +500,6 @@
             let newVal = (item.qty || 0) + delta;
             if (newVal < 0) newVal = 0;
             item.qty = newVal;
-            // LOG YOK (Sessiz)
             renderTable(); 
             document.getElementById('globalSaveBtn').style.display = 'flex';
         }
@@ -537,7 +528,7 @@
                 const payload = { products: productData, logs: logData };
                 await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
                 alert("Başarıyla Kaydedildi!");
-                storeOriginalState(); // Kaydedince yeni durumu "orijinal" olarak kabul et
+                storeOriginalState();
                 btn.style.display = 'none';
             } catch(e) { alert("Hata oluştu."); }
             btn.innerHTML = original;
@@ -566,34 +557,87 @@
             input.value = "";
         }
 
+        // --- YENİLENMİŞ EXCEL OKUMA ALGORİTMASI ---
         function parseRowsMerge(rows) {
             let added = 0; let updated = 0;
             let currentCat = "GENEL LİSTE";
+            
             rows.forEach(row => {
-                if(row.length === 0) return;
-                const str = row.join(" ").toLowerCase();
-                if(str.includes("fiyat") && str.includes("ürün")) return;
-                const nums = row.filter(c => typeof c === 'number');
-                const texts = row.filter(c => typeof c === 'string' && c.trim().length > 0);
-                if (nums.length === 0 && texts.length > 0) { currentCat = texts[0].toUpperCase().trim(); return; }
-                let pName = row[0]; if (!pName || typeof pName !== 'string') return;
-                let pPrice = 0, pQty = 0;
-                if (nums.length > 0) {
-                    nums.sort((a,b) => a-b);
-                    const validNums = nums.filter(n => n < 10000000); 
-                    if(validNums.length === 1) { pPrice = validNums[0]; }
-                    else if (validNums.length >= 2) { validNums.pop(); pPrice = validNums.pop(); if(validNums.length > 0) pQty = validNums[0]; }
+                // Boş satırları atla
+                if(!row || row.length === 0) return;
+                
+                // Başlık satırlarını atla (basit kontrol)
+                const rowStr = row.join(" ").toLowerCase();
+                if(rowStr.includes("fiyat") && rowStr.includes("ürün")) return;
+                
+                // Verileri Analiz Et: Hangi sütun sayı, hangisi metin?
+                const nums = [];
+                const texts = [];
+
+                row.forEach(cell => {
+                    if (typeof cell === 'number') {
+                        nums.push(cell);
+                    } else if (typeof cell === 'string') {
+                        const clean = cell.trim();
+                        if (clean.length > 0) {
+                            // "1.250" veya "150,00" gibi metinleri sayıya çevirmeyi dene
+                            // Virgülü noktaya çevir, harfleri temizle
+                            const numStr = clean.replace(/\./g, '').replace(',', '.'); // Binlik ayracı (.) kaldır, ondalık (,) noktaya çevir
+                            const parsed = parseFloat(numStr);
+                            
+                            // Eğer bu bir sayıysa ve içinde harf yoksa (Sadece sayı ve nokta ise)
+                            if (!isNaN(parsed) && /^[0-9.]+$/.test(numStr)) {
+                                nums.push(parsed);
+                            } else {
+                                texts.push(clean);
+                            }
+                        }
+                    }
+                });
+
+                // Karar Mantığı
+                // Eğer hiç sayı yoksa ve metin varsa -> KATEGORİ BAŞLIĞI
+                if (nums.length === 0 && texts.length > 0) {
+                    currentCat = texts[0].toUpperCase().trim();
+                    return;
                 }
-                const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.trim().toLowerCase());
-                if (existingIndex > -1) {
-                    productData[existingIndex].price = pPrice || productData[existingIndex].price;
-                    productData[existingIndex].qty = pQty > 0 ? pQty : productData[existingIndex].qty;
-                    updated++;
-                } else {
-                    productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pName, price: pPrice || 0, qty: pQty || 0 });
-                    added++;
+
+                // Eğer metin varsa ve sayı da varsa -> ÜRÜN
+                if (texts.length > 0) {
+                    let pName = texts[0]; // İlk metni isim kabul et
+                    let pPrice = 0, pQty = 0;
+
+                    // Sayıları sırala: Genelde Fiyat > Adet olur ama garanti değil.
+                    // Mantık: En büyük sayı Fiyat olabilir, küçük olan Adet.
+                    // Veya 1. sayı Fiyat, 2. sayı Adet.
+                    
+                    if (nums.length > 0) {
+                        // Eğer çok büyük bir sayı varsa (barkod gibi), onu atlayalım
+                        const validNums = nums.filter(n => n < 1000000); 
+                        
+                        if (validNums.length === 1) {
+                            pPrice = validNums[0];
+                        } else if (validNums.length >= 2) {
+                            // Genelde tablolarda Fiyat sütunu önce, Adet sonra gelir ya da tam tersi.
+                            // Burada manuel bir mantık kuralım: Büyük olan Fiyat'tır.
+                            validNums.sort((a,b) => a-b); 
+                            pPrice = validNums.pop(); // En büyüğü fiyat al
+                            pQty = validNums[0] || 0; // Kalanı adet al
+                        }
+                    }
+
+                    const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.trim().toLowerCase());
+                    if (existingIndex > -1) {
+                        productData[existingIndex].price = pPrice || productData[existingIndex].price;
+                        productData[existingIndex].qty = pQty > 0 ? pQty : productData[existingIndex].qty;
+                        updated++;
+                    } else {
+                        productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pName, price: pPrice || 0, qty: pQty || 0 });
+                        added++;
+                    }
                 }
             });
+
             addLog(`Excel Yüklendi: ${added} yeni, ${updated} güncelleme.`);
             alert(`${added} yeni, ${updated} güncellendi.`);
             document.getElementById('globalSaveBtn').style.display = 'flex';
@@ -610,7 +654,7 @@
         function deleteItem(id, name) { 
             if(confirm(`${name} silinecek?`)) { 
                 productData = productData.filter(p=>p.id!==id); 
-                addLog(`${name} ürünü silindi.`); // Silme işlemi önemli, tek satır log kalsın
+                addLog(`${name} ürünü silindi.`); 
                 renderTable(); document.getElementById('globalSaveBtn').style.display='flex'; 
             } 
         }
@@ -634,7 +678,6 @@
             const qty = parseInt(document.getElementById('newQty').value) || 1;
             if(name) {
                 productData.push({ id:Date.now(), category: cat, name:name, price:price, qty:qty });
-                // Yeni ürün ekleme de önemli, bu yüzden anında loglansın ama sade olsun
                 addLog(`${name} eklendi.`); 
                 openCategories.add(cat);
                 renderTable(); 

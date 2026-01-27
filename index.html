@@ -330,13 +330,11 @@
             if(logData.length > 5000) logData.pop(); 
         }
 
-        // --- GELİŞMİŞ NOT EKLEME ---
         function editLogDesc(index) {
             const currentDesc = logData[index].action;
             const note = prompt("Bu işleme eklenecek notu yazın:");
             if(note && note.trim() !== "") {
                 const timestamp = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
-                // Notu ayırıcı ile ekle
                 logData[index].action = currentDesc + `|||${note} (${timestamp})`;
                 saveToCloud();
                 openLogModal();
@@ -465,6 +463,7 @@
                     const pVal = item.price === 0 ? '' : item.price;
                     const qVal = item.qty === 0 ? '' : item.qty;
                     const trashHTML = isAdmin ? `<td class="trash-cell" style="text-align:center;"><i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="deleteItem(${item.id}, '${item.name}')"></i></td>` : '<td></td>';
+                    
                     const handleHTML = isAdmin ? `<i class="fa-solid fa-grip-lines drag-handle"></i>` : '';
 
                     tr.innerHTML = `
@@ -610,7 +609,7 @@
             return parseFloat(clean) || 0;
         }
 
-        // --- V35: MATRİS MANTIĞI (Kesin ve Net) ---
+        // --- V35: MATRIX FIX (Dosya Yapısına Birebir Uyumlu) ---
         function parseRowsMerge(rows) {
             let added = 0; let updated = 0;
             let currentCat = "GENEL LİSTE";
@@ -619,40 +618,37 @@
             rows.forEach(row => {
                 if(!row || row.length === 0) return;
 
-                // Dosya Formatı (Kesin): 
-                // Col A (0): Ürün Adı
-                // Col B (1): Stok
-                // Col C (2): Fiyat (Veya Kategori Başlığı)
+                // Dosya Formatı: A=İsim, B=Stok, C=Fiyat/Kategori
+                let colA = row[0]; // İsim
+                let colB = row[1]; // Stok
+                let colC = row[2]; // Fiyat veya Kategori
 
-                // Güvenli veri çekimi
-                let colA = row[0];
-                let colB = row[1];
-                let colC = row[2];
+                // Güvenli String Çevrimi
+                let strA = (colA !== undefined && colA !== null) ? colA.toString().trim() : "";
+                let strC = (colC !== undefined && colC !== null) ? colC.toString().trim() : "";
 
-                // Veri var mı yok mu kontrolü (Sıkı Kontrol)
-                const hasA = (colA !== undefined && colA !== null && colA.toString().trim() !== "");
-                const hasC = (colC !== undefined && colC !== null && colC.toString().trim() !== "");
-
-                // 1. KATEGORİ Mİ? (A boş, C dolu)
-                if (!hasA && hasC) {
-                    let potentialCat = colC.toString().trim();
-                    // Eğer C sütunundaki şey sayı değilse ve yasaklı kelime değilse -> KATEGORİDİR
-                    if (isNaN(cleanPrice(potentialCat)) && !blacklist.some(w => potentialCat.toUpperCase().includes(w))) {
-                        currentCat = potentialCat.toUpperCase();
+                // 1. KATEGORİ Mİ? (A Boş, C Dolu)
+                if (strA === "" && strC !== "") {
+                    // C sütunu sayı değilse kategoridir
+                    if (isNaN(cleanPrice(strC))) {
+                        // Kara liste kontrolü (Başlık satırlarını elemek için)
+                        if(!blacklist.some(w => strC.toUpperCase().includes(w))) {
+                            currentCat = strC.toUpperCase();
+                        }
                     }
                     return; 
                 }
 
-                // 2. ÜRÜN MÜ? (A dolu)
-                if (hasA) {
-                    let pName = colA.toString().trim();
-                    
+                // 2. ÜRÜN MÜ? (A Dolu)
+                if (strA !== "") {
                     // Başlık satırıysa geç
-                    if (blacklist.some(w => pName.toUpperCase().includes(w))) return;
+                    if (blacklist.some(w => strA.toUpperCase().includes(w))) return;
 
+                    // Ürün bilgilerini al
+                    let pName = strA;
                     // Stok ve Fiyatı al (Yoksa 0 yap)
-                    // Yanlış sütuna kaymasını önlemek için kesin indeks kullanıyoruz
                     let pStock = (colB !== undefined && colB !== null) ? cleanPrice(colB) : 0;
+                    // Fiyat Bazen BOŞ geliyor (Dosyadaki "YAĞ DENGELEYİCİ" gibi). Boşsa 0 al.
                     let pPrice = (colC !== undefined && colC !== null) ? cleanPrice(colC) : 0;
 
                     const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.toLowerCase());
@@ -667,6 +663,7 @@
                 }
             });
 
+            // Yeni kategorileri aç
             const allCats = [...new Set(productData.map(p => p.category))];
             allCats.forEach(c => openCategories.add(c));
 

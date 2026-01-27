@@ -1,8 +1,12 @@
+// ============================================================
+// FOCUS MEDİKAL - PANEL V38 (DETAYLI LOG SİSTEMİ)
+// ============================================================
+
 const API_URL = 'https://script.google.com/macros/s/AKfycbzVyMRnnAtxPGEzezy2Vjj07UmrHS7M-0id6KNi7QhGLbgxnfycMjBstyYFaPtn8SMr/exec'; 
 
 let productData = [];
 let logData = []; 
-let originalState = {}; 
+let originalState = {}; // Eski verileri burada tutuyoruz ki kıyaslayabilelim
 let isAdmin = false;
 let currentUser = "Misafir"; 
 let openCategories = new Set(); 
@@ -10,7 +14,7 @@ let draggedItem = null;
 
 window.onload = function() { fetchData(); };
 
-// --- LOGIC ---
+// --- GİRİŞ / ÇIKIŞ ---
 function loginToggle() {
     if (isAdmin) {
         isAdmin = false;
@@ -33,10 +37,12 @@ function loginToggle() {
     }
 }
 
+// --- VERİ ÇEKME ---
 async function fetchData() {
     try {
         const res = await fetch(API_URL);
         const data = await res.json();
+        
         if (data && data.products) {
             productData = data.products;
             logData = data.logs || [];
@@ -44,23 +50,35 @@ async function fetchData() {
             productData = data;
             logData = [];
         }
+
         productData.forEach(p => { if(!p.id) p.id = Date.now() + Math.random(); });
-        storeOriginalState();
+        storeOriginalState(); // İlk durumu hafızaya al
+
         const cats = [...new Set(productData.map(p => p.category))];
         cats.forEach(c => openCategories.add(c));
+        
         renderTable();
     } catch (err) { console.error(err); }
     document.getElementById('loading').style.display = 'none';
 }
 
+// Orijinal durumu kopyalar (Referans kopması için JSON parse/stringify kullanılır)
 function storeOriginalState() {
     originalState = {};
-    productData.forEach(p => { originalState[p.id] = { ...p }; });
+    productData.forEach(p => {
+        originalState[p.id] = { ...p }; 
+    });
 }
 
+// --- LOG SİSTEMİ ---
 function addLog(action) {
     const date = new Date().toLocaleString('tr-TR');
-    const logEntry = { id: Date.now(), date: date, user: currentUser, action: action };
+    const logEntry = {
+        id: Date.now(),
+        date: date,
+        user: currentUser, 
+        action: action
+    };
     logData.unshift(logEntry);
     if(logData.length > 5000) logData.pop(); 
 }
@@ -79,23 +97,40 @@ function editLogDesc(index) {
 function openLogModal() {
     const tbody = document.getElementById('logTableBody');
     tbody.innerHTML = "";
+    
     if(logData.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:#94a3b8;">Henüz kayıt yok.</td></tr>`;
     } else {
         logData.forEach((log, index) => {
             let actionClass = "badge-info";
-            if(log.action.includes("Eklendi") || log.action.includes("girişi")) actionClass = "badge-inc";
-            if(log.action.includes("Silindi")) actionClass = "badge-dec";
+            // Renk kodlaması
+            if(log.action.includes("Eklendi") || log.action.includes("artırıldı")) actionClass = "badge-inc";
+            if(log.action.includes("Silindi") || log.action.includes("azaltıldı") || log.action.includes("eksildi")) actionClass = "badge-dec";
+            
+            // Notları ayır
             let parts = log.action.split('|||');
             let mainText = parts[0];
             let noteText = "";
+            
             if(parts.length > 1) {
                 for(let i=1; i<parts.length; i++) {
                     noteText += `<span class="log-note"><i class="fa-solid fa-comment-dots"></i> ${parts[i]}</span>`;
                 }
             }
+
             const editBtn = isAdmin ? `<i class="fa-solid fa-pen-to-square" style="cursor:pointer; color:#94a3b8;" onclick="editLogDesc(${index})"></i>` : '';
-            const row = `<tr><td style="padding:10px;">${log.date}</td><td style="padding:10px;"><span class="badge badge-admin">${log.user}</span></td><td style="padding:10px;"><span class="${actionClass}" style="padding:2px 5px; border-radius:3px;">${mainText}</span>${noteText}</td><td style="text-align:center;">${editBtn}</td></tr>`;
+
+            const row = `
+                <tr>
+                    <td style="padding:10px;">${log.date}</td>
+                    <td style="padding:10px;"><span class="badge badge-admin">${log.user}</span></td>
+                    <td style="padding:10px;">
+                        <span class="${actionClass}" style="padding:2px 5px; border-radius:3px;">${mainText}</span>
+                        ${noteText}
+                    </td>
+                    <td style="text-align:center;">${editBtn}</td>
+                </tr>
+            `;
             tbody.innerHTML += row;
         });
     }
@@ -103,6 +138,7 @@ function openLogModal() {
 }
 function closeLogModal() { document.getElementById('logModal').style.display = 'none'; }
 
+// --- KAYDETME VE DEĞİŞİKLİK ALGILAMA ---
 function openSaveModal() {
     document.getElementById('saveNote').value = "";
     document.getElementById('saveModal').style.display = 'flex';
@@ -112,17 +148,54 @@ function closeSaveModal() { document.getElementById('saveModal').style.display =
 function confirmSave() {
     const note = document.getElementById('saveNote').value.trim();
     closeSaveModal();
-    let changesCount = 0;
+    
+    // DETAYLI DEĞİŞİKLİK RAPORU OLUŞTURMA
+    let changesLog = [];
+    
     productData.forEach(p => {
         const old = originalState[p.id];
-        if (!old) return;
-        if (old.qty !== p.qty || old.price !== p.price || old.name !== p.name) { changesCount++; }
+        
+        // Eğer ürün yeni eklenmişse ve henüz kaydedilmemişse (manuel ekleme hariç, o anında loglanır)
+        // Ancak burada sadece "Değişiklikleri" buluyoruz.
+        if (!old) return; 
+
+        // 1. Stok Değişimi
+        if (p.qty !== old.qty) {
+            const diff = p.qty - old.qty;
+            const direction = diff > 0 ? "artırıldı" : "azaltıldı";
+            changesLog.push(`${p.name} stoğu ${Math.abs(diff)} adet ${direction} (Yeni: ${p.qty})`);
+        }
+
+        // 2. Fiyat Değişimi
+        if (p.price !== old.price) {
+            changesLog.push(`${p.name} fiyatı ${old.price} -> ${p.price} ₺ olarak güncellendi`);
+        }
+
+        // 3. İsim Değişimi
+        if (p.name !== old.name) {
+            changesLog.push(`${old.name} ismi "${p.name}" olarak değiştirildi`);
+        }
     });
-    if (changesCount > 0) {
-        let logMsg = `${changesCount} Üründe Güncelleme Yapıldı.`;
-        if (note) logMsg += `|||${note}`;
-        addLog(logMsg);
-    } else if (note) { addLog(`Genel Not Eklendi|||${note}`); }
+
+    if (changesLog.length > 0) {
+        // Eğer çok fazla değişiklik varsa (Excel yükleme gibi), özet geçebiliriz ama
+        // kullanıcı detay istediği için hepsini yazıyoruz.
+        // Çok uzun olmaması için ilk 5'i gösterip gerisine "ve X ürün daha" diyebiliriz
+        // ama şimdilik hepsini virgülle ayırarak yazalım.
+        
+        let finalLogStr = "";
+        if (changesLog.length > 10) {
+             finalLogStr = `${changesLog.length} üründe güncelleme yapıldı. (Detaylar için yöneticiye danışın)`;
+        } else {
+             finalLogStr = changesLog.join(', ');
+        }
+
+        if (note) finalLogStr += ` |||${note}`;
+        addLog(finalLogStr);
+    } else if (note) {
+        addLog(`Genel Not Eklendi|||${note}`);
+    }
+
     saveToCloud();
 }
 
@@ -134,20 +207,19 @@ async function saveToCloud() {
         const payload = { products: productData, logs: logData };
         await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
         alert("Başarıyla Kaydedildi!");
-        storeOriginalState();
+        storeOriginalState(); // Yeni hali hafızaya al
         btn.style.display = 'none';
     } catch(e) { alert("Hata oluştu."); }
     btn.innerHTML = original;
 }
 
-// --- EXCEL OKUMA (V38 KESİN ÇÖZÜM) ---
+// --- EXCEL OKUMA (SÜTUNLARA SADIK) ---
 function processExcel(input) {
     const file = input.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(e) {
         const wb = XLSX.read(e.target.result, { type: 'array' });
-        // ÖNEMLİ: defval:"" ile boş hücreleri "" olarak oku, kaydırmayı engelle
         const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" }); 
         parseRowsMerge(rows);
     };
@@ -166,21 +238,19 @@ function cleanPrice(str) {
 }
 
 function parseRowsMerge(rows) {
-    let added = 0; let updated = 0;
+    let addedNames = [];
+    let updatedNames = [];
     let currentCat = "GENEL LİSTE";
     const blacklist = ["ÜRÜN", "STOK", "FİYAT", "TOPLAM", "ADET", "HUMAY", "TABLOSU"];
-    
+
     rows.forEach(row => {
         if(!row || row.length === 0) return;
 
-        // DOSYA FORMATINA SADIK KAL: A=İsim, B=Stok, C=Fiyat
-        // defval: "" sayesinde boşluklar yer tutar, veri kaymaz.
         let colA = (row[0] || "").toString().trim(); // A: İsim
         let colB = (row[1] || "").toString().trim(); // B: Stok
         let colC = (row[2] || "").toString().trim(); // C: Fiyat veya Kategori
 
-        // 1. KATEGORİ Mİ? (A boş, C dolu ve yazı)
-        // Senin dosyanda kategoriler C sütununda (row[2])
+        // Kategori Tespiti
         if (colA === "" && colC !== "" && isNaN(cleanPrice(colC))) {
             if(!blacklist.some(w => colC.toUpperCase().includes(w))) {
                 currentCat = colC.toUpperCase();
@@ -188,24 +258,26 @@ function parseRowsMerge(rows) {
             return; 
         }
 
-        // 2. ÜRÜN MÜ? (A Dolu)
+        // Ürün Tespiti
         if (colA !== "") {
-            // Başlık satırıysa geç
             if (blacklist.some(w => colA.toUpperCase().includes(w))) return;
 
             let pName = colA;
-            // Kesin atama:
-            let pStock = cleanPrice(colB); // B sütunu kesin STOKTUR
-            let pPrice = cleanPrice(colC); // C sütunu kesin FİYATTIR
+            let pStock = cleanPrice(colB); // B = STOK
+            let pPrice = cleanPrice(colC); // C = FİYAT (Boşsa 0)
 
             const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.toLowerCase());
             if (existingIndex > -1) {
-                productData[existingIndex].price = pPrice || productData[existingIndex].price;
-                productData[existingIndex].qty = pStock;
-                updated++;
+                // Güncelleme kontrolü: Değerler değişmiş mi?
+                let oldItem = productData[existingIndex];
+                if (oldItem.price !== pPrice || oldItem.qty !== pStock) {
+                    productData[existingIndex].price = pPrice;
+                    productData[existingIndex].qty = pStock;
+                    updatedNames.push(pName);
+                }
             } else {
                 productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pName, price: pPrice, qty: pStock });
-                added++;
+                addedNames.push(pName);
             }
         }
     });
@@ -213,15 +285,26 @@ function parseRowsMerge(rows) {
     const allCats = [...new Set(productData.map(p => p.category))];
     allCats.forEach(c => openCategories.add(c));
 
-    if(added > 0 || updated > 0) {
-        addLog(`Excel Yüklendi: ${added} yeni, ${updated} güncellendi.`);
-        alert(`${added} yeni, ${updated} güncellendi.`);
+    // --- DETAYLI EXCEL LOGU OLUŞTURMA ---
+    if(addedNames.length > 0 || updatedNames.length > 0) {
+        let logParts = [];
+        if (addedNames.length > 0) {
+            logParts.push(`${addedNames.length} Yeni Ürün Eklendi: (${addedNames.join(', ')})`);
+        }
+        if (updatedNames.length > 0) {
+            logParts.push(`${updatedNames.length} Ürün Güncellendi: (${updatedNames.join(', ')})`);
+        }
+        
+        let finalLog = logParts.join(" | ");
+        addLog(finalLog);
+        
+        alert(`İşlem Tamam!\n${addedNames.length} yeni ürün eklendi.\n${updatedNames.length} ürün güncellendi.`);
         document.getElementById('globalSaveBtn').style.display = 'flex';
         renderTable();
     }
 }
 
-// --- DİĞER FONKSİYONLAR ---
+// --- TABLO RENDER ---
 function renderTable() {
     const tbody = document.getElementById('tableBody');
     tbody.innerHTML = "";
@@ -301,6 +384,7 @@ function renderTable() {
     calculateTotal();
 }
 
+// Diğer yardımcı fonksiyonlar
 function handleDragStart(e) { draggedItem = this; this.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
 function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
 function handleDrop(e) {
@@ -381,7 +465,7 @@ function resetAll() {
 function deleteItem(id, name) { 
     if(confirm(`${name} silinecek?`)) { 
         productData = productData.filter(p=>p.id!==id); 
-        addLog(`${name} ürünü silindi.`); 
+        addLog(`${name} silindi.`); 
         renderTable(); document.getElementById('globalSaveBtn').style.display='flex'; 
     } 
 }
@@ -405,7 +489,7 @@ function addNewProduct() {
     const qty = parseInt(document.getElementById('newQty').value) || 1;
     if(name) {
         productData.push({ id:Date.now(), category: cat, name:name, price:price, qty:qty });
-        addLog(`${name} eklendi.`); 
+        addLog(`${name} manuel olarak eklendi.`); 
         openCategories.add(cat);
         renderTable(); 
         closeModal();

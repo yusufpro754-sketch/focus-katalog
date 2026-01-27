@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V25 (Deep Scan)</title>
+    <title>Focus Medikal - Panel V26 (Compact Scan)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -290,7 +290,6 @@
                 productData.forEach(p => { if(!p.id) p.id = Date.now() + Math.random(); });
                 storeOriginalState();
 
-                // Tüm kategorileri bul ve otomatik AÇ
                 const cats = [...new Set(productData.map(p => p.category))];
                 cats.forEach(c => openCategories.add(c));
                 
@@ -570,84 +569,83 @@
             return parseFloat(clean) || 0;
         }
 
-        // --- V25 DEEP SCAN PARSER (Satır Analizi) ---
+        // --- V26: KOMPAKT TARAMA (Boşluklara ve Sıraya Aldanmaz) ---
         function parseRowsMerge(rows) {
             let added = 0; let updated = 0;
             let currentCat = "GENEL LİSTE";
-            
-            // KARA LİSTE
             const blacklist = ["ÜRÜN", "STOK", "FİYAT", "TOPLAM", "ADET", "TUTAR", "HUMAY", "TABLOSU"];
 
             rows.forEach(row => {
                 if(!row || row.length === 0) return;
 
-                // Satırdaki tüm hücreleri tara
-                let numbers = [];
-                let texts = [];
+                // 1. SATIRI SIKIŞTIR (Boş hücreleri at, sadece dolu verileri al)
+                const compactRow = row.filter(cell => cell !== null && cell !== undefined && cell.toString().trim() !== "");
+                
+                if (compactRow.length === 0) return;
 
-                row.forEach(cell => {
-                    if (cell !== null && cell !== undefined && cell.toString().trim() !== "") {
-                        const valStr = cell.toString().trim();
-                        const cleanVal = cleanPrice(valStr);
-                        
-                        // Sadece rakam veya para birimi içerenler SAYI
-                        if (cleanVal > 0 && /^[0-9.,\sTLtry₺]+$/i.test(valStr)) {
-                            numbers.push(cleanVal);
-                        } else {
-                            // Harf içerenler YAZI (Kara listede değilse)
-                            let isBad = blacklist.some(w => valStr.toUpperCase().includes(w));
-                            if(!isBad) texts.push(valStr);
-                        }
+                // 2. ANALİZ ET: Yazılar ve Sayılar
+                let texts = [];
+                let numbers = [];
+
+                compactRow.forEach(val => {
+                    let sVal = val.toString().trim();
+                    let cleanVal = cleanPrice(sVal);
+                    // Eğer temizlenmiş hali pozitif bir sayıysa ve orijinal metin sayıya benziyorsa
+                    if (cleanVal >= 0 && /^[0-9.,]+$/.test(sVal)) {
+                        numbers.push(cleanVal);
+                    } else {
+                        // Kara liste kontrolü
+                        let isBad = blacklist.some(w => sVal.toUpperCase().includes(w));
+                        if(!isBad) texts.push(sVal);
                     }
                 });
 
                 // --- KARAR ANI ---
 
-                // 1. Sadece YAZI var, HİÇ SAYI YOK -> KATEGORİ
-                if (texts.length > 0 && numbers.length === 0) {
-                    currentCat = texts[0].toUpperCase(); // İlk metni kategori yap
-                    return; 
+                // KATEGORİ: Hiç sayı yok ama yazı var
+                if (numbers.length === 0 && texts.length > 0) {
+                    currentCat = texts.join(" ").toUpperCase();
+                    return;
                 }
 
-                // 2. Hem YAZI hem SAYI var -> ÜRÜN
-                if (texts.length > 0 && numbers.length > 0) {
-                    let pName = texts[0]; // İlk metin Ürün Adı
+                // ÜRÜN: En az 1 yazı var (Sayı olsa da olmasa da, sayı yoksa fiyat/stok 0 olur)
+                // Ama genelde ürün satırında sayı olur. Senin dosyanın yapısında STOK ve FİYAT var.
+                // Eğer "Güneş kremi" gibi tek bir yazı varsa ve sayı yoksa bu KATEGORİ olabilir mi?
+                // Senin dosyanın yapısında KATEGORİLER genelde tek başına duruyor.
+                // ÜRÜNLER ise yanında sayılarla duruyor.
+                // İSTİSNA: Stok 0 ise sayı olmayabilir mi? Hayır "0" yazar.
+                
+                if (texts.length > 0) {
+                    let pName = texts[0]; // İlk metni isim al
+                    
+                    let pStock = 0;
                     let pPrice = 0;
-                    let pQty = 0;
-                    
-                    // Sayıları yorumla: Büyükten küçüğe sırala
-                    numbers.sort((a,b) => b-a); 
-                    
-                    if(numbers.length === 1) {
-                        pPrice = numbers[0]; // Tek sayı varsa fiyattır
-                    } else {
-                        // En büyük sayı fiyat (Barkod değilse), ikinci büyük adet
-                        if(numbers[0] < 1000000) {
-                            pPrice = numbers[0];
-                            pQty = numbers[1];
-                        } else {
-                            pPrice = numbers[1] || 0;
-                            pQty = numbers[2] || 0;
-                        }
+
+                    if (numbers.length > 0) {
+                        pStock = numbers[0]; // İlk sayı stok (Dosya formatına göre)
+                    }
+                    if (numbers.length > 1) {
+                        pPrice = numbers[1]; // İkinci sayı fiyat
                     }
 
+                    // Ekle veya Güncelle
                     const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.toLowerCase());
                     if (existingIndex > -1) {
                         productData[existingIndex].price = pPrice || productData[existingIndex].price;
-                        productData[existingIndex].qty = pQty > 0 ? pQty : productData[existingIndex].qty;
+                        productData[existingIndex].qty = pStock > 0 ? pStock : productData[existingIndex].qty;
                         updated++;
                     } else {
-                        productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pName, price: pPrice || 0, qty: pQty || 0 });
+                        productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pName, price: pPrice || 0, qty: pStock || 0 });
                         added++;
                     }
                 }
             });
 
-            // YENİ EKLENEN KATEGORİLERİ GÖRÜNÜR YAP
+            // YENİ EKLENEN KATEGORİLERİ AÇIK YAP
             const allCats = [...new Set(productData.map(p => p.category))];
             allCats.forEach(c => openCategories.add(c));
 
-            addLog(`Excel Yüklendi (V25): ${added} yeni, ${updated} güncelleme.`);
+            addLog(`Excel Yüklendi (V26): ${added} yeni, ${updated} güncelleme.`);
             alert(`${added} yeni ürün eklendi, ${updated} ürün güncellendi.`);
             document.getElementById('globalSaveBtn').style.display = 'flex';
             renderTable();

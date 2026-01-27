@@ -2,12 +2,11 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V36 (Modüler)</title>
+    <title>Focus Medikal - Panel V38 (Stable)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -38,12 +37,14 @@
             
             <div class="admin-panel" id="adminControls">
                 <button class="btn btn-add" onclick="openModal()">
-                    <i class="fa-solid fa-plus"></i> <span>Ekle</span>
+                    <i class="fa-solid fa-plus"></i> <span>Manuel Ekle</span>
                 </button>
+                
                 <label class="btn btn-excel">
                     <i class="fa-solid fa-file-excel"></i> <span>Excel Yükle</span>
-                    <input type="file" id="fileInput" hidden accept=".xlsx, .xls" onchange="processExcel(this)">
+                    <input type="file" id="fileInput" hidden accept=".xlsx, .xls, .csv" onchange="processExcel(this)">
                 </label>
+
                 <button class="btn btn-export" onclick="exportToExcel()">
                     <i class="fa-solid fa-file-arrow-down"></i> <span>İndir</span>
                 </button>
@@ -65,7 +66,7 @@
                         <th width="5%"></th>
                         <th width="35%">ÜRÜN ADI</th>
                         <th width="20%" style="text-align:right;">BİRİM FİYAT</th>
-                        <th width="20%" style="text-align:center;">ADET</th>
+                        <th width="20%" style="text-align:center;">ADET (STOK)</th>
                         <th width="15%" style="text-align:right;">TOPLAM</th>
                         <th width="5%"></th>
                     </tr>

@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V32 (Manual Map)</title>
+    <title>Focus Medikal - Panel V33 (No-Shift)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -38,6 +38,8 @@
         .btn-export { background: #6366f1; }
         .btn-reset { background: var(--danger); }
         .btn-log { background: #334155; } 
+        /* YENİ: Sütun Değiştirme Butonu */
+        .btn-swap { background: #8b5cf6; }
 
         .search-box { width: 100%; position: relative; }
         .search-box input { width: 100%; height: 40px; padding-left: 40px; border-radius: 8px; border: 1px solid var(--border); outline: none; background: #f8fafc; font-size: 1rem; }
@@ -82,7 +84,7 @@
 
         @media (max-width: 768px) {
             .btn span { display: none; }
-            .btn-excel span, .btn-add span, #globalSaveBtn span, .btn-log span { display: inline-block; }
+            .btn-excel span, .btn-add span, #globalSaveBtn span, .btn-log span, .btn-swap span { display: inline-block; }
             thead { display: none; } 
             table, tbody { display: block; width: 100%; }
             tr { display: block; width: 100%; margin-bottom: 0; }
@@ -152,6 +154,9 @@
                     <i class="fa-solid fa-file-excel"></i> <span>Excel Yükle</span>
                     <input type="file" id="fileInput" hidden accept=".xlsx, .xls" onchange="processExcel(this)">
                 </label>
+                <button class="btn btn-swap" onclick="swapColumns()">
+                    <i class="fa-solid fa-arrow-right-arrow-left"></i> <span>Adet/Fiyat Değiştir</span>
+                </button>
                 <button class="btn btn-export" onclick="exportToExcel()">
                     <i class="fa-solid fa-file-arrow-down"></i> <span>İndir</span>
                 </button>
@@ -317,13 +322,26 @@
             if(logData.length > 5000) logData.pop(); 
         }
 
-        // --- YENİ EKLENEN ÖZELLİK: LOGA NOT EKLEME (ALT SATIR + TURUNCU) ---
+        // --- YENİ EKLENEN ÖZELLİK: SÜTUN DEĞİŞTİR ---
+        function swapColumns() {
+            if(productData.length === 0) { alert("Liste boş."); return; }
+            if(confirm("Fiyat ve Adet sütunlarının yerini değiştirmek istiyor musunuz?")) {
+                productData.forEach(p => {
+                    let temp = p.price;
+                    p.price = p.qty;
+                    p.qty = temp;
+                });
+                renderTable();
+                document.getElementById('globalSaveBtn').style.display = 'flex';
+                addLog("Yönetici Fiyat/Adet sütunlarını değiştirdi.");
+            }
+        }
+
         function editLogDesc(index) {
             const currentDesc = logData[index].action;
             const note = prompt("Bu işleme eklenecek notu yazın:");
             if(note && note.trim() !== "") {
                 const timestamp = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
-                // Notu özel bir formatta (ayıraç ile) ekliyoruz
                 logData[index].action = currentDesc + `|||${note} (${timestamp})`;
                 saveToCloud();
                 openLogModal();
@@ -342,7 +360,6 @@
                     if(log.action.includes("Eklendi") || log.action.includes("girişi")) actionClass = "badge-inc";
                     if(log.action.includes("Silindi")) actionClass = "badge-dec";
                     
-                    // Notu parçala ve HTML ile renklendir
                     let parts = log.action.split('|||');
                     let mainText = parts[0];
                     let noteText = "";
@@ -575,8 +592,9 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
+                // EXCEL OKURKEN BOŞ HÜCRELERİ DE AL (defval: "") - BU ÇOK ÖNEMLİ
                 const wb = XLSX.read(e.target.result, { type: 'array' });
-                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" }); 
                 parseRowsMerge(rows);
             };
             reader.readAsArrayBuffer(file);
@@ -597,7 +615,7 @@
             return parseFloat(clean) || 0;
         }
 
-        // --- V32: MANUAL MAPPING (Sütunlar Sabit) ---
+        // --- V33: NO-SHIFT PARSER (Kaydırma Önleyici) ---
         function parseRowsMerge(rows) {
             let added = 0; let updated = 0;
             let currentCat = "GENEL LİSTE";
@@ -606,16 +624,12 @@
             rows.forEach(row => {
                 if(!row || row.length === 0) return;
 
-                // Dosya Formatına Göre Kesin Sütunlar:
-                // A [0] = Ürün Adı
-                // B [1] = Stok Adedi
-                // C [2] = Fiyat (veya Kategori)
+                // defval: "" sayesinde artık row[0] boşsa, gerçekten boştur. Kaymaz.
+                let col0 = (row[0] || "").toString().trim(); // A: İsim
+                let col1 = (row[1] || "").toString().trim(); // B: Stok
+                let col2 = (row[2] || "").toString().trim(); // C: Fiyat (veya Kategori)
 
-                let col0 = (row[0] || "").toString().trim(); 
-                let col1 = (row[1] || "").toString().trim(); 
-                let col2 = (row[2] || "").toString().trim(); 
-
-                // 1. Kategori Kontrolü (A boş, C dolu ve yazı)
+                // 1. KATEGORİ Mİ? (A boş, C dolu ve yazı)
                 if (col0 === "" && col2 !== "" && isNaN(cleanPrice(col2))) {
                     if(!blacklist.some(w => col2.toUpperCase().includes(w))) {
                         currentCat = col2.toUpperCase();
@@ -623,23 +637,18 @@
                     return; 
                 }
 
-                // 2. Ürün Kontrolü (A dolu)
+                // 2. ÜRÜN MÜ? (A dolu)
                 if (col0 !== "") {
-                    // Başlık satırlarını atla
                     if (blacklist.some(w => col0.toUpperCase().includes(w))) return;
 
                     let pName = col0;
-                    
-                    // --- BURASI DEĞİŞTİ: ASLA SIRALAMA YOK ---
-                    // B sütunu neyse Stok odur. C sütunu neyse Fiyat odur.
-                    // Boşsa 0 kabul edilir ama yer değiştirilmez.
                     let pStock = cleanPrice(col1); 
                     let pPrice = cleanPrice(col2);
 
                     const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.toLowerCase());
                     if (existingIndex > -1) {
                         productData[existingIndex].price = pPrice || productData[existingIndex].price;
-                        productData[existingIndex].qty = pStock; // Stoğu daima güncelle (0 olsa bile)
+                        productData[existingIndex].qty = pStock;
                         updated++;
                     } else {
                         productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pName, price: pPrice || 0, qty: pStock || 0 });

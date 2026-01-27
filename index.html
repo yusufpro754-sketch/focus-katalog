@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V22 (Humay Special)</title>
+    <title>Focus Medikal - Panel V23 (Format Detector)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -555,11 +555,9 @@
             input.value = "";
         }
 
-        // --- YARDIMCI: Fiyat Temizleyici ---
         function cleanPrice(str) {
             if(typeof str === 'number') return str;
             if(!str) return 0;
-            // Tüm boşlukları ve gereksiz karakterleri temizle
             let clean = str.toString().replace(/[^0-9.,]/g, '');
             if(clean.includes(',') && clean.includes('.')) {
                 clean = clean.replace(/\./g, '').replace(',', '.');
@@ -571,64 +569,44 @@
             return parseFloat(clean) || 0;
         }
 
-        // --- V22 HUMAY ÖZEL PARSER ---
+        // --- V23: FORMAT DEDEKTÖRÜ (GÜÇLENDİRİLMİŞ) ---
         function parseRowsMerge(rows) {
             let added = 0; let updated = 0;
             let currentCat = "GENEL LİSTE";
             
+            // KARA LİSTE (Bu kelimeler varsa ÜRÜN DEĞİLDİR)
+            const blacklist = ["ÜRÜN", "STOK", "FİYAT", "TOPLAM", "ADET", "TUTAR", "HUMAY", "TABLOSU"];
+
             rows.forEach(row => {
-                // Boş satırları atla
+                // Boş veya çok kısa satırları atla
                 if(!row || row.length === 0) return;
-                
-                // Başlık satırını atla
-                // Bu dosyanın yapısında başlık satırı şöyle: "ÜRÜN ,STOK,FİYAT..."
-                // row[0] "ÜRÜN " (boşluklu) olabilir.
-                if (row[0] && row[0].toString().toUpperCase().includes("ÜRÜN")) return;
-                if (row[0] && row[0].toString().toUpperCase().includes("STOK")) return;
 
-                // --- STRATEJİ: A Sütununa Bak ---
-                
-                // 1. KATEGORİ TESPİTİ
-                // Senin dosyanın yapısı: A ve B sütunu BOŞ, C sütununda başlık var.
-                // Yani: row[0] undefined/boş, row[1] undefined/boş, row[2] DOLU
-                
-                let col0 = row[0]; // Ürün Adı
-                let col1 = row[1]; // Stok
-                let col2 = row[2]; // Fiyat (veya kategori ismi)
+                // Verileri güvenle al (undefined hatalarını önle)
+                let a = (row[0] || "").toString().trim(); // A Sütunu (Ürün Adı)
+                let b = (row[1] || "").toString().trim(); // B Sütunu (Stok)
+                let c = (row[2] || "").toString().trim(); // C Sütunu (Fiyat veya Kategori)
 
-                // Boşluk kontrolü için yardımcı
-                const isEmpty = (val) => val === null || val === undefined || val.toString().trim() === "";
-
-                // Eğer A boşsa VE (C doluysa veya B doluysa) -> Bu bir KATEGORİ BAŞLIĞIDIR
-                if (isEmpty(col0) && (!isEmpty(col2) || !isEmpty(col1))) {
-                    // C sütunundaki yazıyı kategori yap
-                    let potentialCat = !isEmpty(col2) ? col2 : col1;
-                    // Eğer bu bir sayı değilse kategoridir
-                    if (isNaN(cleanPrice(potentialCat)) || potentialCat.toString().length > 5) {
-                        currentCat = potentialCat.toString().trim().toUpperCase();
-                        // "KABİN ÜRÜNLERİ" gibi temizle
-                        return; // Satır bitti
-                    }
+                // 1. KATEGORİ Mİ? (A boş, C dolu ve sayı değilse)
+                if (a === "" && c !== "" && isNaN(cleanPrice(c))) {
+                    currentCat = c.toUpperCase();
+                    return; // Satırı geç, işlem tamam
                 }
 
-                // 2. ÜRÜN TESPİTİ
-                // A sütunu doluysa -> Bu kesinlikle bir ÜRÜNDÜR
-                if (!isEmpty(col0)) {
-                    let pName = col0.toString().trim();
-                    
-                    // Gereksiz başlık satırlarını tekrar filtrele (Garanti olsun)
-                    if (pName.includes("STOK TABLOSU") || pName.includes("HUMAY")) return;
+                // 2. ÜRÜN MÜ? (A doluysa ve kara listede değilse)
+                if (a !== "") {
+                    // Kara liste kontrolü
+                    let isBlacklisted = false;
+                    blacklist.forEach(word => {
+                        if(a.toUpperCase().includes(word)) isBlacklisted = true;
+                    });
+                    if(isBlacklisted) return; // Başlık satırıysa geç
 
-                    let pStock = 0;
-                    let pPrice = 0;
+                    // Buraya geldiyse bu bir ÜRÜNDÜR
+                    let pName = a;
+                    let pStock = cleanPrice(b);
+                    let pPrice = cleanPrice(c);
 
-                    // Stok genelde B sütununda (index 1)
-                    if (!isEmpty(col1)) pStock = cleanPrice(col1);
-
-                    // Fiyat genelde C sütununda (index 2)
-                    if (!isEmpty(col2)) pPrice = cleanPrice(col2);
-
-                    // Listeye Ekle
+                    // Listeye Ekle veya Güncelle
                     const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.toLowerCase());
                     if (existingIndex > -1) {
                         productData[existingIndex].price = pPrice || productData[existingIndex].price;
@@ -641,7 +619,7 @@
                 }
             });
 
-            addLog(`Excel Yüklendi (V22 Humay): ${added} yeni, ${updated} güncelleme.`);
+            addLog(`Excel Yüklendi (V23): ${added} yeni, ${updated} güncelleme.`);
             alert(`${added} yeni ürün eklendi, ${updated} ürün güncellendi.`);
             document.getElementById('globalSaveBtn').style.display = 'flex';
             renderTable();

@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V34 (Auto-Detect)</title>
+    <title>Focus Medikal - Panel V35 (Matrix Fix)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -79,7 +79,19 @@
         .badge-inc { background: #dcfce7; color: #166534; }
         .badge-dec { background: #fee2e2; color: #991b1b; }
         
-        .log-note { display: block; margin-top: 5px; font-size: 0.85rem; color: #f97316; font-style: italic; font-weight: 700; border-left: 3px solid #f97316; padding-left: 8px; }
+        /* LOG NOTU STİLİ (Ayrı satırda, farklı renk) */
+        .log-note { 
+            display: block; 
+            margin-top: 6px; 
+            font-size: 0.85rem; 
+            color: #f97316; /* Turuncu */
+            font-style: italic; 
+            font-weight: 600; 
+            background: #fff7ed;
+            padding: 4px 8px;
+            border-left: 3px solid #f97316;
+            border-radius: 0 4px 4px 0;
+        }
 
         @media (max-width: 768px) {
             .btn span { display: none; }
@@ -318,13 +330,13 @@
             if(logData.length > 5000) logData.pop(); 
         }
 
-        // --- GÜVENLİ NOT EKLEME (APPEND MOD) ---
+        // --- GELİŞMİŞ NOT EKLEME ---
         function editLogDesc(index) {
             const currentDesc = logData[index].action;
-            const note = prompt("Bu işleme eklenecek notu yazın (Eski yazı silinmez):");
+            const note = prompt("Bu işleme eklenecek notu yazın:");
             if(note && note.trim() !== "") {
                 const timestamp = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
-                // Eski notun üzerine "|||" ile yeni notu ekle
+                // Notu ayırıcı ile ekle
                 logData[index].action = currentDesc + `|||${note} (${timestamp})`;
                 saveToCloud();
                 openLogModal();
@@ -343,7 +355,6 @@
                     if(log.action.includes("Eklendi") || log.action.includes("girişi")) actionClass = "badge-inc";
                     if(log.action.includes("Silindi")) actionClass = "badge-dec";
                     
-                    // Notu parçala: Ana Metin ||| Ek Açıklama
                     let parts = log.action.split('|||');
                     let mainText = parts[0];
                     let noteText = "";
@@ -454,8 +465,6 @@
                     const pVal = item.price === 0 ? '' : item.price;
                     const qVal = item.qty === 0 ? '' : item.qty;
                     const trashHTML = isAdmin ? `<td class="trash-cell" style="text-align:center;"><i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="deleteItem(${item.id}, '${item.name}')"></i></td>` : '<td></td>';
-                    
-                    // DRAG HANDLE (Masaüstü için)
                     const handleHTML = isAdmin ? `<i class="fa-solid fa-grip-lines drag-handle"></i>` : '';
 
                     tr.innerHTML = `
@@ -578,9 +587,9 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                // BOŞLUKLARI OKU (defval)
                 const wb = XLSX.read(e.target.result, { type: 'array' });
-                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" }); 
+                // header:1 = Ham veri (array of arrays)
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }); 
                 parseRowsMerge(rows);
             };
             reader.readAsArrayBuffer(file);
@@ -601,66 +610,58 @@
             return parseFloat(clean) || 0;
         }
 
-        // --- V34: AKILLI DEDEKTÖR (Smart Detect) ---
+        // --- V35: MATRİS MANTIĞI (Kesin ve Net) ---
         function parseRowsMerge(rows) {
             let added = 0; let updated = 0;
             let currentCat = "GENEL LİSTE";
-            
-            // 1. BAŞLIK SÜTUNLARINI BUL (Otomatik Algılama)
-            let stockIndex = -1;
-            let priceIndex = -1;
-            let nameIndex = 0; // Varsayılan A sütunu
-
-            // İlk 20 satırı tara, başlıkları bul
-            for(let i=0; i<Math.min(rows.length, 20); i++) {
-                const row = rows[i];
-                for(let j=0; j<row.length; j++) {
-                    const cell = (row[j] || "").toString().toUpperCase();
-                    if(cell.includes("STOK")) stockIndex = j;
-                    if(cell.includes("FİYAT")) priceIndex = j;
-                }
-            }
-
-            // Eğer başlıklar bulunamazsa standart (B=1, C=2) kullan
-            if(stockIndex === -1) stockIndex = 1;
-            if(priceIndex === -1) priceIndex = 2;
-
             const blacklist = ["ÜRÜN", "STOK", "FİYAT", "TOPLAM", "ADET", "HUMAY", "TABLOSU"];
 
             rows.forEach(row => {
                 if(!row || row.length === 0) return;
 
-                // Dinamik indekslere göre verileri çek
-                let pNameRaw = (row[nameIndex] || "").toString().trim();
-                let pStockRaw = row[stockIndex];
-                let pPriceRaw = row[priceIndex];
-                
-                // Kategori Bulma (İsim sütunu boş, ama Fiyat sütununda yazı varsa)
-                // Örn: ,,KABİN ÜRÜNLERİ (A boş, C dolu)
-                let potentialCat = (row[priceIndex] || "").toString().trim();
-                
-                if (pNameRaw === "" && potentialCat !== "" && isNaN(cleanPrice(potentialCat))) {
-                    if(!blacklist.some(w => potentialCat.toUpperCase().includes(w))) {
+                // Dosya Formatı (Kesin): 
+                // Col A (0): Ürün Adı
+                // Col B (1): Stok
+                // Col C (2): Fiyat (Veya Kategori Başlığı)
+
+                // Güvenli veri çekimi
+                let colA = row[0];
+                let colB = row[1];
+                let colC = row[2];
+
+                // Veri var mı yok mu kontrolü (Sıkı Kontrol)
+                const hasA = (colA !== undefined && colA !== null && colA.toString().trim() !== "");
+                const hasC = (colC !== undefined && colC !== null && colC.toString().trim() !== "");
+
+                // 1. KATEGORİ Mİ? (A boş, C dolu)
+                if (!hasA && hasC) {
+                    let potentialCat = colC.toString().trim();
+                    // Eğer C sütunundaki şey sayı değilse ve yasaklı kelime değilse -> KATEGORİDİR
+                    if (isNaN(cleanPrice(potentialCat)) && !blacklist.some(w => potentialCat.toUpperCase().includes(w))) {
                         currentCat = potentialCat.toUpperCase();
                     }
                     return; 
                 }
 
-                // Ürün Ekleme (İsim sütunu doluysa)
-                if (pNameRaw !== "") {
-                    // Başlık satırını atla
-                    if (blacklist.some(w => pNameRaw.toUpperCase().includes(w))) return;
+                // 2. ÜRÜN MÜ? (A dolu)
+                if (hasA) {
+                    let pName = colA.toString().trim();
+                    
+                    // Başlık satırıysa geç
+                    if (blacklist.some(w => pName.toUpperCase().includes(w))) return;
 
-                    let pStock = cleanPrice(pStockRaw);
-                    let pPrice = cleanPrice(pPriceRaw);
+                    // Stok ve Fiyatı al (Yoksa 0 yap)
+                    // Yanlış sütuna kaymasını önlemek için kesin indeks kullanıyoruz
+                    let pStock = (colB !== undefined && colB !== null) ? cleanPrice(colB) : 0;
+                    let pPrice = (colC !== undefined && colC !== null) ? cleanPrice(colC) : 0;
 
-                    const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pNameRaw.toLowerCase());
+                    const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.toLowerCase());
                     if (existingIndex > -1) {
                         productData[existingIndex].price = pPrice || productData[existingIndex].price;
                         productData[existingIndex].qty = pStock;
                         updated++;
                     } else {
-                        productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pNameRaw, price: pPrice || 0, qty: pStock || 0 });
+                        productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pName, price: pPrice, qty: pStock });
                         added++;
                     }
                 }

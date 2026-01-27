@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V30 (Fixed)</title>
+    <title>Focus Medikal - Panel V31 (Column Lock)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -79,8 +79,8 @@
         .badge-inc { background: #dcfce7; color: #166534; }
         .badge-dec { background: #fee2e2; color: #991b1b; }
         
-        /* Log Notu Stili */
-        .log-note { display: block; margin-top: 4px; font-size: 0.8rem; color: #f59e0b; font-style: italic; font-weight: 600; }
+        /* ÖZEL LOG NOTU STİLİ */
+        .log-note { display: block; margin-top: 5px; font-size: 0.85rem; color: #f97316; font-style: italic; font-weight: 700; border-left: 3px solid #f97316; padding-left: 8px; }
 
         @media (max-width: 768px) {
             .btn span { display: none; }
@@ -319,13 +319,15 @@
             if(logData.length > 5000) logData.pop(); 
         }
 
+        // --- YENİ EKLENEN ÖZELLİK: LOGA NOT EKLEME (ALT SATIR + TURUNCU) ---
         function editLogDesc(index) {
             const currentDesc = logData[index].action;
-            const note = prompt("Bu işleme eklenecek notu yazın:");
+            // Eski not varsa onu temizleyip ham metni gösterelim mi? Hayır, sadece ekleyelim.
+            const note = prompt("Eklenecek notu yazın:");
             if(note && note.trim() !== "") {
                 const timestamp = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
-                // Notu özel bir formatta ekliyoruz
-                logData[index].action = currentDesc + ` [Not (${timestamp}): ${note}]`;
+                // Notu özel bir formatta (ayıraç ile) ekliyoruz
+                logData[index].action = currentDesc + `|||${note} (${timestamp})`;
                 saveToCloud();
                 openLogModal();
             }
@@ -343,12 +345,16 @@
                     if(log.action.includes("Eklendi") || log.action.includes("girişi")) actionClass = "badge-inc";
                     if(log.action.includes("Silindi")) actionClass = "badge-dec";
                     
-                    // Notu renkli göstermek için HTML düzenleme
-                    let displayText = log.action;
-                    if(displayText.includes("[Not")) {
-                        // [Not ... ] kısmını span içine al
-                        displayText = displayText.replace(/\[Not/g, '<span class="log-note">[Not');
-                        displayText = displayText.replace(/\]$/g, ']</span>');
+                    // Notu parçala ve HTML ile renklendir
+                    let parts = log.action.split('|||');
+                    let mainText = parts[0];
+                    let noteText = "";
+                    
+                    if(parts.length > 1) {
+                        // Eğer birden fazla not varsa hepsini alt alta ekle
+                        for(let i=1; i<parts.length; i++) {
+                            noteText += `<span class="log-note"><i class="fa-solid fa-comment-dots"></i> ${parts[i]}</span>`;
+                        }
                     }
 
                     const editBtn = isAdmin ? `<i class="fa-solid fa-pen-to-square" style="cursor:pointer; color:#94a3b8;" onclick="editLogDesc(${index})"></i>` : '';
@@ -358,7 +364,8 @@
                             <td style="padding:10px;">${log.date}</td>
                             <td style="padding:10px;"><span class="badge badge-admin">${log.user}</span></td>
                             <td style="padding:10px;">
-                                <span class="${actionClass}" style="padding:2px 5px; border-radius:3px;">${displayText}</span>
+                                <span class="${actionClass}" style="padding:2px 5px; border-radius:3px;">${mainText}</span>
+                                ${noteText}
                             </td>
                             <td style="text-align:center;">${editBtn}</td>
                         </tr>
@@ -391,10 +398,10 @@
 
             if (changesCount > 0) {
                 let logMsg = `${changesCount} Üründe Güncelleme Yapıldı.`;
-                if (note) logMsg += ` (Açıklama: ${note})`;
+                if (note) logMsg += `|||${note}`;
                 addLog(logMsg);
             } else if (note) {
-                addLog(`Not Eklendi: ${note}`);
+                addLog(`Genel Not Eklendi|||${note}`);
             }
 
             saveToCloud();
@@ -594,48 +601,45 @@
             return parseFloat(clean) || 0;
         }
 
-        // --- V30: KESİN SÜTUN PARSER ---
+        // --- V31: SÜTUN KİLİTLİ PARSER (KESİN ÇÖZÜM) ---
         function parseRowsMerge(rows) {
             let added = 0; let updated = 0;
             let currentCat = "GENEL LİSTE";
-            const blacklist = ["ÜRÜN", "STOK", "FİYAT", "TOPLAM", "ADET", "TUTAR", "HUMAY", "TABLOSU"];
+            const blacklist = ["ÜRÜN", "STOK", "FİYAT", "TOPLAM", "ADET", "HUMAY", "TABLOSU"];
 
             rows.forEach(row => {
                 if(!row || row.length === 0) return;
 
-                // Senin Dosya Formatın:
-                // Col 0 -> A Sütunu -> Ürün Adı
-                // Col 1 -> B Sütunu -> Stok Adedi
-                // Col 2 -> C Sütunu -> Fiyat
-
-                let colA = (row[0] || "").toString().trim();
-                let colB = (row[1] || "").toString().trim();
-                let colC = (row[2] || "").toString().trim();
+                // HÜCRELERİ GARANTİ ALTINA AL (Undefined hatasını önle)
+                let col0 = (row[0] || "").toString().trim(); // A Sütunu (İsim)
+                let col1 = (row[1] || "").toString().trim(); // B Sütunu (STOK)
+                let col2 = (row[2] || "").toString().trim(); // C Sütunu (FİYAT) - Bazen Kategori
 
                 // 1. KATEGORİ Mİ? (A boş, C dolu ve yazı)
-                if (colA === "" && colC !== "") {
-                    // C sütunu sayı değilse kategoridir
-                    if (isNaN(cleanPrice(colC))) {
-                        currentCat = colC.toUpperCase();
-                        return;
+                // "KABİN ÜRÜNLERİ" gibi başlıklar C sütununda oluyor
+                if (col0 === "" && col2 !== "" && isNaN(cleanPrice(col2))) {
+                    if(!blacklist.some(w => col2.toUpperCase().includes(w))) {
+                        currentCat = col2.toUpperCase();
                     }
+                    return; 
                 }
 
                 // 2. ÜRÜN MÜ? (A dolu)
-                if (colA !== "") {
-                    // Başlık satırıysa geç
-                    if (blacklist.some(w => colA.toUpperCase().includes(w))) return;
+                if (col0 !== "") {
+                    // Başlık satırı kontrolü
+                    if (blacklist.some(w => col0.toUpperCase().includes(w))) return;
 
-                    let pName = colA;
-                    // BURASI ÇOK ÖNEMLİ: Asla sıralama yok.
-                    // B Sütunu kesin STOK, C Sütunu kesin FİYAT.
-                    let pStock = cleanPrice(colB); 
-                    let pPrice = cleanPrice(colC); 
+                    let pName = col0;
+                    
+                    // KESİN VE NET: B=STOK, C=FİYAT
+                    // Sıralama yok, tahmin yok. Dosya neyse o.
+                    let pStock = cleanPrice(row[1]); 
+                    let pPrice = cleanPrice(row[2]);
 
                     const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.toLowerCase());
                     if (existingIndex > -1) {
                         productData[existingIndex].price = pPrice || productData[existingIndex].price;
-                        productData[existingIndex].qty = pStock > 0 ? pStock : productData[existingIndex].qty;
+                        productData[existingIndex].qty = pStock; // Stok 0 olsa bile güncelle
                         updated++;
                     } else {
                         productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pName, price: pPrice || 0, qty: pStock || 0 });

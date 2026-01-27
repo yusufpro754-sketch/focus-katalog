@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V20 (Final Fix)</title>
+    <title>Focus Medikal - Panel V21 (Smart Scan)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -555,33 +555,23 @@
             input.value = "";
         }
 
-        // --- YARDIMCI: Fiyat Temizleyici (1.250 TL -> 1250) ---
+        // --- YARDIMCI: Fiyat Temizleyici ---
         function cleanPrice(str) {
             if(typeof str === 'number') return str;
             if(!str) return 0;
-            // İçinde rakam, nokta veya virgül dışındaki her şeyi (TL, TRY, boşluk vb) sil
-            // "1 250,50 TL" -> "1250,50"
             let clean = str.toString().replace(/[^0-9.,]/g, '');
-            
-            // Format Düzeltme (Türkiye standardı: Binlik ".", Ondalık ",")
+            // TR format: Binlik nokta, Ondalık virgül -> JS format: Nokta ondalık
             if(clean.includes(',') && clean.includes('.')) {
-                // Hem nokta hem virgül varsa (Örn: 1.250,50)
                 clean = clean.replace(/\./g, '').replace(',', '.');
             } else if(clean.includes(',')) {
-                // Sadece virgül varsa (Örn: 150,50 veya 1,5) -> Ondalık kabul et
                 clean = clean.replace(',', '.');
-            }
-            // Sadece nokta varsa (Örn: 1.500) -> Binlik kabul et ve sil
-            // Dikkat: 1.5 (bir buçuk) ile 1.500 (bin beş yüz) karışabilir.
-            // Genelde fiyat listelerinde 1.500 (bin) kullanılır.
-            else if(clean.includes('.') && clean.split('.')[1].length === 3) {
+            } else if(clean.includes('.') && clean.split('.')[1].length === 3) {
                  clean = clean.replace(/\./g, '');
             }
-            
             return parseFloat(clean) || 0;
         }
 
-        // --- EXCEL PARSE (V20 - KESİN ÇÖZÜM) ---
+        // --- V21 SMART SCAN PARSER ---
         function parseRowsMerge(rows) {
             let added = 0; let updated = 0;
             let currentCat = "GENEL LİSTE";
@@ -590,91 +580,77 @@
                 // Boş satırları atla
                 if(!row || row.length === 0) return;
                 
-                // Dolu kutuları say ve temizle
-                const filledCells = row.filter(c => c !== null && c !== undefined && c.toString().trim() !== "");
-                
-                // Eğer hiç dolu kutu yoksa geç
-                if(filledCells.length === 0) return;
-
-                // Başlık satırı kontrolü (Basit)
-                const rowStr = filledCells.join(" ").toLowerCase();
+                // Başlık satırı kontrolü
+                const rowStr = row.map(x=>String(x).toLowerCase()).join(" ");
                 if(rowStr.includes("fiyat") && rowStr.includes("ürün")) return;
 
-                // --- MANTIK V20 ---
-                // 1. Sadece 1 kutu doluysa -> BU BİR KATEGORİDİR (veya başlık)
-                if (filledCells.length === 1) {
-                    currentCat = filledCells[0].toString().trim().toUpperCase();
-                    return; // Sıradaki satıra geç
-                }
+                // Satırdaki verileri analiz et
+                const potentialNumbers = [];
+                let potentialName = "";
 
-                // 2. Birden fazla kutu doluysa -> BU BİR ÜRÜNDÜR
-                if (filledCells.length > 1) {
-                    // İsim: Satırdaki İLK dolu metin hücresi
-                    let pName = "";
-                    let foundNameIndex = -1;
-
-                    // İsmi bulalım (Sayı olmayan ilk şey)
-                    for(let i=0; i<row.length; i++) {
-                         let val = row[i];
-                         // Değer varsa ve (Rakam değilse VEYA Rakam olsa bile metin formatındaysa ama fiyat değilse)
-                         // Basitçe: İlk sütunlardaki metni isim al.
-                         if (val && val.toString().trim() !== "") {
-                             // Fiyat temizleyici ile test et, eğer sonuç 0 veya NaN ise bu bir isimdir.
-                             // Ama dikkat: "100" diye ürün adı olabilir (Maske 100).
-                             // O yüzden ilk sütunu direkt isim kabul edelim.
-                             pName = val.toString().trim();
-                             foundNameIndex = i;
-                             break; 
-                         }
-                    }
-
-                    if(pName === "") return; // İsim yoksa geç
-
-                    // Fiyat ve Adet Bulalım (İsimden sonraki sütunlarda)
-                    let pPrice = 0;
-                    let pQty = 0;
-                    const potentialNums = [];
-
-                    for(let i = foundNameIndex + 1; i < row.length; i++) {
-                        let val = row[i];
-                        if(val !== null && val !== undefined && val.toString().trim() !== "") {
-                            let cleanVal = cleanPrice(val);
-                            if(cleanVal > 0) potentialNums.push(cleanVal);
+                // Satırdaki her hücreyi gez
+                row.forEach(cell => {
+                    if (cell !== null && cell !== undefined && cell.toString().trim() !== "") {
+                        const valStr = cell.toString().trim();
+                        // Sayı mı?
+                        const cleanVal = cleanPrice(valStr);
+                        
+                        // Eğer temizlenmiş hali sayıysa ve orijinal metinde de sadece sayısal karakterler varsa
+                        // (Örn: "1.250" -> Sayıdır. "Maske 50" -> Metindir, içindeki 50'yi sayı sanma)
+                        // Basit test: cleanVal > 0 ve metin uzunluğu makul
+                        if (cleanVal > 0 && /^[0-9.,\sTLtry₺]+$/i.test(valStr)) {
+                            potentialNumbers.push(cleanVal);
+                        } else {
+                            // Sayı değilse metindir, eğer henüz isim bulamadıysak bunu isim yap
+                            if (potentialName === "") potentialName = valStr;
                         }
                     }
+                });
 
-                    // Bulunan sayıları yorumla
-                    if(potentialNums.length > 0) {
-                        // Eğer sadece 1 sayı varsa -> FİYAT
-                        if(potentialNums.length === 1) {
-                            pPrice = potentialNums[0];
-                        } 
-                        // Eğer 2 sayı varsa -> Büyük olan Fiyat, Küçük olan Adet (Genelde)
-                        else {
-                            // Basit sıralama yapmayalım, sırayla gidelim. 
-                            // Genelde: Ürün Adı | Fiyat | Adet sırası olur.
-                            pPrice = potentialNums[0];
-                            pQty = potentialNums[1]; 
-                            
-                            // Güvenlik kontrolü: Fiyat < Adet ise yer değiştir (Medikalde adet genelde çoktur ama fiyat da yüksek olabilir, bu riskli. Sırayı baz alalım)
+                // KARAR MEKANİZMASI
+                
+                // 1. Sadece YAZI var, HİÇ SAYI YOK -> KATEGORİ
+                if (potentialName !== "" && potentialNumbers.length === 0) {
+                    currentCat = potentialName.toUpperCase();
+                    return; 
+                }
+
+                // 2. Hem YAZI hem SAYI var -> ÜRÜN
+                if (potentialName !== "" && potentialNumbers.length > 0) {
+                    // Sayıları yorumla
+                    let pPrice = 0;
+                    let pQty = 0;
+                    
+                    potentialNumbers.sort((a,b) => b-a); // Büyükten küçüğe
+                    
+                    if(potentialNumbers.length === 1) {
+                        pPrice = potentialNumbers[0];
+                    } else {
+                        // En büyük sayı fiyat (Barkod değilse)
+                        if(potentialNumbers[0] < 1000000) {
+                            pPrice = potentialNumbers[0];
+                            pQty = potentialNumbers[1];
+                        } else {
+                            pPrice = potentialNumbers[1] || 0;
+                            pQty = potentialNumbers[2] || 0;
                         }
                     }
 
                     // Listeye Ekle
-                    const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.toLowerCase());
+                    const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === potentialName.toLowerCase());
                     if (existingIndex > -1) {
                         productData[existingIndex].price = pPrice || productData[existingIndex].price;
                         productData[existingIndex].qty = pQty > 0 ? pQty : productData[existingIndex].qty;
                         updated++;
                     } else {
-                        productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pName, price: pPrice || 0, qty: pQty || 0 });
+                        productData.push({ id: Date.now() + Math.random(), category: currentCat, name: potentialName, price: pPrice || 0, qty: pQty || 0 });
                         added++;
                     }
                 }
             });
 
-            addLog(`Excel Yüklendi: ${added} yeni, ${updated} güncelleme.`);
-            alert(`${added} yeni, ${updated} güncellendi.`);
+            addLog(`Excel Yüklendi (V21 Smart): ${added} yeni, ${updated} güncelleme.`);
+            alert(`${added} yeni ürün eklendi, ${updated} ürün güncellendi.`);
             document.getElementById('globalSaveBtn').style.display = 'flex';
             renderTable();
         }

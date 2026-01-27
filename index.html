@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V19 (Classic Stable)</title>
+    <title>Focus Medikal - Panel V20 (Final Fix)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -14,7 +14,6 @@
         * { box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; color: var(--text); }
         
-        /* HEADER */
         .header { background: var(--white); padding: 15px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
         .header-content { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
         
@@ -22,7 +21,6 @@
         .brand-container { display: flex; align-items: center; gap: 10px; flex-grow: 1; }
         .brand-logo { font-family: 'Montserrat', sans-serif; font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap; }
         
-        /* BUTONLAR */
         .btn { padding: 0 16px; height: 40px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; color: white; transition: 0.2s; font-size: 0.85rem; }
         .btn:active { transform: scale(0.98); }
         
@@ -549,7 +547,6 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                // EXCEL OKUMA: Klasik Yöntem (V12) + Sayı Düzeltme
                 const wb = XLSX.read(e.target.result, { type: 'array' });
                 const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
                 parseRowsMerge(rows);
@@ -558,72 +555,113 @@
             input.value = "";
         }
 
-        // --- KLASİK OKUMA ALGORİTMASI (V12 + Sayı Düzeltme) ---
+        // --- YARDIMCI: Fiyat Temizleyici (1.250 TL -> 1250) ---
+        function cleanPrice(str) {
+            if(typeof str === 'number') return str;
+            if(!str) return 0;
+            // İçinde rakam, nokta veya virgül dışındaki her şeyi (TL, TRY, boşluk vb) sil
+            // "1 250,50 TL" -> "1250,50"
+            let clean = str.toString().replace(/[^0-9.,]/g, '');
+            
+            // Format Düzeltme (Türkiye standardı: Binlik ".", Ondalık ",")
+            if(clean.includes(',') && clean.includes('.')) {
+                // Hem nokta hem virgül varsa (Örn: 1.250,50)
+                clean = clean.replace(/\./g, '').replace(',', '.');
+            } else if(clean.includes(',')) {
+                // Sadece virgül varsa (Örn: 150,50 veya 1,5) -> Ondalık kabul et
+                clean = clean.replace(',', '.');
+            }
+            // Sadece nokta varsa (Örn: 1.500) -> Binlik kabul et ve sil
+            // Dikkat: 1.5 (bir buçuk) ile 1.500 (bin beş yüz) karışabilir.
+            // Genelde fiyat listelerinde 1.500 (bin) kullanılır.
+            else if(clean.includes('.') && clean.split('.')[1].length === 3) {
+                 clean = clean.replace(/\./g, '');
+            }
+            
+            return parseFloat(clean) || 0;
+        }
+
+        // --- EXCEL PARSE (V20 - KESİN ÇÖZÜM) ---
         function parseRowsMerge(rows) {
             let added = 0; let updated = 0;
             let currentCat = "GENEL LİSTE";
             
             rows.forEach(row => {
+                // Boş satırları atla
                 if(!row || row.length === 0) return;
                 
-                // Başlık satırını atla
-                const rowStr = row.join(" ").toLowerCase();
+                // Dolu kutuları say ve temizle
+                const filledCells = row.filter(c => c !== null && c !== undefined && c.toString().trim() !== "");
+                
+                // Eğer hiç dolu kutu yoksa geç
+                if(filledCells.length === 0) return;
+
+                // Başlık satırı kontrolü (Basit)
+                const rowStr = filledCells.join(" ").toLowerCase();
                 if(rowStr.includes("fiyat") && rowStr.includes("ürün")) return;
 
-                // Satırdaki verileri analiz et
-                const nums = [];
-                const texts = [];
-
-                row.forEach(cell => {
-                    if (typeof cell === 'number') {
-                        nums.push(cell);
-                    } else if (typeof cell === 'string') {
-                        let c = cell.trim();
-                        if (c.length > 0) {
-                            // "1.250" gibi metinleri sayıya çevirmeyi dene
-                            // Sadece rakam, nokta, virgül içeriyorsa
-                            if (/^[0-9.,]+$/.test(c)) {
-                                let clean = c.replace(/\./g, "").replace(",", "."); // TR format düzeltme
-                                let parsed = parseFloat(clean);
-                                if(!isNaN(parsed)) nums.push(parsed);
-                                else texts.push(c);
-                            } else {
-                                texts.push(c);
-                            }
-                        }
-                    }
-                });
-
-                // --- KARAR ---
-                // Hiç sayı yoksa -> Kategori
-                if (nums.length === 0 && texts.length > 0) {
-                    currentCat = texts[0].toUpperCase().trim(); // İlk metni kategori yap
-                    return;
+                // --- MANTIK V20 ---
+                // 1. Sadece 1 kutu doluysa -> BU BİR KATEGORİDİR (veya başlık)
+                if (filledCells.length === 1) {
+                    currentCat = filledCells[0].toString().trim().toUpperCase();
+                    return; // Sıradaki satıra geç
                 }
 
-                // Sayı varsa -> Ürün
-                if (nums.length > 0) {
-                    // İSİM: Satırdaki ilk metin hücresini al (join yapma!)
+                // 2. Birden fazla kutu doluysa -> BU BİR ÜRÜNDÜR
+                if (filledCells.length > 1) {
+                    // İsim: Satırdaki İLK dolu metin hücresi
                     let pName = "";
-                    // Orijinal satırı tekrar gez, ilk metni bul (texts dizisi sırasız olabilir)
+                    let foundNameIndex = -1;
+
+                    // İsmi bulalım (Sayı olmayan ilk şey)
                     for(let i=0; i<row.length; i++) {
-                         if (typeof row[i] === 'string' && isNaN(parseFloat(row[i].replace(/\./g,"").replace(",","."))) && row[i].trim().length > 0) {
-                             pName = row[i].trim();
-                             break;
+                         let val = row[i];
+                         // Değer varsa ve (Rakam değilse VEYA Rakam olsa bile metin formatındaysa ama fiyat değilse)
+                         // Basitçe: İlk sütunlardaki metni isim al.
+                         if (val && val.toString().trim() !== "") {
+                             // Fiyat temizleyici ile test et, eğer sonuç 0 veya NaN ise bu bir isimdir.
+                             // Ama dikkat: "100" diye ürün adı olabilir (Maske 100).
+                             // O yüzden ilk sütunu direkt isim kabul edelim.
+                             pName = val.toString().trim();
+                             foundNameIndex = i;
+                             break; 
                          }
                     }
-                    if(pName === "") return; // İsimsiz ürün olmaz
 
-                    // FİYAT ve ADET
-                    nums.sort((a,b) => b-a); // Büyükten küçüğe
-                    let pPrice = nums[0]; // En büyüğü fiyat
-                    let pQty = (nums.length > 1) ? nums[nums.length-1] : 0; // En küçüğü adet (eğer varsa)
-                    
-                    // Fiyat çok küçükse (ör: 10) ve adet çok büyükse (ör: 1000) ters köşe olmasın
-                    // Ama medikal sektörde fiyat genelde adetten yüksektir (tekil ürünse). 
-                    // V12 mantığına sadık kalıyoruz.
+                    if(pName === "") return; // İsim yoksa geç
 
-                    const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.trim().toLowerCase());
+                    // Fiyat ve Adet Bulalım (İsimden sonraki sütunlarda)
+                    let pPrice = 0;
+                    let pQty = 0;
+                    const potentialNums = [];
+
+                    for(let i = foundNameIndex + 1; i < row.length; i++) {
+                        let val = row[i];
+                        if(val !== null && val !== undefined && val.toString().trim() !== "") {
+                            let cleanVal = cleanPrice(val);
+                            if(cleanVal > 0) potentialNums.push(cleanVal);
+                        }
+                    }
+
+                    // Bulunan sayıları yorumla
+                    if(potentialNums.length > 0) {
+                        // Eğer sadece 1 sayı varsa -> FİYAT
+                        if(potentialNums.length === 1) {
+                            pPrice = potentialNums[0];
+                        } 
+                        // Eğer 2 sayı varsa -> Büyük olan Fiyat, Küçük olan Adet (Genelde)
+                        else {
+                            // Basit sıralama yapmayalım, sırayla gidelim. 
+                            // Genelde: Ürün Adı | Fiyat | Adet sırası olur.
+                            pPrice = potentialNums[0];
+                            pQty = potentialNums[1]; 
+                            
+                            // Güvenlik kontrolü: Fiyat < Adet ise yer değiştir (Medikalde adet genelde çoktur ama fiyat da yüksek olabilir, bu riskli. Sırayı baz alalım)
+                        }
+                    }
+
+                    // Listeye Ekle
+                    const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.toLowerCase());
                     if (existingIndex > -1) {
                         productData[existingIndex].price = pPrice || productData[existingIndex].price;
                         productData[existingIndex].qty = pQty > 0 ? pQty : productData[existingIndex].qty;

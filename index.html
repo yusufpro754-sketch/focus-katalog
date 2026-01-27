@@ -73,6 +73,8 @@
         .qty-btn { width: 32px; height: 32px; border: none; background: white; cursor: pointer; color: var(--primary); font-weight: bold; font-size: 1.2rem; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .qty-btn:active { background: #e2e8f0; }
         .qty-val { width: 45px; text-align: center; background: transparent; border: none; font-weight: bold; outline: none; font-size: 1rem; }
+        /* Adet inputu artık readonly olmadığı için focus efekti verelim */
+        .qty-val:focus { background: white; box-shadow: inset 0 0 0 2px var(--primary); border-radius: 4px; }
 
         /* --- MOBİL ÖZEL AYARLAR (TAMİR EDİLDİ) --- */
         @media (max-width: 768px) {
@@ -396,7 +398,7 @@
                         <td data-label="Adet">
                             <div class="qty-wrapper">
                                 <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
-                                <input type="number" class="qty-val" placeholder="0" value="${qVal}" readonly>
+                                <input type="number" class="qty-val" placeholder="0" value="${qVal}" oninput="updateQtyManual(${item.id}, this.value)" onfocus="this.select()">
                                 <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
                             </div>
                         </td>
@@ -446,6 +448,22 @@
             // Adet değişince tabloyu yenile
             renderTable(); 
             // Adet değişimi kritik, Kaydet butonunu aç
+            document.getElementById('globalSaveBtn').style.display = 'flex';
+        }
+
+        // --- YENİ EKLENEN FONKSİYON: Klavyeyle adet girmeyi sağlar ---
+        function updateQtyManual(id, value) {
+            const item = productData.find(p => p.id === id);
+            if (!item) return;
+            
+            let v = parseInt(value);
+            if (isNaN(v) || v < 0) v = 0;
+            item.qty = v;
+            
+            // Sadece ilgili satırın toplamını güncelle (Tabloyu yeniden çizme ki imleç kaybolmasın)
+            document.getElementById(`total-${id}`).innerText = (item.price * item.qty).toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
+            
+            calculateTotal();
             document.getElementById('globalSaveBtn').style.display = 'flex';
         }
 

@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V15 (Hızlı Giriş)</title>
+    <title>Focus Medikal - Panel V16 (Smart Log)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -79,7 +79,7 @@
         .log-table td { font-size: 0.85rem; border-bottom: 1px solid #e2e8f0; }
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
         .badge-admin { background: #dbeafe; color: #1e40af; }
-        .badge-user { background: #fef9c3; color: #854d0e; }
+        .badge-info { background: #e0f2fe; color: #0369a1; } /* Genel Bilgi */
         .badge-inc { background: #dcfce7; color: #166534; }
         .badge-dec { background: #fee2e2; color: #991b1b; }
 
@@ -93,20 +93,13 @@
             tr.cat-row td { display: flex !important; justify-content: space-between; align-items: center; width: 100%; background-color: #1e293b !important; color: #ffffff !important; font-size: 1.1rem; font-weight: 800; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
             tr.cat-row td i { color: #ffffff !important; }
             tr:not(.cat-row) { display: flex; flex-wrap: wrap; background: white; border-bottom: 1px solid var(--border); padding: 15px 5px; position: relative; align-items: center; }
-            
-            /* Mobilde Drag Handle'ı Gizle */
             .drag-handle { display: none; } 
-
-            tr:not(.cat-row) td:nth-child(2) { width: 100%; padding: 0 0 10px 0; border: none; display: block; } /* İsim */
+            tr:not(.cat-row) td:nth-child(2) { width: 100%; padding: 0 0 10px 0; border: none; display: block; }
             tr:not(.cat-row) td:nth-child(2) .input-clean { font-size: 1rem; color: var(--dark); padding: 0; width: 90%; font-weight: 600; }
-
-            tr:not(.cat-row) td:nth-child(3) { width: 35%; padding: 0; border: none; display:block; } /* Fiyat */
-            tr:not(.cat-row) td:nth-child(4) { width: 35%; padding: 0; border: none; display: flex; justify-content: center; } /* Adet */
-            tr:not(.cat-row) td:nth-child(5) { width: 30%; padding: 0; border: none; text-align: right; display:block; } /* Toplam */
-            
-            /* Silme butonu */
+            tr:not(.cat-row) td:nth-child(3) { width: 35%; padding: 0; border: none; display:block; }
+            tr:not(.cat-row) td:nth-child(4) { width: 35%; padding: 0; border: none; display: flex; justify-content: center; }
+            tr:not(.cat-row) td:nth-child(5) { width: 30%; padding: 0; border: none; text-align: right; display:block; }
             tr:not(.cat-row) td:last-child { position: absolute; top: 12px; right: 0; padding: 0; border: none; width: auto; display:block; }
-
             .price-input { text-align: left; font-size: 0.95rem; }
             .currency { display: none; }
             .qty-wrapper { transform: scale(0.95); }
@@ -139,7 +132,7 @@
                 <div class="brand-container">
                     <div class="brand-logo"><i class="fa-solid fa-notes-medical"></i> FOCUS MEDİKAL</div>
                     
-                    <button id="globalSaveBtn" class="btn" onclick="saveToCloud()">
+                    <button id="globalSaveBtn" class="btn" onclick="openSaveModal()">
                         <i class="fa-solid fa-cloud-arrow-up"></i> <span>KAYDET</span>
                     </button>
                 </div>
@@ -180,7 +173,8 @@
             <table id="mainTable">
                 <thead>
                     <tr>
-                        <th width="5%"></th> <th width="35%">ÜRÜN ADI</th>
+                        <th width="5%"></th>
+                        <th width="35%">ÜRÜN ADI</th>
                         <th width="20%" style="text-align:right;">BİRİM FİYAT</th>
                         <th width="20%" style="text-align:center;">ADET</th>
                         <th width="15%" style="text-align:right;">TOPLAM</th>
@@ -195,6 +189,18 @@
     <div class="footer">
         <div style="font-size:0.8rem; color:#64748b;">Genel Toplam:</div>
         <div class="total-amount" id="grandTotal">0,00 ₺</div>
+    </div>
+
+    <div class="modal-overlay" id="saveModal">
+        <div class="modal">
+            <h3>Değişiklikleri Kaydet</h3>
+            <p style="color:#64748b; font-size:0.9rem; margin-bottom:10px;">Yapılan değişiklikler için bir açıklama giriniz (Opsiyonel):</p>
+            <textarea id="saveNote" class="form-control" rows="3" placeholder="Örn: Ahmet Beye 100 koli verildi..."></textarea>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn" style="background:#94a3b8;" onclick="closeSaveModal()">İptal</button>
+                <button class="btn" style="background:#f59e0b;" onclick="confirmSave()">Onayla ve Kaydet</button>
+            </div>
+        </div>
     </div>
 
     <div class="modal-overlay" id="addModal">
@@ -216,14 +222,14 @@
         <div class="modal modal-large">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h3><i class="fa-solid fa-shield-halved"></i> Hareket Geçmişi</h3>
-                </div>
+            </div>
             <div style="max-height:400px; overflow-y:auto; border:1px solid #cbd5e1; border-radius:8px;">
                 <table class="log-table" style="width:100%;">
                     <thead>
                         <tr>
                             <th style="padding:10px;">Tarih</th>
                             <th style="padding:10px;">Kullanıcı</th>
-                            <th style="padding:10px;">İşlem</th>
+                            <th style="padding:10px;">Açıklama</th>
                         </tr>
                     </thead>
                     <tbody id="logTableBody" style="background:white;"></tbody>
@@ -240,6 +246,7 @@
 
         let productData = [];
         let logData = []; 
+        let originalState = {}; // Değişiklikleri kıyaslamak için başlangıç verisi
         let isAdmin = false;
         let currentUser = "Misafir"; 
         let openCategories = new Set(); 
@@ -249,7 +256,6 @@
 
         function loginToggle() {
             if (isAdmin) {
-                // Çıkış Yap
                 isAdmin = false;
                 currentUser = "Misafir";
                 document.getElementById('adminControls').style.display = 'none';
@@ -258,10 +264,8 @@
             } else {
                 let pass = prompt("Sistem Şifresi:");
                 if (pass === "nur27") {
-                    // İSİM SORMA KALDIRILDI
                     isAdmin = true;
                     currentUser = "Yönetici"; 
-                    
                     document.getElementById('adminControls').style.display = 'flex';
                     document.getElementById('loginText').innerText = "Çıkış Yap";
                     addLog("Yönetici girişi yapıldı.");
@@ -286,13 +290,21 @@
                 }
 
                 productData.forEach(p => { if(!p.id) p.id = Date.now() + Math.random(); });
-                
+                storeOriginalState(); // Veriler gelince ilk halini kaydet
+
                 const cats = [...new Set(productData.map(p => p.category))];
                 cats.forEach(c => openCategories.add(c));
                 
                 renderTable();
             } catch (err) { console.error(err); }
             document.getElementById('loading').style.display = 'none';
+        }
+
+        function storeOriginalState() {
+            originalState = {};
+            productData.forEach(p => {
+                originalState[p.id] = { ...p }; // Derin kopya
+            });
         }
 
         function addLog(action) {
@@ -315,9 +327,9 @@
                 tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px; color:#94a3b8;">Henüz kayıt yok.</td></tr>`;
             } else {
                 logData.forEach(log => {
-                    let actionClass = "";
-                    if(log.action.includes("Arttı") || log.action.includes("Eklendi")) actionClass = "badge-inc";
-                    if(log.action.includes("Azaldı") || log.action.includes("Silindi")) actionClass = "badge-dec";
+                    let actionClass = "badge-info";
+                    if(log.action.includes("Eklendi") || log.action.includes("girişi")) actionClass = "badge-inc";
+                    if(log.action.includes("Silindi")) actionClass = "badge-dec";
                     
                     const row = `
                         <tr>
@@ -334,6 +346,38 @@
             document.getElementById('logModal').style.display = 'flex';
         }
         function closeLogModal() { document.getElementById('logModal').style.display = 'none'; }
+
+        /* SAVE & LOGIC */
+        function openSaveModal() {
+            document.getElementById('saveNote').value = "";
+            document.getElementById('saveModal').style.display = 'flex';
+        }
+        function closeSaveModal() { document.getElementById('saveModal').style.display = 'none'; }
+        
+        function confirmSave() {
+            const note = document.getElementById('saveNote').value.trim();
+            closeSaveModal();
+            
+            // DEĞİŞİKLİKLERİ HESAPLA
+            let changesCount = 0;
+            productData.forEach(p => {
+                const old = originalState[p.id];
+                if (!old) return; // Yeni eklenenler zaten loglandı
+                if (old.qty !== p.qty || old.price !== p.price || old.name !== p.name) {
+                    changesCount++;
+                }
+            });
+
+            if (changesCount > 0) {
+                let logMsg = `${changesCount} Üründe Güncelleme Yapıldı.`;
+                if (note) logMsg += ` (Açıklama: ${note})`;
+                addLog(logMsg);
+            } else if (note) {
+                addLog(`Not Eklendi: ${note}`);
+            }
+
+            saveToCloud();
+        }
 
         function renderTable() {
             const tbody = document.getElementById('tableBody');
@@ -373,10 +417,9 @@
                     const tr = document.createElement('tr');
                     tr.style.display = displayStyle;
                     tr.className = `item-row`;
-                    tr.setAttribute('draggable', isAdmin); // Sadece admin sürükleyebilir
+                    tr.setAttribute('draggable', isAdmin); 
                     tr.dataset.id = item.id;
                     
-                    // DRAG EVENTS
                     if(isAdmin) {
                         tr.addEventListener('dragstart', handleDragStart);
                         tr.addEventListener('dragover', handleDragOver);
@@ -393,18 +436,18 @@
                     tr.innerHTML = `
                         <td style="text-align:center;">${handleHTML}</td>
                         <td data-label="Ürün">
-                            <input type="text" class="input-clean" value="${item.name}" ${readOnlyNamePrice} onchange="logNameChange(${item.id}, this.value, '${item.name}')" oninput="updateData(${item.id}, 'name', this.value)">
+                            <input type="text" class="input-clean" value="${item.name}" ${readOnlyNamePrice} oninput="updateData(${item.id}, 'name', this.value)">
                         </td>
                         <td data-label="Fiyat">
                             <div class="price-wrapper">
-                                <input type="number" class="input-clean price-input" placeholder="0" value="${pVal}" ${readOnlyNamePrice} onchange="logPriceChange(${item.id}, this.value, ${item.price})" oninput="updateData(${item.id}, 'price', this.value)">
+                                <input type="number" class="input-clean price-input" placeholder="0" value="${pVal}" ${readOnlyNamePrice} oninput="updateData(${item.id}, 'price', this.value)">
                                 <span class="currency">₺</span>
                             </div>
                         </td>
                         <td data-label="Adet">
                             <div class="qty-wrapper">
                                 <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
-                                <input type="number" class="qty-val" placeholder="0" value="${qVal}" onchange="logQtyChangeManual(${item.id}, this.value, ${item.qty})" oninput="updateQtyManual(${item.id}, this.value)" onfocus="this.select()">
+                                <input type="number" class="qty-val" placeholder="0" value="${qVal}" oninput="updateQtyManual(${item.id}, this.value)" onfocus="this.select()">
                                 <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
                             </div>
                         </td>
@@ -417,46 +460,34 @@
             calculateTotal();
         }
 
-        // --- DRAG & DROP FONKSİYONLARI ---
+        /* DRAG DROP (SESSİZ) */
         function handleDragStart(e) {
             draggedItem = this;
             this.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
         }
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-        }
+        function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
         function handleDrop(e) {
             e.stopPropagation();
             const targetRow = e.target.closest('tr.item-row');
             if (draggedItem !== targetRow && targetRow) {
                 const draggedId = parseFloat(draggedItem.dataset.id);
                 const targetId = parseFloat(targetRow.dataset.id);
-                
                 const fromIndex = productData.findIndex(p => p.id === draggedId);
                 const toIndex = productData.findIndex(p => p.id === targetId);
-                
                 if(fromIndex > -1 && toIndex > -1) {
                     const item = productData.splice(fromIndex, 1)[0];
                     productData.splice(toIndex, 0, item);
-                    addLog(`${item.name} sırası değiştirildi.`);
+                    // LOG YOK (Sessiz)
                     document.getElementById('globalSaveBtn').style.display = 'flex';
                 }
             }
             return false;
         }
-        function handleDragEnd(e) {
-            this.classList.remove('dragging');
-            renderTable(); 
-        }
+        function handleDragEnd(e) { this.classList.remove('dragging'); renderTable(); }
+        function toggleCategory(cat) { if (openCategories.has(cat)) openCategories.delete(cat); else openCategories.add(cat); renderTable(); }
 
-        function toggleCategory(cat) {
-            if (openCategories.has(cat)) openCategories.delete(cat);
-            else openCategories.add(cat);
-            renderTable();
-        }
-
+        /* DATA UPDATES (SESSİZ - Sadece Buton Açar) */
         function updateData(id, field, value) {
             if (!isAdmin && (field === 'name' || field === 'price')) return;
             const item = productData.find(p => p.id === id);
@@ -470,22 +501,13 @@
             document.getElementById('globalSaveBtn').style.display = 'flex';
         }
 
-        function logNameChange(id, newVal, oldVal) { if(newVal !== oldVal) addLog(`İsim Değişti: "${oldVal}" -> "${newVal}"`); }
-        function logPriceChange(id, newVal, oldVal) { if(parseFloat(newVal) !== oldVal) addLog(`Fiyat Değişti (ID:${id}): ${oldVal}₺ -> ${newVal}₺`); }
-        function logQtyChangeManual(id, newVal, oldVal) {
-            const item = productData.find(p => p.id === id);
-            if(item && parseInt(newVal) !== oldVal) addLog(`${item.name} Adet Elle Güncellendi: ${newVal} oldu.`);
-        }
-
         function updateQty(id, delta) {
             const item = productData.find(p => p.id === id);
             if (!item) return;
-            const oldQty = item.qty || 0;
-            let newVal = oldQty + delta;
+            let newVal = (item.qty || 0) + delta;
             if (newVal < 0) newVal = 0;
             item.qty = newVal;
-            if(newVal > oldQty) addLog(`${item.name}: Adet Arttı (+1) -> Yeni: ${newVal}`);
-            if(newVal < oldQty) addLog(`${item.name}: Adet Azaldı (-1) -> Yeni: ${newVal}`);
+            // LOG YOK (Sessiz)
             renderTable(); 
             document.getElementById('globalSaveBtn').style.display = 'flex';
         }
@@ -513,7 +535,8 @@
             try {
                 const payload = { products: productData, logs: logData };
                 await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                alert("Veritabanı ve Güvenli Loglar Güncellendi!");
+                alert("Başarıyla Kaydedildi!");
+                storeOriginalState(); // Kaydedince yeni durumu "orijinal" olarak kabul et
                 btn.style.display = 'none';
             } catch(e) { alert("Hata oluştu."); }
             btn.innerHTML = original;
@@ -523,7 +546,7 @@
             const list = productData.map(p=>({"KATEGORİ":p.category, "ÜRÜN":p.name, "FİYAT":p.price, "ADET":p.qty, "TOPLAM":p.price*p.qty}));
             const ws = XLSX.utils.json_to_sheet(list);
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Liste");
-            const logList = logData.map(l=>({"TARİH":l.date, "KULLANICI":l.user, "İŞLEM":l.action}));
+            const logList = logData.map(l=>({"TARİH":l.date, "KULLANICI":l.user, "AÇIKLAMA":l.action}));
             const wsLog = XLSX.utils.json_to_sheet(logList);
             XLSX.utils.book_append_sheet(wb, wsLog, "Hareket Gecmisi");
             XLSX.writeFile(wb, "Focus_Medikal_Full.xlsx");
@@ -549,7 +572,6 @@
                 if(row.length === 0) return;
                 const str = row.join(" ").toLowerCase();
                 if(str.includes("fiyat") && str.includes("ürün")) return;
-                if(str.includes("toplam") && str.length < 50) return;
                 const nums = row.filter(c => typeof c === 'number');
                 const texts = row.filter(c => typeof c === 'string' && c.trim().length > 0);
                 if (nums.length === 0 && texts.length > 0) { currentCat = texts[0].toUpperCase().trim(); return; }
@@ -587,7 +609,7 @@
         function deleteItem(id, name) { 
             if(confirm(`${name} silinecek?`)) { 
                 productData = productData.filter(p=>p.id!==id); 
-                addLog(`${name} ürünü Silindi.`);
+                addLog(`${name} ürünü silindi.`); // Silme işlemi önemli, tek satır log kalsın
                 renderTable(); document.getElementById('globalSaveBtn').style.display='flex'; 
             } 
         }
@@ -611,7 +633,8 @@
             const qty = parseInt(document.getElementById('newQty').value) || 1;
             if(name) {
                 productData.push({ id:Date.now(), category: cat, name:name, price:price, qty:qty });
-                addLog(`Yeni Ürün Eklendi: ${name} (Fiyat: ${price}, Adet: ${qty})`);
+                // Yeni ürün ekleme de önemli, bu yüzden anında loglansın ama sade olsun
+                addLog(`${name} eklendi.`); 
                 openCategories.add(cat);
                 renderTable(); 
                 closeModal();

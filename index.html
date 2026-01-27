@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V27 (Hybrid)</title>
+    <title>Focus Medikal - Panel V28 (Final Fix)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -67,12 +67,10 @@
         .qty-val { width: 45px; text-align: center; background: transparent; border: none; font-weight: bold; outline: none; font-size: 1rem; }
         .qty-val:focus { background: white; box-shadow: inset 0 0 0 2px var(--primary); border-radius: 4px; }
 
-        /* DRAG HANDLE */
         .drag-handle { cursor: grab; color: #cbd5e1; padding: 10px; transition: color 0.2s; }
         .drag-handle:hover { color: var(--primary); }
         tr.dragging { opacity: 0.5; background: #f1f5f9; }
 
-        /* LOG TABLOSU */
         .log-table th { background: #334155; color: white; position: sticky; top: 0; z-index: 10; }
         .log-table td { font-size: 0.85rem; border-bottom: 1px solid #e2e8f0; }
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
@@ -228,6 +226,7 @@
                             <th style="padding:10px;">Tarih</th>
                             <th style="padding:10px;">Kullanıcı</th>
                             <th style="padding:10px;">Açıklama</th>
+                            <th style="padding:10px; width:40px;"></th>
                         </tr>
                     </thead>
                     <tbody id="logTableBody" style="background:white;"></tbody>
@@ -317,18 +316,35 @@
             if(logData.length > 5000) logData.pop(); 
         }
 
+        function editLogDesc(index) {
+            // Log listesi ters sıralı (unshift ile ekleniyor), ama ekranda 0. eleman en yeni.
+            // Doğru indexi bulmak önemli.
+            // HTML renderlarken data-id verelim daha güvenli olsun.
+            // Ama basitlik için prompt kullanalım:
+            const currentDesc = logData[index].action;
+            const newDesc = prompt("Yeni açıklama:", currentDesc);
+            if(newDesc !== null && newDesc !== currentDesc) {
+                logData[index].action = newDesc;
+                saveToCloud(); // Sessizce kaydet
+                openLogModal(); // Tabloyu yenile
+            }
+        }
+
         function openLogModal() {
             const tbody = document.getElementById('logTableBody');
             tbody.innerHTML = "";
             
             if(logData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px; color:#94a3b8;">Henüz kayıt yok.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:#94a3b8;">Henüz kayıt yok.</td></tr>`;
             } else {
-                logData.forEach(log => {
+                logData.forEach((log, index) => {
                     let actionClass = "badge-info";
                     if(log.action.includes("Eklendi") || log.action.includes("girişi")) actionClass = "badge-inc";
                     if(log.action.includes("Silindi")) actionClass = "badge-dec";
                     
+                    // Düzenleme butonu (Sadece Admin için veya herkes için)
+                    const editBtn = isAdmin ? `<i class="fa-solid fa-pen-to-square" style="cursor:pointer; color:#94a3b8;" onclick="editLogDesc(${index})"></i>` : '';
+
                     const row = `
                         <tr>
                             <td style="padding:10px;">${log.date}</td>
@@ -336,6 +352,7 @@
                             <td style="padding:10px;">
                                 <span class="${actionClass}" style="padding:2px 5px; border-radius:3px;">${log.action}</span>
                             </td>
+                            <td style="text-align:center;">${editBtn}</td>
                         </tr>
                     `;
                     tbody.innerHTML += row;
@@ -425,7 +442,6 @@
                     const pVal = item.price === 0 ? '' : item.price;
                     const qVal = item.qty === 0 ? '' : item.qty;
                     const trashHTML = isAdmin ? `<td class="trash-cell" style="text-align:center;"><i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="deleteItem(${item.id}, '${item.name}')"></i></td>` : '<td></td>';
-                    
                     const handleHTML = isAdmin ? `<i class="fa-solid fa-grip-lines drag-handle"></i>` : '';
 
                     tr.innerHTML = `
@@ -556,7 +572,7 @@
             input.value = "";
         }
 
-        // --- SENİN İSTEDİĞİN V12'DEKİ ORİJİNAL PARSE KODU ---
+        // --- DÜZELTİLMİŞ EXCEL PARSER (V28) ---
         function parseRowsMerge(rows) {
             let added = 0; let updated = 0;
             let currentCat = "GENEL LİSTE";
@@ -582,10 +598,22 @@
                 if (nums.length > 0) {
                     nums.sort((a,b) => a-b);
                     const validNums = nums.filter(n => n < 10000000); 
-                    if(validNums.length === 1) { pPrice = validNums[0]; }
-                    else if (validNums.length >= 2) {
-                        validNums.pop(); pPrice = validNums.pop();
-                        if(validNums.length > 0) pQty = validNums[0];
+                    
+                    if(validNums.length === 1) { 
+                        pPrice = validNums[0]; 
+                    }
+                    // --- KRİTİK HATA DÜZELTMESİ BURADA ---
+                    else if (validNums.length === 2) {
+                        // Eğer sadece 2 sayı varsa (Fiyat ve Stok), büyüğünü SİLME!
+                        // Büyüğü Fiyat, Küçüğü Stoktur.
+                        pPrice = validNums[1]; // Büyük olan (Fiyat)
+                        pQty = validNums[0];   // Küçük olan (Stok)
+                    }
+                    else if (validNums.length >= 3) {
+                        // Eğer 3 sayı varsa (Stok, Fiyat, Toplam), En büyüğünü sil (Toplam)
+                        validNums.pop(); 
+                        pPrice = validNums.pop(); // Kalanların büyüğü Fiyat
+                        if(validNums.length > 0) pQty = validNums[0]; // Kalan Stok
                     }
                 }
 
@@ -600,11 +628,10 @@
                 }
             });
 
-            // Otomatik olarak yeni kategorileri AÇIK hale getir (Kritik Düzeltme)
+            // Otomatik olarak yeni kategorileri AÇIK hale getir
             const allCats = [...new Set(productData.map(p => p.category))];
             allCats.forEach(c => openCategories.add(c));
 
-            // Sistemin geri kalanıyla uyumlu loglama
             if(added > 0 || updated > 0) {
                 addLog(`Excel Yüklendi: ${added} yeni, ${updated} güncellendi.`);
                 alert(`${added} yeni, ${updated} güncellendi.`);

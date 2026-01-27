@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V23 (Format Detector)</title>
+    <title>Focus Medikal - Panel V24 (Garantili)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -569,44 +569,41 @@
             return parseFloat(clean) || 0;
         }
 
-        // --- V23: FORMAT DEDEKTÖRÜ (GÜÇLENDİRİLMİŞ) ---
+        // --- V24 PARSER (Kategori Açma Özellikli) ---
         function parseRowsMerge(rows) {
             let added = 0; let updated = 0;
             let currentCat = "GENEL LİSTE";
             
-            // KARA LİSTE (Bu kelimeler varsa ÜRÜN DEĞİLDİR)
+            // KARA LİSTE (Başlık Satırlarını Ele)
             const blacklist = ["ÜRÜN", "STOK", "FİYAT", "TOPLAM", "ADET", "TUTAR", "HUMAY", "TABLOSU"];
 
             rows.forEach(row => {
-                // Boş veya çok kısa satırları atla
                 if(!row || row.length === 0) return;
 
-                // Verileri güvenle al (undefined hatalarını önle)
-                let a = (row[0] || "").toString().trim(); // A Sütunu (Ürün Adı)
-                let b = (row[1] || "").toString().trim(); // B Sütunu (Stok)
-                let c = (row[2] || "").toString().trim(); // C Sütunu (Fiyat veya Kategori)
+                // Verileri al
+                let a = (row[0] || "").toString().trim(); // Ürün Adı
+                let b = (row[1] || "").toString().trim(); // Stok
+                let c = (row[2] || "").toString().trim(); // Fiyat veya Kategori
 
-                // 1. KATEGORİ Mİ? (A boş, C dolu ve sayı değilse)
+                // 1. KATEGORİ Mİ? (A boş, C dolu ve yazı)
+                // Ayrıca C "FİYAT" gibi bir başlık olmamalı
                 if (a === "" && c !== "" && isNaN(cleanPrice(c))) {
-                    currentCat = c.toUpperCase();
-                    return; // Satırı geç, işlem tamam
+                    if(!blacklist.some(w => c.toUpperCase().includes(w))) {
+                        currentCat = c.toUpperCase();
+                    }
+                    return; 
                 }
 
-                // 2. ÜRÜN MÜ? (A doluysa ve kara listede değilse)
+                // 2. ÜRÜN MÜ? (A dolu)
                 if (a !== "") {
                     // Kara liste kontrolü
-                    let isBlacklisted = false;
-                    blacklist.forEach(word => {
-                        if(a.toUpperCase().includes(word)) isBlacklisted = true;
-                    });
-                    if(isBlacklisted) return; // Başlık satırıysa geç
+                    let isBlacklisted = blacklist.some(w => a.toUpperCase().includes(w));
+                    if(isBlacklisted) return; 
 
-                    // Buraya geldiyse bu bir ÜRÜNDÜR
                     let pName = a;
                     let pStock = cleanPrice(b);
                     let pPrice = cleanPrice(c);
 
-                    // Listeye Ekle veya Güncelle
                     const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.toLowerCase());
                     if (existingIndex > -1) {
                         productData[existingIndex].price = pPrice || productData[existingIndex].price;
@@ -619,7 +616,11 @@
                 }
             });
 
-            addLog(`Excel Yüklendi (V23): ${added} yeni, ${updated} güncelleme.`);
+            // --- KRİTİK DÜZELTME: YENİ KATEGORİLERİ GÖRÜNÜR YAP ---
+            const allCats = [...new Set(productData.map(p => p.category))];
+            allCats.forEach(c => openCategories.add(c));
+
+            addLog(`Excel Yüklendi (V24): ${added} yeni, ${updated} güncelleme.`);
             alert(`${added} yeni ürün eklendi, ${updated} ürün güncellendi.`);
             document.getElementById('globalSaveBtn').style.display = 'flex';
             renderTable();

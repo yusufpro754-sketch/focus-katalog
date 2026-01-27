@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V24 (Garantili)</title>
+    <title>Focus Medikal - Panel V25 (Deep Scan)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -290,6 +290,7 @@
                 productData.forEach(p => { if(!p.id) p.id = Date.now() + Math.random(); });
                 storeOriginalState();
 
+                // Tüm kategorileri bul ve otomatik AÇ
                 const cats = [...new Set(productData.map(p => p.category))];
                 cats.forEach(c => openCategories.add(c));
                 
@@ -569,58 +570,84 @@
             return parseFloat(clean) || 0;
         }
 
-        // --- V24 PARSER (Kategori Açma Özellikli) ---
+        // --- V25 DEEP SCAN PARSER (Satır Analizi) ---
         function parseRowsMerge(rows) {
             let added = 0; let updated = 0;
             let currentCat = "GENEL LİSTE";
             
-            // KARA LİSTE (Başlık Satırlarını Ele)
+            // KARA LİSTE
             const blacklist = ["ÜRÜN", "STOK", "FİYAT", "TOPLAM", "ADET", "TUTAR", "HUMAY", "TABLOSU"];
 
             rows.forEach(row => {
                 if(!row || row.length === 0) return;
 
-                // Verileri al
-                let a = (row[0] || "").toString().trim(); // Ürün Adı
-                let b = (row[1] || "").toString().trim(); // Stok
-                let c = (row[2] || "").toString().trim(); // Fiyat veya Kategori
+                // Satırdaki tüm hücreleri tara
+                let numbers = [];
+                let texts = [];
 
-                // 1. KATEGORİ Mİ? (A boş, C dolu ve yazı)
-                // Ayrıca C "FİYAT" gibi bir başlık olmamalı
-                if (a === "" && c !== "" && isNaN(cleanPrice(c))) {
-                    if(!blacklist.some(w => c.toUpperCase().includes(w))) {
-                        currentCat = c.toUpperCase();
+                row.forEach(cell => {
+                    if (cell !== null && cell !== undefined && cell.toString().trim() !== "") {
+                        const valStr = cell.toString().trim();
+                        const cleanVal = cleanPrice(valStr);
+                        
+                        // Sadece rakam veya para birimi içerenler SAYI
+                        if (cleanVal > 0 && /^[0-9.,\sTLtry₺]+$/i.test(valStr)) {
+                            numbers.push(cleanVal);
+                        } else {
+                            // Harf içerenler YAZI (Kara listede değilse)
+                            let isBad = blacklist.some(w => valStr.toUpperCase().includes(w));
+                            if(!isBad) texts.push(valStr);
+                        }
                     }
+                });
+
+                // --- KARAR ANI ---
+
+                // 1. Sadece YAZI var, HİÇ SAYI YOK -> KATEGORİ
+                if (texts.length > 0 && numbers.length === 0) {
+                    currentCat = texts[0].toUpperCase(); // İlk metni kategori yap
                     return; 
                 }
 
-                // 2. ÜRÜN MÜ? (A dolu)
-                if (a !== "") {
-                    // Kara liste kontrolü
-                    let isBlacklisted = blacklist.some(w => a.toUpperCase().includes(w));
-                    if(isBlacklisted) return; 
-
-                    let pName = a;
-                    let pStock = cleanPrice(b);
-                    let pPrice = cleanPrice(c);
+                // 2. Hem YAZI hem SAYI var -> ÜRÜN
+                if (texts.length > 0 && numbers.length > 0) {
+                    let pName = texts[0]; // İlk metin Ürün Adı
+                    let pPrice = 0;
+                    let pQty = 0;
+                    
+                    // Sayıları yorumla: Büyükten küçüğe sırala
+                    numbers.sort((a,b) => b-a); 
+                    
+                    if(numbers.length === 1) {
+                        pPrice = numbers[0]; // Tek sayı varsa fiyattır
+                    } else {
+                        // En büyük sayı fiyat (Barkod değilse), ikinci büyük adet
+                        if(numbers[0] < 1000000) {
+                            pPrice = numbers[0];
+                            pQty = numbers[1];
+                        } else {
+                            pPrice = numbers[1] || 0;
+                            pQty = numbers[2] || 0;
+                        }
+                    }
 
                     const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.toLowerCase());
                     if (existingIndex > -1) {
                         productData[existingIndex].price = pPrice || productData[existingIndex].price;
-                        productData[existingIndex].qty = pStock > 0 ? pStock : productData[existingIndex].qty;
+                        productData[existingIndex].qty = pQty > 0 ? pQty : productData[existingIndex].qty;
                         updated++;
                     } else {
-                        productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pName, price: pPrice || 0, qty: pStock || 0 });
+                        productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pName, price: pPrice || 0, qty: pQty || 0 });
                         added++;
                     }
                 }
             });
 
-            // --- KRİTİK DÜZELTME: YENİ KATEGORİLERİ GÖRÜNÜR YAP ---
+            // YENİ EKLENEN KATEGORİLERİ GÖRÜNÜR YAP
             const allCats = [...new Set(productData.map(p => p.category))];
             allCats.forEach(c => openCategories.add(c));
 
-            addLog(`Excel Yüklendi (V24): ${added} yeni, ${updated} güncelleme.`);
+            addLog(`Excel Yüklendi (V25): ${added} yeni, ${updated} güncelleme.`);
             alert(`${added} yeni ürün eklendi, ${updated} ürün güncellendi.`);
             document.getElementById('globalSaveBtn').style.display = 'flex';
             renderTable();

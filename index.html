@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V31 (Column Lock)</title>
+    <title>Focus Medikal - Panel V32 (Manual Map)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -78,8 +78,6 @@
         .badge-info { background: #e0f2fe; color: #0369a1; }
         .badge-inc { background: #dcfce7; color: #166534; }
         .badge-dec { background: #fee2e2; color: #991b1b; }
-        
-        /* ÖZEL LOG NOTU STİLİ */
         .log-note { display: block; margin-top: 5px; font-size: 0.85rem; color: #f97316; font-style: italic; font-weight: 700; border-left: 3px solid #f97316; padding-left: 8px; }
 
         @media (max-width: 768px) {
@@ -322,8 +320,7 @@
         // --- YENİ EKLENEN ÖZELLİK: LOGA NOT EKLEME (ALT SATIR + TURUNCU) ---
         function editLogDesc(index) {
             const currentDesc = logData[index].action;
-            // Eski not varsa onu temizleyip ham metni gösterelim mi? Hayır, sadece ekleyelim.
-            const note = prompt("Eklenecek notu yazın:");
+            const note = prompt("Bu işleme eklenecek notu yazın:");
             if(note && note.trim() !== "") {
                 const timestamp = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
                 // Notu özel bir formatta (ayıraç ile) ekliyoruz
@@ -351,7 +348,6 @@
                     let noteText = "";
                     
                     if(parts.length > 1) {
-                        // Eğer birden fazla not varsa hepsini alt alta ekle
                         for(let i=1; i<parts.length; i++) {
                             noteText += `<span class="log-note"><i class="fa-solid fa-comment-dots"></i> ${parts[i]}</span>`;
                         }
@@ -601,7 +597,7 @@
             return parseFloat(clean) || 0;
         }
 
-        // --- V31: SÜTUN KİLİTLİ PARSER (KESİN ÇÖZÜM) ---
+        // --- V32: MANUAL MAPPING (Sütunlar Sabit) ---
         function parseRowsMerge(rows) {
             let added = 0; let updated = 0;
             let currentCat = "GENEL LİSTE";
@@ -610,13 +606,16 @@
             rows.forEach(row => {
                 if(!row || row.length === 0) return;
 
-                // HÜCRELERİ GARANTİ ALTINA AL (Undefined hatasını önle)
-                let col0 = (row[0] || "").toString().trim(); // A Sütunu (İsim)
-                let col1 = (row[1] || "").toString().trim(); // B Sütunu (STOK)
-                let col2 = (row[2] || "").toString().trim(); // C Sütunu (FİYAT) - Bazen Kategori
+                // Dosya Formatına Göre Kesin Sütunlar:
+                // A [0] = Ürün Adı
+                // B [1] = Stok Adedi
+                // C [2] = Fiyat (veya Kategori)
 
-                // 1. KATEGORİ Mİ? (A boş, C dolu ve yazı)
-                // "KABİN ÜRÜNLERİ" gibi başlıklar C sütununda oluyor
+                let col0 = (row[0] || "").toString().trim(); 
+                let col1 = (row[1] || "").toString().trim(); 
+                let col2 = (row[2] || "").toString().trim(); 
+
+                // 1. Kategori Kontrolü (A boş, C dolu ve yazı)
                 if (col0 === "" && col2 !== "" && isNaN(cleanPrice(col2))) {
                     if(!blacklist.some(w => col2.toUpperCase().includes(w))) {
                         currentCat = col2.toUpperCase();
@@ -624,22 +623,23 @@
                     return; 
                 }
 
-                // 2. ÜRÜN MÜ? (A dolu)
+                // 2. Ürün Kontrolü (A dolu)
                 if (col0 !== "") {
-                    // Başlık satırı kontrolü
+                    // Başlık satırlarını atla
                     if (blacklist.some(w => col0.toUpperCase().includes(w))) return;
 
                     let pName = col0;
                     
-                    // KESİN VE NET: B=STOK, C=FİYAT
-                    // Sıralama yok, tahmin yok. Dosya neyse o.
-                    let pStock = cleanPrice(row[1]); 
-                    let pPrice = cleanPrice(row[2]);
+                    // --- BURASI DEĞİŞTİ: ASLA SIRALAMA YOK ---
+                    // B sütunu neyse Stok odur. C sütunu neyse Fiyat odur.
+                    // Boşsa 0 kabul edilir ama yer değiştirilmez.
+                    let pStock = cleanPrice(col1); 
+                    let pPrice = cleanPrice(col2);
 
                     const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.toLowerCase());
                     if (existingIndex > -1) {
                         productData[existingIndex].price = pPrice || productData[existingIndex].price;
-                        productData[existingIndex].qty = pStock; // Stok 0 olsa bile güncelle
+                        productData[existingIndex].qty = pStock; // Stoğu daima güncelle (0 olsa bile)
                         updated++;
                     } else {
                         productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pName, price: pPrice || 0, qty: pStock || 0 });
@@ -648,7 +648,6 @@
                 }
             });
 
-            // Yeni kategorileri aç
             const allCats = [...new Set(productData.map(p => p.category))];
             allCats.forEach(c => openCategories.add(c));
 

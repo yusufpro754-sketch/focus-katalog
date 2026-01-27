@@ -1,16 +1,8 @@
-Sorunu tespit ettim. "Bu kadar zor olmaması gerek" dediğin konuda çok haklısın. Sorun Excel kütüphanesinin (SheetJS) varsayılan davranışında gizli.
-Excel'de bir kutucuk boşsa, kütüphane o kutuyu "yok" sayıp sağdaki veriyi sola kaydırıyor.
-Örneğin:
- * Excel'de: [Ürün Adı] [ (Boş) ] [ 100 TL ]
- * Kodun gördüğü: [Ürün Adı] [ 100 TL ]
-Böyle olunca kod, 100 TL'yi "Stok Adedi" (2. sıradaki veri) sanıyor. Fiyat yerine Adet yazmasının sebebi %100 budur.
-V33 (Kesin Çözüm) ile kütüphaneye "Boş kutuları atlama, onları da boş olarak getir" (defval: "") emrini verdim. Artık kayma olması imkansız. Ayrıca ne olur ne olmaz diye listeye bir "Sütunları Değiştir" butonu ekledim; eğer yine ters gelirse tek tuşla düzeltebileceksin.
-İşte hatasız çalışacak kod:
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V33 (No-Shift)</title>
+    <title>Focus Medikal - Panel V34 (Auto-Detect)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -46,8 +38,6 @@ V33 (Kesin Çözüm) ile kütüphaneye "Boş kutuları atlama, onları da boş o
         .btn-export { background: #6366f1; }
         .btn-reset { background: var(--danger); }
         .btn-log { background: #334155; } 
-        /* YENİ: Sütun Değiştirme Butonu */
-        .btn-swap { background: #8b5cf6; }
 
         .search-box { width: 100%; position: relative; }
         .search-box input { width: 100%; height: 40px; padding-left: 40px; border-radius: 8px; border: 1px solid var(--border); outline: none; background: #f8fafc; font-size: 1rem; }
@@ -88,11 +78,12 @@ V33 (Kesin Çözüm) ile kütüphaneye "Boş kutuları atlama, onları da boş o
         .badge-info { background: #e0f2fe; color: #0369a1; }
         .badge-inc { background: #dcfce7; color: #166534; }
         .badge-dec { background: #fee2e2; color: #991b1b; }
+        
         .log-note { display: block; margin-top: 5px; font-size: 0.85rem; color: #f97316; font-style: italic; font-weight: 700; border-left: 3px solid #f97316; padding-left: 8px; }
 
         @media (max-width: 768px) {
             .btn span { display: none; }
-            .btn-excel span, .btn-add span, #globalSaveBtn span, .btn-log span, .btn-swap span { display: inline-block; }
+            .btn-excel span, .btn-add span, #globalSaveBtn span, .btn-log span { display: inline-block; }
             thead { display: none; } 
             table, tbody { display: block; width: 100%; }
             tr { display: block; width: 100%; margin-bottom: 0; }
@@ -162,9 +153,6 @@ V33 (Kesin Çözüm) ile kütüphaneye "Boş kutuları atlama, onları da boş o
                     <i class="fa-solid fa-file-excel"></i> <span>Excel Yükle</span>
                     <input type="file" id="fileInput" hidden accept=".xlsx, .xls" onchange="processExcel(this)">
                 </label>
-                <button class="btn btn-swap" onclick="swapColumns()">
-                    <i class="fa-solid fa-arrow-right-arrow-left"></i> <span>Adet/Fiyat Değiştir</span>
-                </button>
                 <button class="btn btn-export" onclick="exportToExcel()">
                     <i class="fa-solid fa-file-arrow-down"></i> <span>İndir</span>
                 </button>
@@ -330,26 +318,13 @@ V33 (Kesin Çözüm) ile kütüphaneye "Boş kutuları atlama, onları da boş o
             if(logData.length > 5000) logData.pop(); 
         }
 
-        // --- YENİ EKLENEN ÖZELLİK: SÜTUN DEĞİŞTİR ---
-        function swapColumns() {
-            if(productData.length === 0) { alert("Liste boş."); return; }
-            if(confirm("Fiyat ve Adet sütunlarının yerini değiştirmek istiyor musunuz?")) {
-                productData.forEach(p => {
-                    let temp = p.price;
-                    p.price = p.qty;
-                    p.qty = temp;
-                });
-                renderTable();
-                document.getElementById('globalSaveBtn').style.display = 'flex';
-                addLog("Yönetici Fiyat/Adet sütunlarını değiştirdi.");
-            }
-        }
-
+        // --- GÜVENLİ NOT EKLEME (APPEND MOD) ---
         function editLogDesc(index) {
             const currentDesc = logData[index].action;
-            const note = prompt("Bu işleme eklenecek notu yazın:");
+            const note = prompt("Bu işleme eklenecek notu yazın (Eski yazı silinmez):");
             if(note && note.trim() !== "") {
                 const timestamp = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+                // Eski notun üzerine "|||" ile yeni notu ekle
                 logData[index].action = currentDesc + `|||${note} (${timestamp})`;
                 saveToCloud();
                 openLogModal();
@@ -368,6 +343,7 @@ V33 (Kesin Çözüm) ile kütüphaneye "Boş kutuları atlama, onları da boş o
                     if(log.action.includes("Eklendi") || log.action.includes("girişi")) actionClass = "badge-inc";
                     if(log.action.includes("Silindi")) actionClass = "badge-dec";
                     
+                    // Notu parçala: Ana Metin ||| Ek Açıklama
                     let parts = log.action.split('|||');
                     let mainText = parts[0];
                     let noteText = "";
@@ -478,6 +454,8 @@ V33 (Kesin Çözüm) ile kütüphaneye "Boş kutuları atlama, onları da boş o
                     const pVal = item.price === 0 ? '' : item.price;
                     const qVal = item.qty === 0 ? '' : item.qty;
                     const trashHTML = isAdmin ? `<td class="trash-cell" style="text-align:center;"><i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="deleteItem(${item.id}, '${item.name}')"></i></td>` : '<td></td>';
+                    
+                    // DRAG HANDLE (Masaüstü için)
                     const handleHTML = isAdmin ? `<i class="fa-solid fa-grip-lines drag-handle"></i>` : '';
 
                     tr.innerHTML = `
@@ -600,7 +578,7 @@ V33 (Kesin Çözüm) ile kütüphaneye "Boş kutuları atlama, onları da boş o
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                // EXCEL OKURKEN BOŞ HÜCRELERİ DE AL (defval: "") - BU ÇOK ÖNEMLİ
+                // BOŞLUKLARI OKU (defval)
                 const wb = XLSX.read(e.target.result, { type: 'array' });
                 const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" }); 
                 parseRowsMerge(rows);
@@ -623,43 +601,66 @@ V33 (Kesin Çözüm) ile kütüphaneye "Boş kutuları atlama, onları da boş o
             return parseFloat(clean) || 0;
         }
 
-        // --- V33: NO-SHIFT PARSER (Kaydırma Önleyici) ---
+        // --- V34: AKILLI DEDEKTÖR (Smart Detect) ---
         function parseRowsMerge(rows) {
             let added = 0; let updated = 0;
             let currentCat = "GENEL LİSTE";
+            
+            // 1. BAŞLIK SÜTUNLARINI BUL (Otomatik Algılama)
+            let stockIndex = -1;
+            let priceIndex = -1;
+            let nameIndex = 0; // Varsayılan A sütunu
+
+            // İlk 20 satırı tara, başlıkları bul
+            for(let i=0; i<Math.min(rows.length, 20); i++) {
+                const row = rows[i];
+                for(let j=0; j<row.length; j++) {
+                    const cell = (row[j] || "").toString().toUpperCase();
+                    if(cell.includes("STOK")) stockIndex = j;
+                    if(cell.includes("FİYAT")) priceIndex = j;
+                }
+            }
+
+            // Eğer başlıklar bulunamazsa standart (B=1, C=2) kullan
+            if(stockIndex === -1) stockIndex = 1;
+            if(priceIndex === -1) priceIndex = 2;
+
             const blacklist = ["ÜRÜN", "STOK", "FİYAT", "TOPLAM", "ADET", "HUMAY", "TABLOSU"];
 
             rows.forEach(row => {
                 if(!row || row.length === 0) return;
 
-                // defval: "" sayesinde artık row[0] boşsa, gerçekten boştur. Kaymaz.
-                let col0 = (row[0] || "").toString().trim(); // A: İsim
-                let col1 = (row[1] || "").toString().trim(); // B: Stok
-                let col2 = (row[2] || "").toString().trim(); // C: Fiyat (veya Kategori)
-
-                // 1. KATEGORİ Mİ? (A boş, C dolu ve yazı)
-                if (col0 === "" && col2 !== "" && isNaN(cleanPrice(col2))) {
-                    if(!blacklist.some(w => col2.toUpperCase().includes(w))) {
-                        currentCat = col2.toUpperCase();
+                // Dinamik indekslere göre verileri çek
+                let pNameRaw = (row[nameIndex] || "").toString().trim();
+                let pStockRaw = row[stockIndex];
+                let pPriceRaw = row[priceIndex];
+                
+                // Kategori Bulma (İsim sütunu boş, ama Fiyat sütununda yazı varsa)
+                // Örn: ,,KABİN ÜRÜNLERİ (A boş, C dolu)
+                let potentialCat = (row[priceIndex] || "").toString().trim();
+                
+                if (pNameRaw === "" && potentialCat !== "" && isNaN(cleanPrice(potentialCat))) {
+                    if(!blacklist.some(w => potentialCat.toUpperCase().includes(w))) {
+                        currentCat = potentialCat.toUpperCase();
                     }
                     return; 
                 }
 
-                // 2. ÜRÜN MÜ? (A dolu)
-                if (col0 !== "") {
-                    if (blacklist.some(w => col0.toUpperCase().includes(w))) return;
+                // Ürün Ekleme (İsim sütunu doluysa)
+                if (pNameRaw !== "") {
+                    // Başlık satırını atla
+                    if (blacklist.some(w => pNameRaw.toUpperCase().includes(w))) return;
 
-                    let pName = col0;
-                    let pStock = cleanPrice(col1); 
-                    let pPrice = cleanPrice(col2);
+                    let pStock = cleanPrice(pStockRaw);
+                    let pPrice = cleanPrice(pPriceRaw);
 
-                    const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.toLowerCase());
+                    const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pNameRaw.toLowerCase());
                     if (existingIndex > -1) {
                         productData[existingIndex].price = pPrice || productData[existingIndex].price;
                         productData[existingIndex].qty = pStock;
                         updated++;
                     } else {
-                        productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pName, price: pPrice || 0, qty: pStock || 0 });
+                        productData.push({ id: Date.now() + Math.random(), category: currentCat, name: pNameRaw, price: pPrice || 0, qty: pStock || 0 });
                         added++;
                     }
                 }
@@ -723,4 +724,3 @@ V33 (Kesin Çözüm) ile kütüphaneye "Boş kutuları atlama, onları da boş o
     </script>
 </body>
 </html>
-

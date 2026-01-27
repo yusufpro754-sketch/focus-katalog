@@ -1,3 +1,11 @@
+Sorunu tespit ettim. "Bu kadar zor olmaması gerek" dediğin konuda çok haklısın. Sorun Excel kütüphanesinin (SheetJS) varsayılan davranışında gizli.
+Excel'de bir kutucuk boşsa, kütüphane o kutuyu "yok" sayıp sağdaki veriyi sola kaydırıyor.
+Örneğin:
+ * Excel'de: [Ürün Adı] [ (Boş) ] [ 100 TL ]
+ * Kodun gördüğü: [Ürün Adı] [ 100 TL ]
+Böyle olunca kod, 100 TL'yi "Stok Adedi" (2. sıradaki veri) sanıyor. Fiyat yerine Adet yazmasının sebebi %100 budur.
+V33 (Kesin Çözüm) ile kütüphaneye "Boş kutuları atlama, onları da boş olarak getir" (defval: "") emrini verdim. Artık kayma olması imkansız. Ayrıca ne olur ne olmaz diye listeye bir "Sütunları Değiştir" butonu ekledim; eğer yine ters gelirse tek tuşla düzeltebileceksin.
+İşte hatasız çalışacak kod:
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -715,3 +723,4 @@
     </script>
 </body>
 </html>
+

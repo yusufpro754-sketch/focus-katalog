@@ -6,7 +6,9 @@ let originalState = {};
 let isAdmin = false;
 let currentUser = "Misafir"; 
 let openCategories = new Set(); 
-let draggedItemId = null; // Sürüklenen ID
+// Drag & Drop Değişkenleri
+let draggedItemId = null;
+let draggedItemIndex = -1;
 
 window.onload = function() { fetchData(); };
 
@@ -16,7 +18,7 @@ function loginToggle() {
         isAdmin = false;
         currentUser = "Misafir";
         document.getElementById('adminControls').style.display = 'none';
-        document.getElementById('dragHint').style.display = 'none'; // İpucunu gizle
+        document.getElementById('dragHint').style.display = 'none';
         document.getElementById('loginText').innerText = "Giriş Yap";
         renderTable();
     } else {
@@ -25,7 +27,7 @@ function loginToggle() {
             isAdmin = true;
             currentUser = "Yönetici"; 
             document.getElementById('adminControls').style.display = 'flex';
-            document.getElementById('dragHint').style.display = 'block'; // İpucunu göster
+            document.getElementById('dragHint').style.display = 'block';
             document.getElementById('loginText').innerText = "Çıkış Yap";
             addLog("Yönetici girişi yapıldı.");
             renderTable();
@@ -107,7 +109,7 @@ function openLogModal() {
 }
 function closeLogModal() { document.getElementById('logModal').style.display = 'none'; }
 
-// --- KAYDETME VE RAPOR ---
+// --- KAYDETME ---
 function openSaveModal() {
     document.getElementById('saveNote').value = "";
     document.getElementById('saveModal').style.display = 'flex';
@@ -132,7 +134,6 @@ function confirmSave() {
         if (p.name !== old.name) {
             changesLog.push(`${old.name} ismi "${p.name}" olarak değiştirildi`);
         }
-        // Kategori değişikliği kontrolü
         if (p.category !== old.category) {
             changesLog.push(`${p.name}, "${old.category}" kategorisinden "${p.category}" kategorisine taşındı`);
         }
@@ -160,7 +161,7 @@ async function saveToCloud() {
     btn.innerHTML = original;
 }
 
-// --- AKILLI EXCEL PARSER (V41) ---
+// --- AKILLI EXCEL OKUYUCU ---
 function processExcel(input) {
     const file = input.files[0];
     if (!file) return;
@@ -168,7 +169,6 @@ function processExcel(input) {
     reader.onload = function(e) {
         const wb = XLSX.read(e.target.result, { type: 'array' });
         const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" }); 
-        // Otomatik Format Algıla
         let map = detectColumns(rows);
         parseRowsSmart(rows, map);
     };
@@ -188,7 +188,6 @@ function cleanPrice(str) {
 
 function detectColumns(rows) {
     let map = { name: 0, stock: 1, price: 2, category: -1, isStructured: false };
-    // Başlık satırını ara (İlk 10 satır)
     for(let i=0; i<Math.min(rows.length, 10); i++) {
         const row = rows[i].map(x => String(x).toUpperCase().trim());
         if (row.includes("ÜRÜN") && (row.includes("FİYAT") || row.includes("ADET"))) {
@@ -215,32 +214,26 @@ function parseRowsSmart(rows, map) {
         let pName = "", pStock = 0, pPrice = 0, pCat = "";
 
         if (map.isStructured) {
-            // FORMAT 1: Düzenli Dosya
             let rawName = (row[map.name] || "").toString().trim();
             if (rawName === "" || blacklist.some(w => rawName.toUpperCase().includes(w))) return;
             pName = rawName;
             pStock = cleanPrice(row[map.stock]);
             pPrice = cleanPrice(row[map.price]);
-            // Eğer kategori sütunu varsa ve o satırda doluysa güncelle
             if (map.category > -1 && row[map.category]) {
                 let catVal = row[map.category].toString().trim();
                 if (catVal !== "") currentCat = catVal.toUpperCase();
             }
             pCat = currentCat;
         } else {
-            // FORMAT 2: Humay (A=İsim, B=Stok, C=Fiyat/Kategori)
             let colA = (row[0] || "").toString().trim(); 
             let colB = (row[1] || "").toString().trim(); 
             let colC = (row[2] || "").toString().trim(); 
-
-            // Kategori Tespiti
             if (colA === "" && colC !== "" && isNaN(cleanPrice(colC))) {
                 if(!blacklist.some(w => colC.toUpperCase().includes(w))) {
                     currentCat = colC.toUpperCase();
                 }
                 return; 
             }
-            // Ürün Tespiti
             if (colA !== "") {
                 if (blacklist.some(w => colA.toUpperCase().includes(w))) return;
                 pName = colA;
@@ -275,7 +268,7 @@ function parseRowsSmart(rows, map) {
     }
 }
 
-// --- KATEGORİ DÜZENLEME & SÜRÜKLE BIRAK ---
+// --- DÜZENLEME ---
 function editCategoryName(oldCatName) {
     if (!isAdmin) { alert("Yetkisiz işlem."); return; }
     const newName = prompt("Kategori ismini düzenle:", oldCatName);
@@ -294,51 +287,109 @@ function toggleCategory(cat) {
     renderTable(); 
 }
 
-// DRAG & DROP FONKSİYONLARI
+// --- SÜRÜKLE BIRAK (YENİ VE GELİŞMİŞ) ---
 function handleDragStart(e) {
     if (!isAdmin) return;
     draggedItemId = parseFloat(e.target.dataset.id);
+    draggedItemIndex = parseInt(e.target.dataset.idx); // Render sırasındaki index
     e.target.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
 }
 
 function handleDragEnd(e) {
     e.target.classList.remove('dragging');
-    // Tüm highlightları temizle
-    document.querySelectorAll('.cat-row').forEach(row => row.classList.remove('drag-over'));
+    document.querySelectorAll('tr').forEach(row => {
+        row.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over');
+    });
 }
 
-function handleDragOverCategory(e) {
+function handleDragOver(e) {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    const row = e.target.closest('.cat-row');
-    if (row) row.classList.add('drag-over');
+    if (!isAdmin) return;
+    const targetRow = e.target.closest('tr');
+    if (!targetRow || targetRow.classList.contains('dragging')) return;
+
+    if (targetRow.classList.contains('item-row')) {
+        // Ürün satırı üzerindeyse
+        const rect = targetRow.getBoundingClientRect();
+        const offset = e.clientY - rect.top;
+        targetRow.classList.remove('drag-over-top', 'drag-over-bottom');
+        if (offset < rect.height / 2) {
+            targetRow.classList.add('drag-over-top');
+        } else {
+            targetRow.classList.add('drag-over-bottom');
+        }
+    } else if (targetRow.classList.contains('cat-row')) {
+        // Kategori başlığı üzerindeyse
+        targetRow.classList.add('drag-over');
+    }
 }
 
-function handleDragLeaveCategory(e) {
-    const row = e.target.closest('.cat-row');
-    if (row) row.classList.remove('drag-over');
+function handleDragLeave(e) {
+    const targetRow = e.target.closest('tr');
+    if (targetRow) {
+        targetRow.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over');
+    }
 }
 
-function handleDropOnCategory(e, catName) {
+function handleDrop(e) {
     e.preventDefault();
-    const row = e.target.closest('.cat-row');
-    if (row) row.classList.remove('drag-over');
+    e.stopPropagation();
+    if (!isAdmin || !draggedItemId) return;
 
-    if (draggedItemId) {
-        const item = productData.find(p => p.id === draggedItemId);
-        if (item && item.category !== catName) {
-            const oldCat = item.category;
-            item.category = catName;
-            // Kategori kapalıysa aç ki ürün görünsün
-            if (!openCategories.has(catName)) openCategories.add(catName);
+    const targetRow = e.target.closest('tr');
+    if (!targetRow) return;
+
+    const draggedItem = productData.find(p => p.id === draggedItemId);
+    const draggedIndex = productData.indexOf(draggedItem);
+
+    if (targetRow.classList.contains('cat-row')) {
+        // KATEGORİYE BIRAKMA
+        const newCategory = targetRow.querySelector('.cat-actions span').innerText;
+        if (draggedItem.category !== newCategory) {
+            draggedItem.category = newCategory;
+            // Kategorinin en başına taşı
+            productData.splice(draggedIndex, 1);
+            // Hedef kategorinin ilk ürününü bul
+            const firstInCatIndex = productData.findIndex(p => p.category === newCategory);
+            if(firstInCatIndex > -1) {
+                productData.splice(firstInCatIndex, 0, draggedItem);
+            } else {
+                productData.push(draggedItem); // Kategori boşsa sona ekle
+            }
+            if(!openCategories.has(newCategory)) openCategories.add(newCategory);
+        }
+    } 
+    else if (targetRow.classList.contains('item-row')) {
+        // ÜRÜNE BIRAKMA (SIRALAMA VE KATEGORİ DEĞİŞİMİ)
+        const targetId = parseFloat(targetRow.dataset.id);
+        const targetItem = productData.find(p => p.id === targetId);
+        const targetIndex = productData.indexOf(targetItem);
+
+        if (draggedItem && targetItem && draggedItem !== targetItem) {
+            // Eğer kategori farklıysa güncelle
+            if (draggedItem.category !== targetItem.category) {
+                draggedItem.category = targetItem.category;
+            }
+
+            // Dizideki yerini değiştir
+            productData.splice(draggedIndex, 1);
+            // Tekrar index bul (silindiği için kaymış olabilir)
+            const newTargetIndex = productData.indexOf(targetItem);
             
-            // Loglama yapmayalım çünkü kaydet butonuna basınca toplu loglayacak
-            // Ama kullanıcıya görsel geri bildirim verelim (Tablo yenilenecek)
-            renderTable();
-            document.getElementById('globalSaveBtn').style.display = 'flex';
+            // Üstüne mi altına mı?
+            if (targetRow.classList.contains('drag-over-bottom')) {
+                productData.splice(newTargetIndex + 1, 0, draggedItem);
+            } else {
+                productData.splice(newTargetIndex, 0, draggedItem);
+            }
         }
     }
+
+    // Temizlik ve Yenileme
+    handleDragEnd({ target: document.querySelector('.dragging') });
+    document.getElementById('globalSaveBtn').style.display = 'flex';
+    renderTable();
 }
 
 // --- RENDER TABLE ---
@@ -352,61 +403,74 @@ function renderTable() {
         calculateTotal(); return;
     }
 
-    const grouped = {};
-    productData.forEach(p => {
-        if (p.name.toLowerCase().includes(term)) {
-            const cat = (p.category || "DİĞER").trim().toUpperCase();
-            if(!grouped[cat]) grouped[cat] = [];
-            grouped[cat].push(p);
-        }
-    });
+    // Gruplama sırasını productData sırasına göre yapmalıyız
+    // productData zaten sıralı olduğu için, sırayla dönerken kategorileri oluşturacağız.
+    // Ancak arama yapıldığında işler değişir. Arama yoksa sıralı, varsa filtrelenmiş.
+    
+    let displayData = productData;
+    if (term) {
+        displayData = productData.filter(p => p.name.toLowerCase().includes(term));
+    }
 
     const readOnlyNamePrice = isAdmin ? '' : 'readonly';
+    let globalIndex = 1; // Sıra numarası sayacı
+    let lastCategory = null;
 
-    Object.keys(grouped).forEach((cat) => {
-        const isOpen = openCategories.has(cat);
-        const displayStyle = isOpen ? '' : 'none';
-        const iconRotate = isOpen ? 'rotate(-180deg)' : 'rotate(0deg)';
+    displayData.forEach((item, index) => {
+        // Kategori Başlığı (Değiştiyse bas)
+        if (item.category !== lastCategory) {
+            lastCategory = item.category;
+            // Arama yapılıyorsa kategori başlıklarını gizle/göster mantığına girmeyelim,
+            // sadece başlığı basalım.
+            const isOpen = openCategories.has(lastCategory) || term.length > 0; // Arama varsa hepsi açık
+            const displayStyle = isOpen ? '' : 'none'; // Ürünler için stil
+            const iconRotate = isOpen ? 'rotate(-180deg)' : 'rotate(0deg)';
 
-        const trCat = document.createElement('tr');
-        trCat.className = 'cat-row';
-        // Sürükle Bırak Eventleri (Kategoriye Bırakma)
-        if (isAdmin) {
-            trCat.addEventListener('dragover', handleDragOverCategory);
-            trCat.addEventListener('dragleave', handleDragLeaveCategory);
-            trCat.addEventListener('drop', (e) => handleDropOnCategory(e, cat));
+            const trCat = document.createElement('tr');
+            trCat.className = 'cat-row';
+            if (isAdmin) {
+                trCat.addEventListener('dragover', handleDragOver);
+                trCat.addEventListener('dragleave', handleDragLeave);
+                trCat.addEventListener('drop', handleDrop);
+            }
+            
+            trCat.innerHTML = `
+                <td colspan="6">
+                    <div class="cat-actions" onclick="toggleCategory('${lastCategory}')" style="flex-grow:1; display:flex; align-items:center; justify-content:space-between;">
+                        <span>${lastCategory}</span>
+                        <i class="fa-solid fa-chevron-down cat-icon" style="transform:${iconRotate}"></i>
+                    </div>
+                    ${isAdmin ? `<button class="cat-edit-btn" onclick="event.stopPropagation(); editCategoryName('${lastCategory}')"><i class="fa-solid fa-pen"></i></button>` : ''}
+                </td>
+            `;
+            tbody.appendChild(trCat);
         }
 
-        trCat.innerHTML = `
-            <td colspan="6">
-                <div class="cat-actions" onclick="toggleCategory('${cat}')" style="flex-grow:1; display:flex; align-items:center; justify-content:space-between;">
-                    <span>${cat}</span>
-                    <i class="fa-solid fa-chevron-down cat-icon" style="transform:${iconRotate}"></i>
-                </div>
-                ${isAdmin ? `<button class="cat-edit-btn" onclick="event.stopPropagation(); editCategoryName('${cat}')"><i class="fa-solid fa-pen"></i></button>` : ''}
-            </td>
-        `;
-        tbody.appendChild(trCat);
-
-        grouped[cat].forEach((item) => {
+        // Ürün Satırı
+        // Kategori kapalıysa ve arama yoksa gizle
+        const isVisible = openCategories.has(item.category) || term.length > 0;
+        
+        if (isVisible) {
             const tr = document.createElement('tr');
-            tr.style.display = displayStyle;
             tr.className = `item-row`;
-            tr.setAttribute('draggable', isAdmin); // Sadece admin sürükleyebilir
             tr.dataset.id = item.id;
+            tr.dataset.idx = index; // Dizi sırası
             
-            if(isAdmin) {
+            if(isAdmin && !term) { // Sadece arama yokken sıralama yapılabilir
+                tr.setAttribute('draggable', true);
                 tr.addEventListener('dragstart', handleDragStart);
+                tr.addEventListener('dragover', handleDragOver);
+                tr.addEventListener('dragleave', handleDragLeave);
+                tr.addEventListener('drop', handleDrop);
                 tr.addEventListener('dragend', handleDragEnd);
             }
 
             const pVal = item.price === 0 ? '' : item.price;
             const qVal = item.qty === 0 ? '' : item.qty;
             const trashHTML = isAdmin ? `<td class="trash-cell" style="text-align:center;"><i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="deleteItem(${item.id}, '${item.name}')"></i></td>` : '<td></td>';
-            const handleHTML = isAdmin ? `<i class="fa-solid fa-grip-lines drag-handle"></i>` : '';
 
             tr.innerHTML = `
-                <td style="text-align:center;">${handleHTML}</td>
+                <td class="index-cell">${globalIndex++}</td>
                 <td data-label="Ürün">
                     <input type="text" class="input-clean" value="${item.name}" ${readOnlyNamePrice} oninput="updateData(${item.id}, 'name', this.value)">
                 </td>
@@ -427,7 +491,7 @@ function renderTable() {
                 ${trashHTML}
             `;
             tbody.appendChild(tr);
-        });
+        }
     });
     calculateTotal();
 }

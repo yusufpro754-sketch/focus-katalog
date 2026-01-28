@@ -1,5 +1,5 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbzVyMRnnAtxPGEzezy2Vjj07UmrHS7M-0id6KNi7QhGLbgxnfycMjBstyYFaPtn8SMr/exec'; 
-const SYSTEM_PASS = "358034"; // YENİ ŞİFRE
+const ENCRYPTED_PASS = "MzU4MDM0";
 
 let productData = [];
 let customerData = [];
@@ -23,20 +23,21 @@ function verifyLogin() {
     const input = document.getElementById('loginPassword').value;
     const errorMsg = document.getElementById('loginError');
     
-    if (input === SYSTEM_PASS) {
+    // Kullanıcının girdiği şifreyi (input) şifreleyip (btoa), kayıtlı şifreli haliyle kıyaslıyoruz
+    if (btoa(input) === ENCRYPTED_PASS) {
         isAdmin = true;
-        // Giriş ekranını gizle, uygulamayı göster
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('appContainer').style.display = 'block';
         addLog("Sisteme giriş yapıldı.");
         refreshCurrentView();
     } else {
         errorMsg.style.display = 'block';
+        // Hatalı şifrede kutuyu temizle
+        document.getElementById('loginPassword').value = "";
     }
-}
-
+}  
 function logout() {
-    location.reload(); // Sayfayı yenileyerek çıkış yap
+    location.reload(); 
 }
 
 // --- SEKME YÖNETİMİ ---

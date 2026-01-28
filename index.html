@@ -2,8 +2,13 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V45 (CRM)</title>
+    <title>Focus Medikal - Panel V46</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3063/3063822.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -11,93 +16,103 @@
 </head>
 <body>
 
-    <div id="loading">
-        <div class="spinner"></div>
-        <p style="margin-top:15px; font-weight:600; color:#64748b;">Sistem Yükleniyor...</p>
+    <div id="loginScreen">
+        <div class="login-box">
+            <div class="login-logo"><i class="fa-solid fa-notes-medical"></i> FOCUS MEDİKAL</div>
+            <p style="color:#64748b; margin-bottom:20px;">Yönetici Paneli Girişi</p>
+            <input type="password" id="loginPassword" placeholder="Şifre Giriniz" onkeyup="if(event.key === 'Enter') verifyLogin()">
+            <button onclick="verifyLogin()">GİRİŞ YAP</button>
+            <p id="loginError" style="color:red; font-size:0.9rem; display:none; margin-top:10px;">Hatalı Şifre!</p>
+        </div>
     </div>
 
-    <div class="header">
-        <div class="header-content">
-            <div class="top-row">
-                <div class="brand-container">
-                    <div class="brand-logo"><i class="fa-solid fa-notes-medical"></i> FOCUS MEDİKAL</div>
-                    <button id="globalSaveBtn" class="btn" onclick="openSaveModal()">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> <span>KAYDET</span>
+    <div id="appContainer" style="display:none;">
+        
+        <div id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top:15px; font-weight:600; color:#64748b;">Veriler Yükleniyor...</p>
+        </div>
+
+        <div class="header">
+            <div class="header-content">
+                <div class="top-row">
+                    <div class="brand-container">
+                        <div class="brand-logo"><i class="fa-solid fa-notes-medical"></i> FOCUS MEDİKAL</div>
+                        <button id="globalSaveBtn" class="btn" onclick="openSaveModal()">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> <span>KAYDET</span>
+                        </button>
+                    </div>
+                    <button class="btn btn-login" onclick="logout()">
+                        <i class="fa-solid fa-right-from-bracket"></i> <span>Çıkış</span>
                     </button>
                 </div>
-                <button class="btn btn-login" onclick="loginToggle()">
-                    <i class="fa-solid fa-lock"></i> <span id="loginText">Giriş Yap</span>
-                </button>
-            </div>
 
-            <div class="nav-tabs">
-                <button class="nav-btn active" onclick="switchTab('stock')"><i class="fa-solid fa-boxes-stacked"></i> STOK LİSTESİ</button>
-                <button class="nav-btn" onclick="switchTab('customers')"><i class="fa-solid fa-users"></i> MÜŞTERİLER</button>
-            </div>
-
-            <div class="search-box">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="searchInput" placeholder="Arama yap..." onkeyup="handleSearch()">
-            </div>
-            
-            <div class="admin-panel" id="stockControls">
-                <button class="btn btn-add" onclick="openModal()">
-                    <i class="fa-solid fa-plus"></i> <span>Manuel Ekle</span>
-                </button>
-                <label class="btn btn-excel">
-                    <i class="fa-solid fa-file-excel"></i> <span>Excel Yükle</span>
-                    <input type="file" id="fileInput" hidden accept=".xlsx, .xls, .csv" onchange="processExcel(this)">
-                </label>
-                <button class="btn btn-export" onclick="exportToExcel()">
-                    <i class="fa-solid fa-file-arrow-down"></i> <span>İndir</span>
-                </button>
-                <button class="btn btn-log" onclick="openLogModal()">
-                    <i class="fa-solid fa-clock-rotate-left"></i> <span>Geçmiş</span>
-                </button>
-                <button class="btn btn-reset" onclick="resetAll()">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </div>
-
-            <div class="admin-panel" id="customerControls" style="display:none;">
-                <button class="btn btn-add" onclick="openCustomerModal()">
-                    <i class="fa-solid fa-user-plus"></i> <span>Müşteri Ekle</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div class="container">
-        
-        <div id="stockView" class="table-wrapper">
-            <div id="dragHint" style="display:none; text-align:center; padding:10px; background:#e0f2fe; color:#0369a1; border-radius:8px; margin-bottom:15px; font-size:0.9rem;">
-                <i class="fa-solid fa-arrows-up-down-left-right"></i> Düzenleme Modu Aktif
-            </div>
-            <table id="mainTable">
-                <thead>
-                    <tr>
-                        <th width="5%" style="text-align:center;">#</th>
-                        <th width="35%">ÜRÜN ADI</th>
-                        <th width="20%" style="text-align:right;">BİRİM FİYAT</th>
-                        <th width="20%" style="text-align:center;">ADET (STOK)</th>
-                        <th width="15%" style="text-align:right;">TOPLAM</th>
-                        <th width="5%"></th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
-        </div>
-
-        <div id="customerView" style="display:none;">
-            <div id="customerList" class="customer-grid">
+                <div class="nav-tabs">
+                    <button class="nav-btn active" onclick="switchTab('stock')"><i class="fa-solid fa-boxes-stacked"></i> STOK LİSTESİ</button>
+                    <button class="nav-btn" onclick="switchTab('customers')"><i class="fa-solid fa-users"></i> MÜŞTERİLER</button>
                 </div>
+
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="searchInput" placeholder="Arama yap..." onkeyup="handleSearch()">
+                </div>
+                
+                <div class="admin-panel" id="stockControls">
+                    <button class="btn btn-add" onclick="openModal()">
+                        <i class="fa-solid fa-plus"></i> <span>Manuel Ekle</span>
+                    </button>
+                    <label class="btn btn-excel">
+                        <i class="fa-solid fa-file-excel"></i> <span>Excel Yükle</span>
+                        <input type="file" id="fileInput" hidden accept=".xlsx, .xls, .csv" onchange="processExcel(this)">
+                    </label>
+                    <button class="btn btn-export" onclick="exportToExcel()">
+                        <i class="fa-solid fa-file-arrow-down"></i> <span>İndir</span>
+                    </button>
+                    <button class="btn btn-log" onclick="openLogModal()">
+                        <i class="fa-solid fa-clock-rotate-left"></i> <span>Geçmiş</span>
+                    </button>
+                    <button class="btn btn-reset" onclick="resetAll()">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+
+                <div class="admin-panel" id="customerControls" style="display:none;">
+                    <button class="btn btn-add" onclick="openCustomerModal()">
+                        <i class="fa-solid fa-user-plus"></i> <span>Müşteri Ekle</span>
+                    </button>
+                </div>
+            </div>
         </div>
 
-    </div>
+        <div class="container">
+            <div id="stockView" class="table-wrapper">
+                <div id="dragHint" style="text-align:center; padding:10px; background:#e0f2fe; color:#0369a1; border-radius:8px; margin-bottom:15px; font-size:0.9rem;">
+                    <i class="fa-solid fa-arrows-up-down-left-right"></i> Ürünleri taşımak için sürükleyin. Kategori silmek için ismini silin.
+                </div>
+                <table id="mainTable">
+                    <thead>
+                        <tr>
+                            <th width="5%" style="text-align:center;">#</th>
+                            <th width="35%">ÜRÜN ADI</th>
+                            <th width="20%" style="text-align:right;">BİRİM FİYAT</th>
+                            <th width="20%" style="text-align:center;">ADET (STOK)</th>
+                            <th width="15%" style="text-align:right;">TOPLAM</th>
+                            <th width="5%"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
 
-    <div class="footer">
-        <div style="font-size:0.8rem; color:#64748b;">Genel Toplam:</div>
-        <div class="total-amount" id="grandTotal">0,00 ₺</div>
+            <div id="customerView" style="display:none;">
+                <div id="customerList" class="customer-grid"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div style="font-size:0.8rem; color:#64748b;">Genel Toplam:</div>
+            <div class="total-amount" id="grandTotal">0,00 ₺</div>
+        </div>
     </div>
 
     <div class="modal-overlay" id="saveModal">
@@ -130,15 +145,12 @@
     <div class="modal-overlay" id="customerModal">
         <div class="modal modal-large">
             <h3 id="custModalTitle">Müşteri Kartı</h3>
-            
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                 <input type="text" id="custName" class="form-control" placeholder="Müşteri Adı Soyadı">
                 <input type="text" id="custPhone" class="form-control" placeholder="Telefon (05...)">
             </div>
-
             <label style="font-size:0.8rem; font-weight:bold; color:#64748b;">İlgilendiği Cihaz/Ürün</label>
-            <input type="text" id="custDevice" class="form-control" placeholder="Örn: Diode Lazer, Cilt Bakım Cihazı...">
-
+            <input type="text" id="custDevice" class="form-control" placeholder="Örn: Diode Lazer...">
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                 <div>
                     <label style="font-size:0.8rem; font-weight:bold; color:#64748b;">Ödeme Tipi</label>
@@ -159,19 +171,16 @@
                     </select>
                 </div>
             </div>
-
             <div style="background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:10px;">
                 <label style="font-size:0.8rem; font-weight:bold; color:#0ea5e9;">FİNANSAL BİLGİLER</label>
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; margin-top:5px;">
-                    <input type="number" id="custTotal" class="form-control" placeholder="Toplam Tutar" style="margin:0;">
+                    <input type="number" id="custTotal" class="form-control" placeholder="Toplam" style="margin:0;">
                     <input type="number" id="custPaid" class="form-control" placeholder="Alınan" style="margin:0;">
                     <input type="number" id="custRest" class="form-control" placeholder="Kalan" readonly style="margin:0; background:#e2e8f0;">
                 </div>
             </div>
-
-            <label style="font-size:0.8rem; font-weight:bold; color:#64748b;">Notlar / Süreç Detayları</label>
-            <textarea id="custNotes" class="form-control" rows="4" placeholder="Görüşme detayları, notlar..."></textarea>
-
+            <label style="font-size:0.8rem; font-weight:bold; color:#64748b;">Notlar</label>
+            <textarea id="custNotes" class="form-control" rows="4"></textarea>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
                 <button id="btnDeleteCust" class="btn btn-reset" style="display:none;" onclick="deleteCustomer()">Sil</button>
                 <div style="display:flex; gap:10px; margin-left:auto;">

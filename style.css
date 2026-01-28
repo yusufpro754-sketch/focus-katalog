@@ -38,12 +38,15 @@ td { padding: 12px 15px; border-bottom: 1px solid var(--border); vertical-align:
 /* KATEGORİ BAŞLIĞI */
 .cat-row { cursor: pointer; transition: background 0.2s; }
 .cat-row:hover td { background: #334155; }
-/* Hedef olduğunda */
 .cat-row.drag-over td { background: #22c55e !important; box-shadow: inset 0 0 0 4px #bbf7d0; }
 
 .cat-row td { background: #1e293b; color: white; font-weight: bold; padding: 12px 20px; font-size: 0.95rem; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
-.cat-edit-btn { background: rgba(255,255,255,0.1); border:none; color:white; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.cat-edit-btn:hover { background: rgba(255,255,255,0.3); }
+
+/* KATEGORİ BUTON GRUBU */
+.cat-btn-group { display: flex; gap: 8px; }
+.cat-btn { background: rgba(255,255,255,0.15); border:none; color:white; width: 30px; height: 30px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+.cat-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
+.cat-btn.delete:hover { background: #ef4444; } /* Silme butonu kırmızı olsun */
 
 /* ÜRÜN NUMARASI */
 .index-cell { font-weight: bold; color: #94a3b8; text-align: center; font-size: 0.9rem; }
@@ -60,9 +63,10 @@ td { padding: 12px 15px; border-bottom: 1px solid var(--border); vertical-align:
 .qty-val { width: 45px; text-align: center; background: transparent; border: none; font-weight: bold; outline: none; font-size: 1rem; }
 .qty-val:focus { background: white; box-shadow: inset 0 0 0 2px var(--primary); border-radius: 4px; }
 
-/* SÜRÜKLE BIRAK EFEKTLERİ */
-.item-row.dragging { opacity: 0.4; background: #e0f2fe; }
-/* Hedef olduğunda üstüne/altına çizgi */
+/* SÜRÜKLE BIRAK */
+.drag-handle { cursor: grab; color: #cbd5e1; padding: 10px; transition: color 0.2s; }
+.drag-handle:hover { color: var(--primary); }
+tr.dragging { opacity: 0.5; background: #f1f5f9; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 .item-row.drag-over-top { border-top: 2px solid var(--primary); }
 .item-row.drag-over-bottom { border-bottom: 2px solid var(--primary); }
 
@@ -97,14 +101,13 @@ td { padding: 12px 15px; border-bottom: 1px solid var(--border); vertical-align:
     tr.cat-row td { display: flex !important; justify-content: space-between; align-items: center; width: 100%; background-color: #1e293b !important; color: #ffffff !important; font-size: 1.1rem; font-weight: 800; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     tr.cat-row td i { color: #ffffff !important; }
     tr:not(.cat-row) { display: flex; flex-wrap: wrap; background: white; border-bottom: 1px solid var(--border); padding: 15px 5px; position: relative; align-items: center; }
-    /* Mobilde Sürükleme Kapalı */
     tr:not(.cat-row) td:nth-child(2) { width: 100%; padding: 0 0 10px 0; border: none; display: block; }
     tr:not(.cat-row) td:nth-child(2) .input-clean { font-size: 1rem; color: var(--dark); padding: 0; width: 90%; font-weight: 600; }
     tr:not(.cat-row) td:nth-child(3) { width: 35%; padding: 0; border: none; display:block; }
     tr:not(.cat-row) td:nth-child(4) { width: 35%; padding: 0; border: none; display: flex; justify-content: center; }
     tr:not(.cat-row) td:nth-child(5) { width: 30%; padding: 0; border: none; text-align: right; display:block; }
     tr:not(.cat-row) td:last-child { position: absolute; top: 12px; right: 0; padding: 0; border: none; width: auto; display:block; }
-    .index-cell { display: none; } /* Mobilde numarayı gizle */
+    .index-cell { display: none; }
     .price-input { text-align: left; font-size: 0.95rem; }
     .currency { display: none; }
     .qty-wrapper { transform: scale(0.95); }

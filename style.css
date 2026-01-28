@@ -1,17 +1,7 @@
-:root { 
-    --primary: #0ea5e9; 
-    --dark: #0f172a; 
-    --bg: #f8fafc; 
-    --white: #ffffff; 
-    --border: #cbd5e1; 
-    --text: #334155; 
-    --danger: #ef4444; 
-}
-
+:root { --primary: #0ea5e9; --dark: #0f172a; --bg: #f8fafc; --white: #ffffff; --border: #cbd5e1; --text: #334155; --danger: #ef4444; }
 * { box-sizing: border-box; }
 body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; color: var(--text); }
 
-/* HEADER */
 .header { background: var(--white); padding: 15px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
 .header-content { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
 
@@ -19,14 +9,10 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; paddi
 .brand-container { display: flex; align-items: center; gap: 10px; flex-grow: 1; }
 .brand-logo { font-family: 'Montserrat', sans-serif; font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap; }
 
-/* BUTONLAR */
 .btn { padding: 0 16px; height: 40px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; color: white; transition: 0.2s; font-size: 0.85rem; }
 .btn:active { transform: scale(0.98); }
 
-#globalSaveBtn { 
-    background: #f59e0b; color: white; display: none; 
-    animation: pulse 2s infinite; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
-}
+#globalSaveBtn { background: #f59e0b; color: white; display: none; animation: pulse 2s infinite; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3); }
 @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
 .btn-login { background: white; color: #64748b; border: 1px solid #cbd5e1; margin-left: auto; }
@@ -49,16 +35,21 @@ table { width: 100%; border-collapse: collapse; }
 th { background: #f1f5f9; padding: 15px; text-align: left; font-size: 0.75rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
 td { padding: 12px 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 
+/* KATEGORİ BAŞLIĞI DÜZENLEME */
 .cat-row { cursor: pointer; transition: background 0.2s; }
 .cat-row:hover td { background: #334155; }
 .cat-row td { background: #1e293b; color: white; font-weight: bold; padding: 12px 20px; font-size: 0.95rem; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
+.cat-title { flex-grow: 1; }
+.cat-actions { display: flex; gap: 10px; align-items: center; }
 .cat-icon { transition: transform 0.3s; }
+.cat-edit-btn { background: rgba(255,255,255,0.1); border:none; color:white; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.cat-edit-btn:hover { background: rgba(255,255,255,0.3); }
 
 .input-clean { width: 100%; padding: 8px; border: 1px solid transparent; border-radius: 6px; background: transparent; font-weight: 600; outline: none; font-size: 0.95rem; color: #334155; transition: 0.2s; }
 .input-clean:not([readonly]):focus { background: white; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
 .price-wrapper { position: relative; width: 100%; }
-.price-input { text-align: right; font-family: 'Consolas', monospace; padding-right: 20px; }
-.currency { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.8rem; pointer-events: none; }
+.price-input { text-align: right; font-family: 'Consolas', monospace; padding-right: 25px; }
+.currency { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.8rem; pointer-events: none; font-weight: bold; }
 
 .qty-wrapper { display: flex; background: #f1f5f9; border-radius: 6px; border: 1px solid var(--border); width: fit-content; margin: 0 auto; }
 .qty-btn { width: 32px; height: 32px; border: none; background: white; cursor: pointer; color: var(--primary); font-weight: bold; font-size: 1.2rem; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
@@ -77,20 +68,7 @@ tr.dragging { opacity: 0.5; background: #f1f5f9; }
 .badge-info { background: #e0f2fe; color: #0369a1; }
 .badge-inc { background: #dcfce7; color: #166534; }
 .badge-dec { background: #fee2e2; color: #991b1b; }
-
-/* LOG NOTU STİLİ (TURUNCU) */
-.log-note { 
-    display: block; 
-    margin-top: 6px; 
-    font-size: 0.85rem; 
-    color: #f97316; 
-    font-style: italic; 
-    font-weight: 600; 
-    background: #fff7ed;
-    padding: 4px 8px;
-    border-left: 3px solid #f97316;
-    border-radius: 0 4px 4px 0;
-}
+.log-note { display: block; margin-top: 6px; font-size: 0.85rem; color: #f97316; font-style: italic; font-weight: 600; background: #fff7ed; padding: 4px 8px; border-left: 3px solid #f97316; border-radius: 0 4px 4px 0; }
 
 .footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; z-index: 100; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
 .total-amount { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
@@ -104,7 +82,6 @@ tr.dragging { opacity: 0.5; background: #f1f5f9; }
 .modal-large { max-width: 800px; }
 .form-control { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; }
 
-/* MOBİL AYARLAR */
 @media (max-width: 768px) {
     .btn span { display: none; }
     .btn-excel span, .btn-add span, #globalSaveBtn span, .btn-log span { display: inline-block; }

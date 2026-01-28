@@ -1,1 +1,616 @@
-const _0xf1b56d=_0x4330;(function(_0x53070f,_0x55208e){const _0x4c0541=_0x4330,_0x979c76=_0x53070f();while(!![]){try{const _0x25881f=-parseInt(_0x4c0541(0x1ab))/0x1+parseInt(_0x4c0541(0x24b))/0x2*(-parseInt(_0x4c0541(0x19a))/0x3)+parseInt(_0x4c0541(0x251))/0x4+-parseInt(_0x4c0541(0x1c9))/0x5*(-parseInt(_0x4c0541(0x1e6))/0x6)+parseInt(_0x4c0541(0x195))/0x7*(parseInt(_0x4c0541(0x18d))/0x8)+parseInt(_0x4c0541(0x214))/0x9+parseInt(_0x4c0541(0x16e))/0xa*(-parseInt(_0x4c0541(0x163))/0xb);if(_0x25881f===_0x55208e)break;else _0x979c76['push'](_0x979c76['shift']());}catch(_0x5d00e0){_0x979c76['push'](_0x979c76['shift']());}}}(_0x570f,0xe0df3));const API_URL=_0xf1b56d(0x21f),ENCRYPTED_PASS='MzU4MDM0';let productData=[],customerData=[],logData=[],originalState={},isAdmin=![],currentUser=_0xf1b56d(0x1ac),openCategories=new Set(),activeTab='stock',currentCustId=null,draggedItemId=null,draggedItemIndex=-0x1;window[_0xf1b56d(0x1af)]=function(){fetchData();};function verifyLogin(){const _0x2d0fda=_0xf1b56d,_0x2df042=document[_0x2d0fda(0x212)](_0x2d0fda(0x1f1))[_0x2d0fda(0x1fd)],_0xa10064=document[_0x2d0fda(0x212)](_0x2d0fda(0x20c));btoa(_0x2df042)===ENCRYPTED_PASS?(isAdmin=!![],document['getElementById'](_0x2d0fda(0x1c4))[_0x2d0fda(0x1be)][_0x2d0fda(0x1df)]=_0x2d0fda(0x1e4),document[_0x2d0fda(0x212)](_0x2d0fda(0x1d7))[_0x2d0fda(0x1be)]['display']=_0x2d0fda(0x1d6),addLog(_0x2d0fda(0x239)),refreshCurrentView()):(_0xa10064[_0x2d0fda(0x1be)][_0x2d0fda(0x1df)]=_0x2d0fda(0x1d6),document[_0x2d0fda(0x212)]('loginPassword')[_0x2d0fda(0x1fd)]='');}function logout(){const _0x509fed=_0xf1b56d;location[_0x509fed(0x1c2)]();}function switchTab(_0x378e95){const _0x28e848=_0xf1b56d;activeTab=_0x378e95,document[_0x28e848(0x237)]('.nav-btn')['forEach'](_0x49be48=>_0x49be48[_0x28e848(0x183)][_0x28e848(0x15e)](_0x28e848(0x18c))),event[_0x28e848(0x1f8)][_0x28e848(0x183)]['add'](_0x28e848(0x18c)),document[_0x28e848(0x212)](_0x28e848(0x22f))[_0x28e848(0x1be)][_0x28e848(0x1df)]=_0x378e95===_0x28e848(0x1e1)?_0x28e848(0x1d6):'none',document[_0x28e848(0x212)](_0x28e848(0x1b8))['style'][_0x28e848(0x1df)]=_0x378e95===_0x28e848(0x24e)?'block':_0x28e848(0x1e4),refreshCurrentView();}function refreshCurrentView(){const _0xad8db2=_0xf1b56d;activeTab===_0xad8db2(0x1e1)?(document['getElementById'](_0xad8db2(0x1c3))[_0xad8db2(0x1be)][_0xad8db2(0x1df)]=_0xad8db2(0x202),document[_0xad8db2(0x212)](_0xad8db2(0x167))[_0xad8db2(0x1be)][_0xad8db2(0x1df)]=_0xad8db2(0x1e4),renderTable()):(document['getElementById'](_0xad8db2(0x1c3))[_0xad8db2(0x1be)][_0xad8db2(0x1df)]='none',document[_0xad8db2(0x212)](_0xad8db2(0x167))[_0xad8db2(0x1be)][_0xad8db2(0x1df)]=_0xad8db2(0x202),renderCustomers());}async function fetchData(){const _0x3116eb=_0xf1b56d;try{const _0x37d980=await fetch(API_URL),_0x11a5c4=await _0x37d980[_0x3116eb(0x1dd)]();if(_0x11a5c4&&_0x11a5c4[_0x3116eb(0x244)])productData=_0x11a5c4[_0x3116eb(0x244)],customerData=_0x11a5c4[_0x3116eb(0x24e)]||[],logData=_0x11a5c4[_0x3116eb(0x1cd)]||[];else Array['isArray'](_0x11a5c4)&&(productData=_0x11a5c4,customerData=[],logData=[]);productData[_0x3116eb(0x235)](_0x234f96=>{const _0x55bb09=_0x3116eb;if(!_0x234f96['id'])_0x234f96['id']=Date[_0x55bb09(0x1b0)]()+Math[_0x55bb09(0x1f2)]();}),customerData[_0x3116eb(0x235)](_0x47c07b=>{const _0x53758a=_0x3116eb;if(!_0x47c07b['id'])_0x47c07b['id']=Date[_0x53758a(0x1b0)]()+Math[_0x53758a(0x1f2)]();}),storeOriginalState();const _0x3ab3ae=[...new Set(productData[_0x3116eb(0x15b)](_0x191a21=>_0x191a21[_0x3116eb(0x1f7)]))];_0x3ab3ae['forEach'](_0x543933=>openCategories['add'](_0x543933)),document['getElementById'](_0x3116eb(0x15d))[_0x3116eb(0x1be)][_0x3116eb(0x1df)]=_0x3116eb(0x1e4);}catch(_0x1a01d5){console[_0x3116eb(0x1d8)](_0x1a01d5);}}function storeOriginalState(){originalState={},productData['forEach'](_0x853ed6=>{originalState[_0x853ed6['id']]={..._0x853ed6};});}function addLog(_0x3358f0){const _0x3714b6=_0xf1b56d,_0x2e2ad5=new Date()[_0x3714b6(0x185)](_0x3714b6(0x1e0)),_0x40f9e1={'id':Date[_0x3714b6(0x1b0)](),'date':_0x2e2ad5,'user':currentUser,'action':_0x3358f0};logData[_0x3714b6(0x233)](_0x40f9e1);if(logData[_0x3714b6(0x17f)]>0x1388)logData['pop']();}function openLogModal(){const _0x36b055=_0xf1b56d,_0x18b3f9=document[_0x36b055(0x212)](_0x36b055(0x22d));_0x18b3f9[_0x36b055(0x1a4)]='',logData[_0x36b055(0x17f)]===0x0?_0x18b3f9[_0x36b055(0x1a4)]=_0x36b055(0x20a):logData['forEach']((_0x17638c,_0x4450ac)=>{const _0x4e17d0=_0x36b055;let _0x28b7f6=_0x4e17d0(0x1f0);if(_0x17638c['action']['includes'](_0x4e17d0(0x1f6))||_0x17638c['action'][_0x4e17d0(0x18b)](_0x4e17d0(0x20f)))_0x28b7f6=_0x4e17d0(0x1ce);if(_0x17638c[_0x4e17d0(0x21b)][_0x4e17d0(0x18b)](_0x4e17d0(0x252))||_0x17638c[_0x4e17d0(0x21b)]['includes'](_0x4e17d0(0x225)))_0x28b7f6=_0x4e17d0(0x24a);let _0x3c766d=_0x17638c[_0x4e17d0(0x21b)][_0x4e17d0(0x207)]('|||'),_0x287ee7=_0x3c766d[0x0],_0x25642b='';if(_0x3c766d[_0x4e17d0(0x17f)]>0x1)for(let _0x109e9c=0x1;_0x109e9c<_0x3c766d[_0x4e17d0(0x17f)];_0x109e9c++){_0x25642b+='<span\x20class=\x22log-note\x22><i\x20class=\x22fa-solid\x20fa-comment-dots\x22></i>\x20'+_0x3c766d[_0x109e9c]+_0x4e17d0(0x17d);}const _0x1b041e='<tr><td\x20style=\x22padding:10px;\x22>'+_0x17638c[_0x4e17d0(0x17b)]+_0x4e17d0(0x1a9)+_0x17638c[_0x4e17d0(0x218)]+_0x4e17d0(0x22b)+_0x28b7f6+_0x4e17d0(0x187)+_0x287ee7+_0x4e17d0(0x17d)+_0x25642b+_0x4e17d0(0x1fe);_0x18b3f9[_0x4e17d0(0x1a4)]+=_0x1b041e;}),document[_0x36b055(0x212)]('logModal')[_0x36b055(0x1be)]['display']=_0x36b055(0x202);}function closeLogModal(){const _0x173fcd=_0xf1b56d;document[_0x173fcd(0x212)](_0x173fcd(0x1ef))[_0x173fcd(0x1be)]['display']=_0x173fcd(0x1e4);}function openSaveModal(){const _0x32d2d5=_0xf1b56d;document['getElementById'](_0x32d2d5(0x238))[_0x32d2d5(0x1fd)]='',document[_0x32d2d5(0x212)](_0x32d2d5(0x247))[_0x32d2d5(0x1be)]['display']='flex';}function closeSaveModal(){const _0x181908=_0xf1b56d;document['getElementById'](_0x181908(0x247))[_0x181908(0x1be)][_0x181908(0x1df)]=_0x181908(0x1e4);}function confirmSave(){const _0x169888=_0xf1b56d,_0x5e070b=document[_0x169888(0x212)](_0x169888(0x238))[_0x169888(0x1fd)]['trim']();closeSaveModal();let _0x826aa4=[];productData[_0x169888(0x235)](_0x114846=>{const _0x38a52d=_0x169888,_0x550d55=originalState[_0x114846['id']];if(!_0x550d55)return;if(_0x114846['qty']!==_0x550d55[_0x38a52d(0x23d)]){const _0x2be923=_0x114846[_0x38a52d(0x23d)]-_0x550d55[_0x38a52d(0x23d)],_0x348ad3=_0x2be923>0x0?_0x38a52d(0x20f):'azaltıldı';_0x826aa4[_0x38a52d(0x1ee)](_0x114846['name']+'\x20stoğu\x20'+Math[_0x38a52d(0x172)](_0x2be923)+_0x38a52d(0x199)+_0x348ad3+_0x38a52d(0x191)+_0x114846[_0x38a52d(0x23d)]+')');}_0x114846[_0x38a52d(0x204)]!==_0x550d55['price']&&_0x826aa4[_0x38a52d(0x1ee)](_0x114846[_0x38a52d(0x227)]+_0x38a52d(0x213)+_0x550d55['price']+_0x38a52d(0x1ed)+_0x114846[_0x38a52d(0x204)]+_0x38a52d(0x1aa)),_0x114846[_0x38a52d(0x227)]!==_0x550d55[_0x38a52d(0x227)]&&_0x826aa4[_0x38a52d(0x1ee)](_0x550d55[_0x38a52d(0x227)]+_0x38a52d(0x1ca)+_0x114846[_0x38a52d(0x227)]+_0x38a52d(0x1e2)),_0x114846[_0x38a52d(0x1f7)]!==_0x550d55[_0x38a52d(0x1f7)]&&_0x826aa4[_0x38a52d(0x1ee)](_0x114846[_0x38a52d(0x227)]+_0x38a52d(0x243)+_0x550d55[_0x38a52d(0x1f7)]+_0x38a52d(0x177)+_0x114846['category']+_0x38a52d(0x1a5));});if(_0x826aa4['length']>0x0){let _0x125b19=_0x826aa4[_0x169888(0x17f)]>0xa?_0x826aa4[_0x169888(0x17f)]+_0x169888(0x158):_0x826aa4[_0x169888(0x21c)](',\x20');if(_0x5e070b)_0x125b19+=_0x169888(0x209)+_0x5e070b;addLog(_0x125b19);}else _0x5e070b&&addLog('Genel\x20Not\x20Eklendi|||'+_0x5e070b);saveToCloud();}async function saveToCloud(){const _0x523f3e=_0xf1b56d,_0x299898=document[_0x523f3e(0x212)](_0x523f3e(0x178)),_0x3aecc2=_0x299898[_0x523f3e(0x1a4)];_0x299898['innerHTML']=_0x523f3e(0x1d2);try{const _0x17733b={'products':productData,'customers':customerData,'logs':logData};await fetch(API_URL,{'method':'POST','mode':'no-cors','body':JSON[_0x523f3e(0x228)](_0x17733b)}),alert(_0x523f3e(0x160)),storeOriginalState(),_0x299898[_0x523f3e(0x1be)]['display']=_0x523f3e(0x1e4);}catch(_0x52720c){alert(_0x523f3e(0x224));}_0x299898[_0x523f3e(0x1a4)]=_0x3aecc2;}function renderCustomers(){const _0x193825=_0xf1b56d,_0x8596a2=document[_0x193825(0x212)](_0x193825(0x165));_0x8596a2[_0x193825(0x1a4)]='';const _0xe5016b=document[_0x193825(0x212)](_0x193825(0x211))[_0x193825(0x1fd)][_0x193825(0x20b)](),_0x15d3d4=customerData[_0x193825(0x223)](_0x154d6c=>_0x154d6c[_0x193825(0x227)]&&_0x154d6c[_0x193825(0x227)]['toLowerCase']()[_0x193825(0x18b)](_0xe5016b)||_0x154d6c[_0x193825(0x198)]&&_0x154d6c[_0x193825(0x198)]['toLowerCase']()[_0x193825(0x18b)](_0xe5016b));if(_0x15d3d4['length']===0x0){_0x8596a2[_0x193825(0x1a4)]=_0x193825(0x203);return;}_0x15d3d4[_0x193825(0x235)](_0x1eabb8=>{const _0x263ba1=_0x193825;let _0x19853f='status-gorusuluyor';if(_0x1eabb8[_0x263ba1(0x253)]===_0x263ba1(0x1bc))_0x19853f='status-teklif';if(_0x1eabb8[_0x263ba1(0x253)]===_0x263ba1(0x200))_0x19853f=_0x263ba1(0x21e);if(_0x1eabb8[_0x263ba1(0x253)]===_0x263ba1(0x219))_0x19853f='status-teslim';if(_0x1eabb8[_0x263ba1(0x253)]===_0x263ba1(0x1e7))_0x19853f=_0x263ba1(0x1a7);const _0x5222ed=document[_0x263ba1(0x1c8)](_0x263ba1(0x231));_0x5222ed[_0x263ba1(0x215)]=_0x263ba1(0x245),_0x5222ed[_0x263ba1(0x1d9)]=()=>openCustomerModal(_0x1eabb8['id']),_0x5222ed[_0x263ba1(0x1a4)]=_0x263ba1(0x1c0)+_0x1eabb8['name']+'</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22cust-device\x22>'+(_0x1eabb8[_0x263ba1(0x198)]||_0x263ba1(0x17a))+'</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22cust-status\x20'+_0x19853f+'\x22>'+_0x1eabb8[_0x263ba1(0x253)]+'</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:0.85rem;\x20color:#64748b;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<i\x20class=\x22fa-solid\x20fa-phone\x22></i>\x20'+(_0x1eabb8[_0x263ba1(0x169)]||'-')+_0x263ba1(0x1b2)+_0x1eabb8[_0x263ba1(0x169)]+_0x263ba1(0x1dc)+(_0x1eabb8['phone']?_0x1eabb8[_0x263ba1(0x169)][_0x263ba1(0x1a1)](/^0/,'')[_0x263ba1(0x1a1)](/\s/g,''):'')+_0x263ba1(0x1bb),_0x8596a2['appendChild'](_0x5222ed);});}function openCustomerModal(_0x247a99=null){const _0x11adf0=_0xf1b56d;currentCustId=_0x247a99;const _0x4a4c93=document[_0x11adf0(0x212)](_0x11adf0(0x22a));if(_0x247a99){const _0x11810b=customerData[_0x11adf0(0x179)](_0x47b686=>_0x47b686['id']===_0x247a99);document['getElementById'](_0x11adf0(0x216))['innerText']=_0x11adf0(0x1fb),document[_0x11adf0(0x212)](_0x11adf0(0x1d0))['value']=_0x11810b['name'],document[_0x11adf0(0x212)](_0x11adf0(0x18f))['value']=_0x11810b[_0x11adf0(0x169)],document[_0x11adf0(0x212)](_0x11adf0(0x1ad))[_0x11adf0(0x1fd)]=_0x11810b[_0x11adf0(0x198)],document[_0x11adf0(0x212)]('custPaymentType')[_0x11adf0(0x1fd)]=_0x11810b[_0x11adf0(0x15f)],document[_0x11adf0(0x212)](_0x11adf0(0x196))[_0x11adf0(0x1fd)]=_0x11810b[_0x11adf0(0x253)],document[_0x11adf0(0x212)]('custTotal')[_0x11adf0(0x1fd)]=_0x11810b[_0x11adf0(0x192)]||'',document[_0x11adf0(0x212)](_0x11adf0(0x242))[_0x11adf0(0x1fd)]=_0x11810b[_0x11adf0(0x23b)]||'',document[_0x11adf0(0x212)](_0x11adf0(0x1b7))[_0x11adf0(0x1fd)]=_0x11810b['notes']||'',document[_0x11adf0(0x212)](_0x11adf0(0x258))[_0x11adf0(0x1be)]['display']=_0x11adf0(0x1d6),updateRestAmount();}else document[_0x11adf0(0x212)](_0x11adf0(0x216))['innerText']='Yeni\x20Müşteri\x20Ekle',document['getElementById'](_0x11adf0(0x1d0))[_0x11adf0(0x1fd)]='',document[_0x11adf0(0x212)](_0x11adf0(0x18f))[_0x11adf0(0x1fd)]='',document[_0x11adf0(0x212)]('custDevice')[_0x11adf0(0x1fd)]='',document[_0x11adf0(0x212)]('custPaymentType')[_0x11adf0(0x1fd)]=_0x11adf0(0x236),document[_0x11adf0(0x212)](_0x11adf0(0x196))[_0x11adf0(0x1fd)]=_0x11adf0(0x257),document[_0x11adf0(0x212)](_0x11adf0(0x1ec))[_0x11adf0(0x1fd)]='',document[_0x11adf0(0x212)]('custPaid')[_0x11adf0(0x1fd)]='',document[_0x11adf0(0x212)]('custRest')['value']='',document[_0x11adf0(0x212)](_0x11adf0(0x1b7))[_0x11adf0(0x1fd)]='',document[_0x11adf0(0x212)](_0x11adf0(0x258))['style'][_0x11adf0(0x1df)]=_0x11adf0(0x1e4);document[_0x11adf0(0x212)](_0x11adf0(0x1ec))['oninput']=updateRestAmount,document[_0x11adf0(0x212)](_0x11adf0(0x242))[_0x11adf0(0x1ae)]=updateRestAmount,_0x4a4c93[_0x11adf0(0x1be)][_0x11adf0(0x1df)]=_0x11adf0(0x202);}function updateRestAmount(){const _0x1485a7=_0xf1b56d,_0x49ebbe=parseFloat(document[_0x1485a7(0x212)](_0x1485a7(0x1ec))[_0x1485a7(0x1fd)])||0x0,_0x32b648=parseFloat(document['getElementById'](_0x1485a7(0x242))[_0x1485a7(0x1fd)])||0x0;document[_0x1485a7(0x212)](_0x1485a7(0x1b9))['value']=_0x49ebbe-_0x32b648;}function _0x4330(_0x528291,_0x313640){_0x528291=_0x528291-0x158;const _0x570f8e=_0x570f();let _0x4330a6=_0x570f8e[_0x528291];return _0x4330a6;}function closeCustomerModal(){const _0x5b765b=_0xf1b56d;document[_0x5b765b(0x212)]('customerModal')[_0x5b765b(0x1be)][_0x5b765b(0x1df)]=_0x5b765b(0x1e4);}function saveCustomer(){const _0x3d3882=_0xf1b56d,_0xc37c40=document[_0x3d3882(0x212)](_0x3d3882(0x1d0))['value'];if(!_0xc37c40){alert(_0x3d3882(0x1c6));return;}const _0x533cdf={'id':currentCustId||Date[_0x3d3882(0x1b0)]()+Math[_0x3d3882(0x1f2)](),'name':_0xc37c40,'phone':document[_0x3d3882(0x212)]('custPhone')[_0x3d3882(0x1fd)],'device':document[_0x3d3882(0x212)](_0x3d3882(0x1ad))[_0x3d3882(0x1fd)],'paymentType':document[_0x3d3882(0x212)](_0x3d3882(0x23c))[_0x3d3882(0x1fd)],'status':document[_0x3d3882(0x212)]('custStatus')[_0x3d3882(0x1fd)],'totalAmount':parseFloat(document[_0x3d3882(0x212)]('custTotal')[_0x3d3882(0x1fd)])||0x0,'paidAmount':parseFloat(document['getElementById'](_0x3d3882(0x242))[_0x3d3882(0x1fd)])||0x0,'notes':document[_0x3d3882(0x212)](_0x3d3882(0x1b7))['value'],'dateAdded':new Date()[_0x3d3882(0x226)](_0x3d3882(0x1e0))};if(currentCustId){const _0x32a665=customerData[_0x3d3882(0x1b3)](_0x289620=>_0x289620['id']===currentCustId);customerData[_0x32a665]=_0x533cdf,addLog(_0x3d3882(0x188)+_0xc37c40+'\x20('+_0x533cdf[_0x3d3882(0x253)]+')');}else customerData[_0x3d3882(0x1ee)](_0x533cdf),addLog('Yeni\x20Müşteri\x20Eklendi:\x20'+_0xc37c40);closeCustomerModal(),renderCustomers(),document[_0x3d3882(0x212)](_0x3d3882(0x178))[_0x3d3882(0x1be)][_0x3d3882(0x1df)]=_0x3d3882(0x202);}function deleteCustomer(){const _0x4cedd6=_0xf1b56d;if(confirm('Bu\x20müşteri\x20kaydını\x20silmek\x20istediğinize\x20emin\x20misiniz?')){const _0x10f57b=customerData['find'](_0xb88454=>_0xb88454['id']===currentCustId);customerData=customerData['filter'](_0x372781=>_0x372781['id']!==currentCustId),addLog(_0x4cedd6(0x1d5)+_0x10f57b[_0x4cedd6(0x227)]),closeCustomerModal(),renderCustomers(),document['getElementById'](_0x4cedd6(0x178))[_0x4cedd6(0x1be)][_0x4cedd6(0x1df)]=_0x4cedd6(0x202);}}function handleSearch(){const _0x22452b=_0xf1b56d;if(activeTab===_0x22452b(0x1e1))renderTable();else renderCustomers();}function processExcel(_0x4aae51){const _0x2f9751=_0xf1b56d,_0x17826c=_0x4aae51[_0x2f9751(0x19c)][0x0];if(!_0x17826c)return;const _0x312649=new FileReader();_0x312649[_0x2f9751(0x1af)]=function(_0x14d168){const _0x43dc53=_0x2f9751,_0x5b6054=XLSX['read'](_0x14d168[_0x43dc53(0x1bf)][_0x43dc53(0x1eb)],{'type':_0x43dc53(0x16d)}),_0x200235=XLSX['utils']['sheet_to_json'](_0x5b6054['Sheets'][_0x5b6054[_0x43dc53(0x24d)][0x0]],{'header':0x1,'defval':''});let _0xa6e53b=detectColumns(_0x200235);parseRowsSmart(_0x200235,_0xa6e53b);},_0x312649[_0x2f9751(0x201)](_0x17826c),_0x4aae51[_0x2f9751(0x1fd)]='';}function cleanPrice(_0x5a7b6f){const _0x39565f=_0xf1b56d;if(typeof _0x5a7b6f===_0x39565f(0x1d1))return _0x5a7b6f;if(!_0x5a7b6f)return 0x0;let _0x5418ec=_0x5a7b6f[_0x39565f(0x1cb)]()[_0x39565f(0x1a1)](/[^0-9.,]/g,'');if(_0x5418ec[_0x39565f(0x18b)](',')&&_0x5418ec['includes']('.'))_0x5418ec=_0x5418ec['replace'](/\./g,'')[_0x39565f(0x1a1)](',','.');else{if(_0x5418ec[_0x39565f(0x18b)](','))_0x5418ec=_0x5418ec[_0x39565f(0x1a1)](',','.');else _0x5418ec[_0x39565f(0x18b)]('.')&&_0x5418ec[_0x39565f(0x207)]('.')[0x1]['length']===0x3&&(_0x5418ec=_0x5418ec[_0x39565f(0x1a1)](/\./g,''));}return parseFloat(_0x5418ec)||0x0;}function detectColumns(_0x241417){const _0x49ed90=_0xf1b56d;let _0x551378={'name':0x0,'stock':0x1,'price':0x2,'category':-0x1,'isStructured':![]};for(let _0x1db690=0x0;_0x1db690<Math[_0x49ed90(0x18a)](_0x241417[_0x49ed90(0x17f)],0xa);_0x1db690++){const _0x3169b4=_0x241417[_0x1db690]['map'](_0x38b53b=>String(_0x38b53b)[_0x49ed90(0x22c)]()['trim']());if(_0x3169b4[_0x49ed90(0x18b)](_0x49ed90(0x16a))&&(_0x3169b4[_0x49ed90(0x18b)](_0x49ed90(0x1da))||_0x3169b4[_0x49ed90(0x18b)]('ADET'))){_0x551378[_0x49ed90(0x240)]=!![],_0x551378[_0x49ed90(0x227)]=_0x3169b4[_0x49ed90(0x1bd)](_0x49ed90(0x16a));if(_0x3169b4['includes'](_0x49ed90(0x23e)))_0x551378['stock']=_0x3169b4[_0x49ed90(0x1bd)](_0x49ed90(0x23e));else{if(_0x3169b4['includes']('STOK'))_0x551378['stock']=_0x3169b4['indexOf'](_0x49ed90(0x249));}if(_0x3169b4[_0x49ed90(0x18b)](_0x49ed90(0x1da)))_0x551378[_0x49ed90(0x204)]=_0x3169b4[_0x49ed90(0x1bd)](_0x49ed90(0x1da));if(_0x3169b4[_0x49ed90(0x18b)](_0x49ed90(0x15a)))_0x551378[_0x49ed90(0x1f7)]=_0x3169b4[_0x49ed90(0x1bd)](_0x49ed90(0x15a));break;}}return _0x551378;}function parseRowsSmart(_0x4e8bda,_0x559c95){const _0x2a8914=_0xf1b56d;let _0x794ba9=[],_0x4efef8=[],_0x288ad2=_0x2a8914(0x210);const _0x45d011=['ÜRÜN',_0x2a8914(0x249),_0x2a8914(0x1da),_0x2a8914(0x1d4),_0x2a8914(0x23e),_0x2a8914(0x180),_0x2a8914(0x1d3)];_0x4e8bda[_0x2a8914(0x235)](_0x49b691=>{const _0x2c8a89=_0x2a8914;if(!_0x49b691||_0x49b691[_0x2c8a89(0x17f)]===0x0)return;let _0x2caa52='',_0x2f4b46=0x0,_0x25a52e=0x0,_0x42623f='';if(_0x559c95[_0x2c8a89(0x240)]){let _0x355a58=(_0x49b691[_0x559c95[_0x2c8a89(0x227)]]||'')[_0x2c8a89(0x1cb)]()[_0x2c8a89(0x19d)]();if(_0x355a58===''||_0x45d011['some'](_0xbb09e4=>_0x355a58['toUpperCase']()[_0x2c8a89(0x18b)](_0xbb09e4)))return;_0x2caa52=_0x355a58,_0x2f4b46=cleanPrice(_0x49b691[_0x559c95['stock']]),_0x25a52e=cleanPrice(_0x49b691[_0x559c95[_0x2c8a89(0x204)]]);if(_0x559c95[_0x2c8a89(0x1f7)]>-0x1&&_0x49b691[_0x559c95[_0x2c8a89(0x1f7)]]){let _0x1a1d14=_0x49b691[_0x559c95['category']][_0x2c8a89(0x1cb)]()[_0x2c8a89(0x19d)]();if(_0x1a1d14!=='')_0x288ad2=_0x1a1d14[_0x2c8a89(0x22c)]();}_0x42623f=_0x288ad2;}else{let _0x1b3c67=(_0x49b691[0x0]||'')[_0x2c8a89(0x1cb)]()[_0x2c8a89(0x19d)](),_0x26397b=(_0x49b691[0x1]||'')[_0x2c8a89(0x1cb)]()[_0x2c8a89(0x19d)](),_0x340f03=(_0x49b691[0x2]||'')[_0x2c8a89(0x1cb)]()[_0x2c8a89(0x19d)]();if(_0x1b3c67===''&&_0x340f03!==''&&isNaN(cleanPrice(_0x340f03))){!_0x45d011[_0x2c8a89(0x23a)](_0x17ce1f=>_0x340f03[_0x2c8a89(0x22c)]()['includes'](_0x17ce1f))&&(_0x288ad2=_0x340f03[_0x2c8a89(0x22c)]());return;}if(_0x1b3c67!==''){if(_0x45d011[_0x2c8a89(0x23a)](_0xfd88a9=>_0x1b3c67[_0x2c8a89(0x22c)]()[_0x2c8a89(0x18b)](_0xfd88a9)))return;_0x2caa52=_0x1b3c67,_0x2f4b46=cleanPrice(_0x26397b),_0x25a52e=cleanPrice(_0x340f03),_0x42623f=_0x288ad2;}else return;}const _0x2faf46=productData['findIndex'](_0x365b3a=>_0x365b3a[_0x2c8a89(0x227)][_0x2c8a89(0x19d)]()[_0x2c8a89(0x20b)]()===_0x2caa52['toLowerCase']());if(_0x2faf46>-0x1){let _0x4c63af=productData[_0x2faf46];(_0x4c63af[_0x2c8a89(0x204)]!==_0x25a52e||_0x4c63af[_0x2c8a89(0x23d)]!==_0x2f4b46)&&(productData[_0x2faf46][_0x2c8a89(0x204)]=_0x25a52e,productData[_0x2faf46][_0x2c8a89(0x23d)]=_0x2f4b46,_0x4efef8[_0x2c8a89(0x1ee)](_0x2caa52));}else productData[_0x2c8a89(0x1ee)]({'id':Date['now']()+Math[_0x2c8a89(0x1f2)](),'category':_0x42623f,'name':_0x2caa52,'price':_0x25a52e,'qty':_0x2f4b46}),_0x794ba9[_0x2c8a89(0x1ee)](_0x2caa52);});const _0x305677=[...new Set(productData[_0x2a8914(0x15b)](_0x1969bc=>_0x1969bc[_0x2a8914(0x1f7)]))];_0x305677[_0x2a8914(0x235)](_0x1e9c77=>openCategories['add'](_0x1e9c77)),(_0x794ba9[_0x2a8914(0x17f)]>0x0||_0x4efef8[_0x2a8914(0x17f)]>0x0)&&(addLog(_0x2a8914(0x23f)+_0x794ba9[_0x2a8914(0x17f)]+_0x2a8914(0x175)+_0x4efef8['length']+_0x2a8914(0x208)),alert('İşlem\x20Tamam!\x0a'+_0x794ba9[_0x2a8914(0x17f)]+_0x2a8914(0x206)+_0x4efef8[_0x2a8914(0x17f)]+_0x2a8914(0x168)),document['getElementById'](_0x2a8914(0x178))['style'][_0x2a8914(0x1df)]=_0x2a8914(0x202),renderTable());}function editCategoryName(_0xb7f480){const _0xeacad8=_0xf1b56d,_0x250f65=prompt(_0xeacad8(0x190),_0xb7f480);if(_0x250f65===null)return;if(_0x250f65[_0xeacad8(0x19d)]()===''){if(confirm('\x22'+_0xb7f480+'\x22\x20kategorisi\x20silinsin\x20mi?\x20\x0aÜrünler\x20\x22GENEL\x20LİSTE\x22ye\x20taşınacak.')){let _0xb24059=0x0;productData[_0xeacad8(0x235)](_0x2b8658=>{const _0x4ebded=_0xeacad8;_0x2b8658[_0x4ebded(0x1f7)]===_0xb7f480&&(_0x2b8658['category']=_0x4ebded(0x210),_0xb24059++);}),openCategories['delete'](_0xb7f480);if(!openCategories[_0xeacad8(0x24c)](_0xeacad8(0x210)))openCategories[_0xeacad8(0x1e9)](_0xeacad8(0x210));addLog(_0xeacad8(0x18e)+_0xb7f480+'\x20('+_0xb24059+_0xeacad8(0x17c)),renderTable(),document['getElementById']('globalSaveBtn')[_0xeacad8(0x1be)][_0xeacad8(0x1df)]=_0xeacad8(0x202);}}else{if(_0x250f65!==_0xb7f480){const _0x206e65=_0x250f65[_0xeacad8(0x19d)]()[_0xeacad8(0x22c)]();let _0x511680=0x0;productData[_0xeacad8(0x235)](_0x20520d=>{const _0x99cf9b=_0xeacad8;_0x20520d['category']===_0xb7f480&&(_0x20520d[_0x99cf9b(0x1f7)]=_0x206e65,_0x511680++);}),openCategories[_0xeacad8(0x24c)](_0xb7f480)&&(openCategories[_0xeacad8(0x21a)](_0xb7f480),openCategories['add'](_0x206e65)),_0x511680>0x0&&(addLog(_0xeacad8(0x17e)+_0xb7f480+_0xeacad8(0x1ed)+_0x206e65),renderTable(),document[_0xeacad8(0x212)]('globalSaveBtn')[_0xeacad8(0x1be)][_0xeacad8(0x1df)]=_0xeacad8(0x202));}}}function toggleCategory(_0xdd53c0){const _0x1848e1=_0xf1b56d;if(openCategories[_0x1848e1(0x24c)](_0xdd53c0))openCategories[_0x1848e1(0x21a)](_0xdd53c0);else openCategories[_0x1848e1(0x1e9)](_0xdd53c0);renderTable();}function handleDragStart(_0x4a31da){const _0x28b837=_0xf1b56d;draggedItemId=parseFloat(_0x4a31da[_0x28b837(0x1bf)][_0x28b837(0x241)]['id']),draggedItemIndex=parseInt(_0x4a31da[_0x28b837(0x1bf)][_0x28b837(0x241)][_0x28b837(0x20d)]),_0x4a31da['target'][_0x28b837(0x183)][_0x28b837(0x1e9)](_0x28b837(0x1b6)),_0x4a31da[_0x28b837(0x189)][_0x28b837(0x181)]=_0x28b837(0x246);}function handleDragEnd(_0x1d7862){const _0x448321=_0xf1b56d;_0x1d7862[_0x448321(0x1bf)][_0x448321(0x183)][_0x448321(0x15e)](_0x448321(0x1b6)),document['querySelectorAll']('tr')[_0x448321(0x235)](_0x21e5b3=>{const _0xeb2439=_0x448321;_0x21e5b3['classList'][_0xeb2439(0x15e)](_0xeb2439(0x221),'drag-over-bottom',_0xeb2439(0x15c));});}function handleDragOver(_0x31e0b2){const _0x1a0022=_0xf1b56d;_0x31e0b2[_0x1a0022(0x1ff)]();const _0x5e5bb3=_0x31e0b2[_0x1a0022(0x1bf)][_0x1a0022(0x254)]('tr');if(!_0x5e5bb3||_0x5e5bb3[_0x1a0022(0x183)]['contains']('dragging'))return;if(_0x5e5bb3['classList']['contains'](_0x1a0022(0x248))){const _0x5888fc=_0x5e5bb3[_0x1a0022(0x1fc)](),_0x47553d=_0x31e0b2[_0x1a0022(0x194)]-_0x5888fc[_0x1a0022(0x1ea)];_0x5e5bb3[_0x1a0022(0x183)]['remove']('drag-over-top',_0x1a0022(0x1ba)),_0x47553d<_0x5888fc[_0x1a0022(0x1a6)]/0x2?_0x5e5bb3['classList']['add'](_0x1a0022(0x221)):_0x5e5bb3[_0x1a0022(0x183)][_0x1a0022(0x1e9)](_0x1a0022(0x1ba));}else _0x5e5bb3[_0x1a0022(0x183)][_0x1a0022(0x19f)](_0x1a0022(0x16c))&&_0x5e5bb3[_0x1a0022(0x183)][_0x1a0022(0x1e9)](_0x1a0022(0x15c));}function handleDragLeave(_0x117623){const _0x1a7960=_0xf1b56d,_0x402a9b=_0x117623['target']['closest']('tr');_0x402a9b&&_0x402a9b[_0x1a7960(0x183)]['remove'](_0x1a7960(0x221),'drag-over-bottom',_0x1a7960(0x15c));}function handleDrop(_0x43aa5d){const _0x37db6d=_0xf1b56d;_0x43aa5d['preventDefault'](),_0x43aa5d['stopPropagation']();if(!draggedItemId)return;const _0x1f3b76=_0x43aa5d['target'][_0x37db6d(0x254)]('tr');if(!_0x1f3b76)return;const _0x5a6d11=productData[_0x37db6d(0x179)](_0x3af468=>_0x3af468['id']===draggedItemId),_0x2e8aa0=productData['indexOf'](_0x5a6d11);if(_0x1f3b76['classList']['contains']('cat-row')){const _0x272f01=_0x1f3b76[_0x37db6d(0x1c7)](_0x37db6d(0x1f5))['innerText'];if(_0x5a6d11[_0x37db6d(0x1f7)]!==_0x272f01){_0x5a6d11[_0x37db6d(0x1f7)]=_0x272f01,productData[_0x37db6d(0x1cc)](_0x2e8aa0,0x1);const _0xbb51eb=productData[_0x37db6d(0x1b3)](_0x41b443=>_0x41b443['category']===_0x272f01);_0xbb51eb>-0x1?productData['splice'](_0xbb51eb,0x0,_0x5a6d11):productData['push'](_0x5a6d11);if(!openCategories['has'](_0x272f01))openCategories[_0x37db6d(0x1e9)](_0x272f01);}}else{if(_0x1f3b76[_0x37db6d(0x183)]['contains'](_0x37db6d(0x248))){const _0x30ad88=parseFloat(_0x1f3b76[_0x37db6d(0x241)]['id']),_0x29f7a0=productData[_0x37db6d(0x179)](_0x501079=>_0x501079['id']===_0x30ad88);if(_0x5a6d11&&_0x29f7a0&&_0x5a6d11!==_0x29f7a0){_0x5a6d11[_0x37db6d(0x1f7)]!==_0x29f7a0['category']&&(_0x5a6d11['category']=_0x29f7a0[_0x37db6d(0x1f7)]);productData[_0x37db6d(0x1cc)](_0x2e8aa0,0x1);const _0x575b37=productData[_0x37db6d(0x1bd)](_0x29f7a0);_0x1f3b76['classList'][_0x37db6d(0x19f)](_0x37db6d(0x1ba))?productData[_0x37db6d(0x1cc)](_0x575b37+0x1,0x0,_0x5a6d11):productData[_0x37db6d(0x1cc)](_0x575b37,0x0,_0x5a6d11);}}}handleDragEnd({'target':document['querySelector']('.dragging')}),document[_0x37db6d(0x212)]('globalSaveBtn')[_0x37db6d(0x1be)]['display']=_0x37db6d(0x202),renderTable();}function renderTable(){const _0x49f6d9=_0xf1b56d,_0x4b90b7=document[_0x49f6d9(0x212)](_0x49f6d9(0x193));_0x4b90b7['innerHTML']='';const _0x21d852=document['getElementById'](_0x49f6d9(0x211))['value']['toLowerCase']();if(productData[_0x49f6d9(0x17f)]===0x0){_0x4b90b7[_0x49f6d9(0x1a4)]=_0x49f6d9(0x250),calculateTotal();return;}let _0x44541f=productData;_0x21d852&&(_0x44541f=productData['filter'](_0x4e4eea=>_0x4e4eea['name'][_0x49f6d9(0x20b)]()[_0x49f6d9(0x18b)](_0x21d852)));const _0x2068fd='';let _0x2ff06e=0x1,_0x4e458f=null;_0x44541f[_0x49f6d9(0x235)]((_0x410862,_0x44e6db)=>{const _0x5bbb84=_0x49f6d9;if(_0x410862[_0x5bbb84(0x1f7)]!==_0x4e458f){_0x4e458f=_0x410862[_0x5bbb84(0x1f7)];const _0x34063e=openCategories[_0x5bbb84(0x24c)](_0x4e458f)||_0x21d852[_0x5bbb84(0x17f)]>0x0,_0x1a4b0a=_0x34063e?_0x5bbb84(0x1fa):_0x5bbb84(0x16f),_0x47035a=document[_0x5bbb84(0x1c8)]('tr');_0x47035a[_0x5bbb84(0x215)]=_0x5bbb84(0x16c),_0x47035a[_0x5bbb84(0x161)]('dragover',handleDragOver),_0x47035a[_0x5bbb84(0x161)](_0x5bbb84(0x22e),handleDragLeave),_0x47035a[_0x5bbb84(0x161)](_0x5bbb84(0x182),handleDrop),_0x47035a['innerHTML']='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20colspan=\x226\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22cat-actions\x22\x20onclick=\x22toggleCategory(\x27'+_0x4e458f+'\x27)\x22\x20style=\x22flex-grow:1;\x20display:flex;\x20align-items:center;\x20justify-content:space-between;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span>'+_0x4e458f+'</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<i\x20class=\x22fa-solid\x20fa-chevron-down\x20cat-icon\x22\x20style=\x22transform:'+_0x1a4b0a+'\x22></i>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22cat-edit-btn\x22\x20onclick=\x22event.stopPropagation();\x20editCategoryName(\x27'+_0x4e458f+_0x5bbb84(0x19b),_0x4b90b7[_0x5bbb84(0x24f)](_0x47035a);}const _0x567e83=openCategories[_0x5bbb84(0x24c)](_0x410862[_0x5bbb84(0x1f7)])||_0x21d852[_0x5bbb84(0x17f)]>0x0;if(_0x567e83){const _0x5792aa=document[_0x5bbb84(0x1c8)]('tr');_0x5792aa[_0x5bbb84(0x215)]=_0x5bbb84(0x248),_0x5792aa[_0x5bbb84(0x241)]['id']=_0x410862['id'],_0x5792aa['dataset'][_0x5bbb84(0x20d)]=_0x44e6db;!_0x21d852&&(_0x5792aa[_0x5bbb84(0x1f4)](_0x5bbb84(0x1db),!![]),_0x5792aa[_0x5bbb84(0x161)](_0x5bbb84(0x1cf),handleDragStart),_0x5792aa[_0x5bbb84(0x161)](_0x5bbb84(0x21d),handleDragOver),_0x5792aa[_0x5bbb84(0x161)](_0x5bbb84(0x22e),handleDragLeave),_0x5792aa[_0x5bbb84(0x161)]('drop',handleDrop),_0x5792aa[_0x5bbb84(0x161)](_0x5bbb84(0x1de),handleDragEnd));const _0x2d6948=_0x410862[_0x5bbb84(0x204)]===0x0?'':_0x410862['price'],_0x28f07a=_0x410862['qty']===0x0?'':_0x410862[_0x5bbb84(0x23d)],_0x4170de=_0x5bbb84(0x1b5)+_0x410862['id']+',\x20\x27'+_0x410862[_0x5bbb84(0x227)]+_0x5bbb84(0x1a2);_0x5792aa[_0x5bbb84(0x1a4)]=_0x5bbb84(0x20e)+_0x2ff06e++ +_0x5bbb84(0x184)+_0x410862[_0x5bbb84(0x227)]+_0x5bbb84(0x1b4)+_0x410862['id']+_0x5bbb84(0x220)+_0x2d6948+_0x5bbb84(0x1b4)+_0x410862['id']+',\x20\x27price\x27,\x20this.value)\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22currency\x22>₺</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20data-label=\x22Adet\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22qty-wrapper\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22qty-btn\x22\x20onclick=\x22updateQty('+_0x410862['id']+_0x5bbb84(0x159)+_0x28f07a+_0x5bbb84(0x222)+_0x410862['id']+_0x5bbb84(0x1a3)+_0x410862['id']+_0x5bbb84(0x232)+_0x410862['id']+'\x22>'+(_0x410862[_0x5bbb84(0x204)]*_0x410862[_0x5bbb84(0x23d)])['toLocaleString'](_0x5bbb84(0x1e0),{'minimumFractionDigits':0x2})+_0x5bbb84(0x1f3)+_0x4170de+_0x5bbb84(0x1e5),_0x4b90b7[_0x5bbb84(0x24f)](_0x5792aa);}}),calculateTotal();}function updateData(_0x1010ec,_0x215e58,_0x2807a2){const _0x5a20f7=_0xf1b56d,_0x3f2feb=productData['find'](_0x595da6=>_0x595da6['id']===_0x1010ec);if(!_0x3f2feb)return;if(_0x215e58===_0x5a20f7(0x204))_0x3f2feb[_0x215e58]=parseFloat(_0x2807a2)||0x0;else{if(_0x215e58==='name')_0x3f2feb[_0x215e58]=_0x2807a2;}_0x215e58===_0x5a20f7(0x204)&&(document[_0x5a20f7(0x212)](_0x5a20f7(0x234)+_0x1010ec)['innerText']=(_0x3f2feb[_0x5a20f7(0x204)]*_0x3f2feb[_0x5a20f7(0x23d)])[_0x5a20f7(0x185)](_0x5a20f7(0x1e0),{'minimumFractionDigits':0x2})+'\x20₺',calculateTotal()),document[_0x5a20f7(0x212)](_0x5a20f7(0x178))['style'][_0x5a20f7(0x1df)]='flex';}function updateQty(_0x55895d,_0x56e90b){const _0x118eff=_0xf1b56d,_0x384727=productData['find'](_0x5aab73=>_0x5aab73['id']===_0x55895d);if(!_0x384727)return;let _0xdf74bd=(_0x384727[_0x118eff(0x23d)]||0x0)+_0x56e90b;if(_0xdf74bd<0x0)_0xdf74bd=0x0;_0x384727[_0x118eff(0x23d)]=_0xdf74bd,renderTable(),document[_0x118eff(0x212)](_0x118eff(0x178))[_0x118eff(0x1be)]['display']=_0x118eff(0x202);}function updateQtyManual(_0x2a3c85,_0x119381){const _0x4c84e6=_0xf1b56d,_0x32dc69=productData['find'](_0x4e86d3=>_0x4e86d3['id']===_0x2a3c85);if(!_0x32dc69)return;let _0x4d2ec9=parseInt(_0x119381);if(isNaN(_0x4d2ec9)||_0x4d2ec9<0x0)_0x4d2ec9=0x0;_0x32dc69[_0x4c84e6(0x23d)]=_0x4d2ec9,document['getElementById'](_0x4c84e6(0x234)+_0x2a3c85)[_0x4c84e6(0x1a0)]=(_0x32dc69['price']*_0x32dc69[_0x4c84e6(0x23d)])[_0x4c84e6(0x185)](_0x4c84e6(0x1e0),{'minimumFractionDigits':0x2})+'\x20₺',calculateTotal(),document[_0x4c84e6(0x212)](_0x4c84e6(0x178))[_0x4c84e6(0x1be)][_0x4c84e6(0x1df)]=_0x4c84e6(0x202);}function calculateTotal(){const _0x32c87f=_0xf1b56d,_0x4a7661=productData[_0x32c87f(0x171)]((_0x4dfd51,_0x1108dd)=>_0x4dfd51+_0x1108dd['price']*_0x1108dd[_0x32c87f(0x23d)],0x0);document[_0x32c87f(0x212)](_0x32c87f(0x217))[_0x32c87f(0x1a0)]=_0x4a7661[_0x32c87f(0x185)](_0x32c87f(0x1e0),{'minimumFractionDigits':0x2})+'\x20₺';}function exportToExcel(){const _0x32e6ea=_0xf1b56d,_0x4e2911=productData[_0x32e6ea(0x15b)](_0x305d34=>({'KATEGORİ':_0x305d34[_0x32e6ea(0x1f7)],'ÜRÜN':_0x305d34['name'],'FİYAT':_0x305d34[_0x32e6ea(0x204)],'ADET':_0x305d34[_0x32e6ea(0x23d)],'TOPLAM':_0x305d34[_0x32e6ea(0x204)]*_0x305d34[_0x32e6ea(0x23d)]})),_0x5899b2=customerData[_0x32e6ea(0x15b)](_0x3276d2=>({'AD\x20SOYAD':_0x3276d2['name'],'TELEFON':_0x3276d2['phone'],'CİHAZ':_0x3276d2[_0x32e6ea(0x198)],'DURUM':_0x3276d2[_0x32e6ea(0x253)],'TOPLAM\x20TUTAR':_0x3276d2[_0x32e6ea(0x192)],'ALINAN':_0x3276d2[_0x32e6ea(0x23b)],'KALAN':_0x3276d2[_0x32e6ea(0x192)]-_0x3276d2['paidAmount'],'NOTLAR':_0x3276d2[_0x32e6ea(0x162)]})),_0x5db9b5=XLSX[_0x32e6ea(0x173)][_0x32e6ea(0x1c1)](_0x4e2911),_0x6a509d=XLSX[_0x32e6ea(0x173)][_0x32e6ea(0x1c1)](_0x5899b2),_0x2c6e80=XLSX[_0x32e6ea(0x173)][_0x32e6ea(0x1c5)]();XLSX[_0x32e6ea(0x173)][_0x32e6ea(0x166)](_0x2c6e80,_0x5db9b5,'Stok\x20Listesi'),XLSX[_0x32e6ea(0x173)]['book_append_sheet'](_0x2c6e80,_0x6a509d,_0x32e6ea(0x255));const _0x4e2c46=logData[_0x32e6ea(0x15b)](_0xe57711=>({'TARİH':_0xe57711[_0x32e6ea(0x17b)],'KULLANICI':_0xe57711[_0x32e6ea(0x218)],'AÇIKLAMA':_0xe57711[_0x32e6ea(0x21b)]})),_0x2f62c5=XLSX[_0x32e6ea(0x173)][_0x32e6ea(0x1c1)](_0x4e2c46);XLSX[_0x32e6ea(0x173)][_0x32e6ea(0x166)](_0x2c6e80,_0x2f62c5,_0x32e6ea(0x230)),XLSX[_0x32e6ea(0x1e8)](_0x2c6e80,_0x32e6ea(0x1a8));}function resetAll(){const _0x4a76f4=_0xf1b56d;confirm(_0x4a76f4(0x205))&&(productData=[],addLog(_0x4a76f4(0x16b)),renderTable(),document[_0x4a76f4(0x212)](_0x4a76f4(0x178))[_0x4a76f4(0x1be)][_0x4a76f4(0x1df)]=_0x4a76f4(0x202));}function _0x570f(){const _0x466fb1=['</td><td\x20style=\x22padding:10px;\x22><span\x20class=\x22badge\x20badge-admin\x22>','\x20₺\x20olarak\x20güncellendi','1267681aLrWkb','Yönetici','custDevice','oninput','onload','now','newName','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22cust-actions\x22\x20onclick=\x22event.stopPropagation()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<a\x20href=\x22tel:','findIndex','\x22\x20oninput=\x22updateData(','<td\x20class=\x22trash-cell\x22\x20style=\x22text-align:center;\x22><i\x20class=\x22fa-solid\x20fa-trash\x22\x20style=\x22color:#ef4444;\x20cursor:pointer;\x22\x20onclick=\x22deleteItem(','dragging','custNotes','customerView','custRest','drag-over-bottom','\x22\x20target=\x22_blank\x22\x20class=\x22action-btn\x20whatsapp\x22><i\x20class=\x22fa-brands\x20fa-whatsapp\x22></i>\x20Yaz</a>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','Teklif\x20Verildi','indexOf','style','target','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22cust-header\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22cust-name\x22>','json_to_sheet','reload','stockControls','loginScreen','book_new','İsim\x20giriniz.','querySelector','createElement','3952505MrQaKN','\x20ismi\x20\x22','toString','splice','logs','badge-inc','dragstart','custName','number','<i\x20class=\x22fa-solid\x20fa-spinner\x20fa-spin\x22></i>','TABLOSU','TOPLAM','Müşteri\x20Silindi:\x20','block','appContainer','error','onclick','FİYAT','draggable','\x22\x20class=\x22action-btn\x22><i\x20class=\x22fa-solid\x20fa-phone\x22></i>\x20Ara</a>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<a\x20href=\x22https://wa.me/90','json','dragend','display','tr-TR','stock','\x22\x20olarak\x20değiştirildi','newPrice','none','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','6WzGUys','İptal','writeFile','add','top','result','custTotal','\x20->\x20','push','logModal','badge-info','loginPassword','random','\x20₺</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','setAttribute','.cat-actions\x20span','Eklendi','category','currentTarget','\x20silinecek?','rotate(-180deg)','Müşteri\x20Düzenle','getBoundingClientRect','value','</td><td\x20style=\x22text-align:center;\x22></td></tr>','preventDefault','Kapora\x20Alındı','readAsArrayBuffer','flex','<p\x20style=\x22grid-column:\x201/-1;\x20text-align:center;\x20color:#94a3b8;\x20margin-top:20px;\x22>Müşteri\x20bulunamadı.</p>','price','Tüm\x20STOK\x20listesi\x20silinecek\x20(Müşteriler\x20kalacak)?','\x20yeni,\x20','split','\x20güncelleme.','\x20|||','<tr><td\x20colspan=\x224\x22\x20style=\x22text-align:center;\x20padding:20px;\x20color:#94a3b8;\x22>Henüz\x20kayıt\x20yok.</td></tr>','toLowerCase','loginError','idx','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20class=\x22index-cell\x22>','artırıldı','GENEL\x20LİSTE','searchInput','getElementById','\x20fiyatı\x20','14512491MOrShf','className','custModalTitle','grandTotal','user','Teslim\x20Edildi','delete','action','join','dragover','status-kapora','https://script.google.com/macros/s/AKfycbzVyMRnnAtxPGEzezy2Vjj07UmrHS7M-0id6KNi7QhGLbgxnfycMjBstyYFaPtn8SMr/exec',',\x20\x27name\x27,\x20this.value)\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20data-label=\x22Fiyat\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22price-wrapper\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22number\x22\x20class=\x22input-clean\x20price-input\x22\x20placeholder=\x220\x22\x20value=\x22','drag-over-top','\x22\x20oninput=\x22updateQtyManual(','filter','Hata\x20oluştu.','azaltıldı','toLocaleDateString','name','stringify','<option>GENEL\x20LİSTE</option>','customerModal','</span></td><td\x20style=\x22padding:10px;\x22><span\x20class=\x22','toUpperCase','logTableBody','dragleave','stockView','Hareket\x20Gecmisi','div',',\x201)\x22>+</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20data-label=\x22Toplam\x22\x20style=\x22text-align:right;\x20font-weight:bold;\x20color:var(--primary);\x22\x20id=\x22total-','unshift','total-','forEach','Peşin','querySelectorAll','saveNote','Sisteme\x20giriş\x20yapıldı.','some','paidAmount','custPaymentType','qty','ADET','Excel\x20İşlemi:\x20','isStructured','dataset','custPaid',',\x20\x22','products','customer-card','move','saveModal','item-row','STOK','badge-dec','134dEGgdW','has','SheetNames','customers','appendChild','<tr><td\x20colspan=\x226\x22\x20style=\x22text-align:center;\x20padding:40px;\x22>Liste\x20Boş.</td></tr>','5447680BAsycz','Silindi','status','closest','Müşteriler','newCat','Görüşülüyor','btnDeleteCust','\x20üründe\x20güncelleme\x20yapıldı.',',\x20-1)\x22>-</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22number\x22\x20class=\x22qty-val\x22\x20placeholder=\x220\x22\x20value=\x22','KATEGORİ','map','drag-over','loading','remove','paymentType','Başarıyla\x20Kaydedildi!','addEventListener','notes','44jOqSAI','Ürün\x20adı\x20giriniz.','customerList','book_append_sheet','customerControls','\x20güncellendi.','phone','ÜRÜN','Ürün\x20listesi\x20sıfırlandı.','cat-row','array','4102110gEKoJz','rotate(0deg)','\x20silindi.','reduce','abs','utils','newCatText','\x20yeni\x20ürün,\x20','<option\x20value=\x22NEW\x22>+\x20YENİ</option>','\x22\x20kategorisinden\x20\x22','globalSaveBtn','find','Cihaz\x20Belirtilmedi','date','\x20ürün\x20taşındı)','</span>','Kategori\x20Değişti:\x20','length','HUMAY','effectAllowed','drop','classList','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20data-label=\x22Ürün\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20class=\x22input-clean\x22\x20value=\x22','toLocaleString','<option>','\x22\x20style=\x22padding:2px\x205px;\x20border-radius:3px;\x22>','Müşteri\x20Güncellendi:\x20','dataTransfer','min','includes','active','8609432IBQeea','Kategori\x20Silindi:\x20','custPhone','Kategori\x20ismini\x20düzenle\x20(Silmek\x20için\x20kutuyu\x20boş\x20bırakıp\x20Tamam\x27a\x20basın):','\x20(Yeni:\x20','totalAmount','tableBody','clientY','7PsastD','custStatus','newQty','device','\x20adet\x20','45291UNAvVP','\x27)\x22><i\x20class=\x22fa-solid\x20fa-pen\x22></i></button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','files','trim','NEW','contains','innerText','replace','\x27)\x22></i></td>',',\x20this.value)\x22\x20onfocus=\x22this.select()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22qty-btn\x22\x20onclick=\x22updateQty(','innerHTML','\x22\x20kategorisine\x20taşındı','height','status-iptal','Focus_Medikal_Full_Data.xlsx'];_0x570f=function(){return _0x466fb1;};return _0x570f();}function deleteItem(_0xa2bb58,_0x114015){const _0x5918c3=_0xf1b56d;confirm(_0x114015+_0x5918c3(0x1f9))&&(productData=productData['filter'](_0x121cfd=>_0x121cfd['id']!==_0xa2bb58),addLog(_0x114015+_0x5918c3(0x170)),renderTable(),document['getElementById'](_0x5918c3(0x178))['style']['display']=_0x5918c3(0x202));}function openModal(){const _0xbaabd0=_0xf1b56d,_0x145d0c=document[_0xbaabd0(0x212)](_0xbaabd0(0x256)),_0x266069=[...new Set(productData[_0xbaabd0(0x15b)](_0x309030=>_0x309030['category']))];_0x145d0c['innerHTML']=_0xbaabd0(0x229)+_0x266069[_0xbaabd0(0x15b)](_0x547c0d=>_0xbaabd0(0x186)+_0x547c0d+'</option>')['join']('')+_0xbaabd0(0x176),document[_0xbaabd0(0x212)]('addModal')[_0xbaabd0(0x1be)][_0xbaabd0(0x1df)]=_0xbaabd0(0x202);}function checkNewCat(_0x471cc1){const _0x1c2361=_0xf1b56d;document[_0x1c2361(0x212)](_0x1c2361(0x174))[_0x1c2361(0x1be)][_0x1c2361(0x1df)]=_0x471cc1[_0x1c2361(0x1fd)]===_0x1c2361(0x19e)?_0x1c2361(0x1d6):_0x1c2361(0x1e4);}function closeModal(){const _0x19fb5a=_0xf1b56d;document['getElementById']('addModal')[_0x19fb5a(0x1be)][_0x19fb5a(0x1df)]=_0x19fb5a(0x1e4);}function addNewProduct(){const _0x503d94=_0xf1b56d,_0x3e2a7b=document[_0x503d94(0x212)](_0x503d94(0x256))[_0x503d94(0x1fd)],_0x5aa48f=document['getElementById'](_0x503d94(0x174))['value'];let _0x35bcdb=(_0x3e2a7b===_0x503d94(0x19e)?_0x5aa48f:_0x3e2a7b)[_0x503d94(0x19d)]()['toUpperCase']();if(!_0x35bcdb)_0x35bcdb=_0x503d94(0x210);const _0x43bb1d=document[_0x503d94(0x212)](_0x503d94(0x1b1))[_0x503d94(0x1fd)],_0x2da27f=parseFloat(document[_0x503d94(0x212)](_0x503d94(0x1e3))['value'])||0x0,_0x50e4d0=parseInt(document[_0x503d94(0x212)]('newQty')[_0x503d94(0x1fd)])||0x1;_0x43bb1d?(productData[_0x503d94(0x1ee)]({'id':Date[_0x503d94(0x1b0)](),'category':_0x35bcdb,'name':_0x43bb1d,'price':_0x2da27f,'qty':_0x50e4d0}),addLog(_0x43bb1d+'\x20manuel\x20olarak\x20eklendi.'),openCategories[_0x503d94(0x1e9)](_0x35bcdb),renderTable(),closeModal(),document['getElementById'](_0x503d94(0x1b1))[_0x503d94(0x1fd)]='',document[_0x503d94(0x212)](_0x503d94(0x1e3))[_0x503d94(0x1fd)]='',document[_0x503d94(0x212)](_0x503d94(0x197))[_0x503d94(0x1fd)]='1',document[_0x503d94(0x212)](_0x503d94(0x178))[_0x503d94(0x1be)][_0x503d94(0x1df)]=_0x503d94(0x202)):alert(_0x503d94(0x164));}
+// ============================================================
+// FOCUS MEDİKAL - PANEL V47 (FULL SYNC & CRM)
+// ============================================================
+
+const API_URL = 'https://script.google.com/macros/s/AKfycbzRsa14tQX1cxHdk_1Q5suD5PKNRwBWd2HGyTKlQjvadcrFW6IdsxjASv-If56oeGyE/exec'; 
+const ENCRYPTED_PASS = "MzU4MDM0"; 
+
+let productData = [];
+let customerData = [];
+let logData = []; 
+let originalState = {}; 
+let isAdmin = false;
+let currentUser = "Yönetici"; 
+let openCategories = new Set(); 
+let activeTab = 'stock';
+let currentCustId = null;
+let draggedItemId = null;
+let draggedItemIndex = -1;
+
+window.onload = function() { 
+    // Sayfa açıldığında veriyi çekmeye başla ama ekranı gösterme
+    fetchData(); 
+};
+
+// --- GİRİŞ SİSTEMİ ---
+function verifyLogin() {
+    const input = document.getElementById('loginPassword').value;
+    const errorMsg = document.getElementById('loginError');
+    
+    if (btoa(input) === ENCRYPTED_PASS) {
+        isAdmin = true;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'block';
+        addLog("Sisteme giriş yapıldı.");
+        refreshCurrentView();
+    } else {
+        errorMsg.style.display = 'block';
+        document.getElementById('loginPassword').value = "";
+    }
+}
+
+function logout() { location.reload(); }
+
+// --- SEKME YÖNETİMİ ---
+function switchTab(tabName) {
+    activeTab = tabName;
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    document.getElementById('stockView').style.display = tabName === 'stock' ? 'block' : 'none';
+    document.getElementById('customerView').style.display = tabName === 'customers' ? 'block' : 'none';
+    refreshCurrentView();
+}
+
+function refreshCurrentView() {
+    if(activeTab === 'stock') {
+        document.getElementById('stockControls').style.display = 'flex';
+        document.getElementById('customerControls').style.display = 'none';
+        renderTable();
+    } else {
+        document.getElementById('stockControls').style.display = 'none';
+        document.getElementById('customerControls').style.display = 'flex';
+        renderCustomers();
+    }
+}
+
+// --- VERİ ÇEKME (GET) ---
+async function fetchData() {
+    try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        
+        // Veriyi güvenli şekilde dağıt
+        if (data) {
+            productData = data.products || [];
+            customerData = data.customers || [];
+            logData = data.logs || [];
+        }
+
+        // ID kontrolü (Eksikse tamamla)
+        productData.forEach(p => { if(!p.id) p.id = Date.now() + Math.random(); });
+        customerData.forEach(c => { if(!c.id) c.id = Date.now() + Math.random(); });
+
+        storeOriginalState();
+        const cats = [...new Set(productData.map(p => p.category))];
+        cats.forEach(c => openCategories.add(c));
+        
+        document.getElementById('loading').style.display = 'none';
+    } catch (err) { 
+        console.error("Veri çekme hatası:", err);
+        // Hata olsa bile loading'i kapat ki giriş yapılabilsin (boş liste ile)
+        document.getElementById('loading').style.display = 'none';
+    }
+}
+
+function storeOriginalState() {
+    originalState = {};
+    productData.forEach(p => { originalState[p.id] = { ...p }; });
+}
+
+// --- VERİ KAYDETME (POST - CRITICAL) ---
+async function saveToCloud() {
+    const btn = document.getElementById('globalSaveBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Kaydediliyor...';
+    btn.disabled = true;
+
+    try {
+        // EN ÖNEMLİ KISIM: Ürünleri ve Müşterileri paketle
+        const payload = { 
+            products: productData, 
+            customers: customerData,
+            logs: logData 
+        };
+        
+        await fetch(API_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify(payload) 
+        });
+
+        alert("Tüm veriler (Stoklar ve Müşteriler) başarıyla buluta kaydedildi!");
+        storeOriginalState();
+        btn.style.display = 'none'; // Değişiklik yoksa butonu gizle
+    } catch(e) { 
+        alert("Kaydetme sırasında hata oluştu! İnternetinizi kontrol edin."); 
+        console.error(e);
+    }
+    
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+}
+
+// "Kaydet" butonu manuel tetiklendiğinde
+function confirmSave() {
+    const note = document.getElementById('saveNote').value.trim();
+    closeSaveModal();
+    
+    // Değişiklikleri Logla (Sadece Stok İçin)
+    let changesLog = [];
+    productData.forEach(p => {
+        const old = originalState[p.id];
+        if (!old) return;
+        if (p.qty !== old.qty) changesLog.push(`${p.name} stoğu ${p.qty} oldu`);
+        if (p.price !== old.price) changesLog.push(`${p.name} fiyatı ${p.price} oldu`);
+    });
+
+    if (changesLog.length > 0) {
+        let logStr = changesLog.length > 5 ? `${changesLog.length} ürün güncellendi` : changesLog.join(', ');
+        if(note) logStr += ` (${note})`;
+        addLog(logStr);
+    } else if (note) {
+        addLog(`Not: ${note}`);
+    }
+    
+    // Müşteri verileri zaten array'de güncel, direkt gönderiyoruz.
+    saveToCloud();
+}
+
+// --- LOG FONKSİYONLARI ---
+function addLog(action) {
+    const date = new Date().toLocaleString('tr-TR');
+    logData.unshift({ id: Date.now(), date: date, user: currentUser, action: action });
+    if(logData.length > 5000) logData.pop(); 
+}
+
+function openLogModal() {
+    const tbody = document.getElementById('logTableBody');
+    tbody.innerHTML = "";
+    logData.forEach(log => {
+        tbody.innerHTML += `<tr>
+            <td style="padding:10px;">${log.date}</td>
+            <td style="padding:10px;"><span class="badge badge-admin">${log.user}</span></td>
+            <td style="padding:10px;">${log.action}</td>
+            <td></td>
+        </tr>`;
+    });
+    document.getElementById('logModal').style.display = 'flex';
+}
+function closeLogModal() { document.getElementById('logModal').style.display = 'none'; }
+function openSaveModal() { document.getElementById('saveNote').value=""; document.getElementById('saveModal').style.display='flex'; }
+function closeSaveModal() { document.getElementById('saveModal').style.display='none'; }
+
+// --- MÜŞTERİ (CRM) YÖNETİMİ ---
+function renderCustomers() {
+    const container = document.getElementById('customerList');
+    container.innerHTML = "";
+    const term = document.getElementById('searchInput').value.toLowerCase();
+    
+    const filtered = customerData.filter(c => 
+        (c.name && c.name.toLowerCase().includes(term)) || 
+        (c.device && c.device.toLowerCase().includes(term))
+    );
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:#94a3b8; margin-top:20px;">Kayıt bulunamadı.</p>`;
+        return;
+    }
+
+    filtered.forEach(c => {
+        let statusClass = "status-gorusuluyor";
+        if(c.status === "Teklif Verildi") statusClass = "status-teklif";
+        if(c.status === "Kapora Alındı") statusClass = "status-kapora";
+        if(c.status === "Teslim Edildi") statusClass = "status-teslim";
+        if(c.status === "İptal") statusClass = "status-iptal";
+
+        const card = document.createElement('div');
+        card.className = "customer-card";
+        card.onclick = () => openCustomerModal(c.id);
+        
+        card.innerHTML = `
+            <div class="cust-header">
+                <div>
+                    <div class="cust-name">${c.name}</div>
+                    <span class="cust-device">${c.device || ''}</span>
+                </div>
+                <span class="cust-status ${statusClass}">${c.status}</span>
+            </div>
+            <div style="font-size:0.85rem; color:#64748b; margin-bottom:10px;">
+                <i class="fa-solid fa-phone"></i> ${c.phone || '-'}
+            </div>
+            <div style="font-size:0.8rem; background:#f1f5f9; padding:5px; border-radius:4px;">
+                <b>Kalan:</b> ${(c.totalAmount - c.paidAmount).toLocaleString('tr-TR')} ₺
+            </div>
+            <div class="cust-actions" onclick="event.stopPropagation()">
+                <a href="tel:${c.phone}" class="action-btn"><i class="fa-solid fa-phone"></i> Ara</a>
+                <a href="https://wa.me/90${c.phone ? c.phone.replace(/^0/,'').replace(/\s/g,'') : ''}" target="_blank" class="action-btn whatsapp"><i class="fa-brands fa-whatsapp"></i> Yaz</a>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function openCustomerModal(id = null) {
+    currentCustId = id;
+    const modal = document.getElementById('customerModal');
+    if (id) {
+        const c = customerData.find(x => x.id === id);
+        document.getElementById('custModalTitle').innerText = "Müşteri Düzenle";
+        document.getElementById('custName').value = c.name;
+        document.getElementById('custPhone').value = c.phone;
+        document.getElementById('custDevice').value = c.device;
+        document.getElementById('custPaymentType').value = c.paymentType;
+        document.getElementById('custStatus').value = c.status;
+        document.getElementById('custTotal').value = c.totalAmount || "";
+        document.getElementById('custPaid').value = c.paidAmount || "";
+        document.getElementById('custNotes').value = c.notes || "";
+        document.getElementById('btnDeleteCust').style.display = 'block';
+        updateRestAmount();
+    } else {
+        document.getElementById('custModalTitle').innerText = "Yeni Müşteri Ekle";
+        document.getElementById('custName').value = "";
+        document.getElementById('custPhone').value = "";
+        document.getElementById('custDevice').value = "";
+        document.getElementById('custPaymentType').value = "Peşin";
+        document.getElementById('custStatus').value = "Görüşülüyor";
+        document.getElementById('custTotal').value = "";
+        document.getElementById('custPaid').value = "";
+        document.getElementById('custRest').value = "";
+        document.getElementById('custNotes').value = "";
+        document.getElementById('btnDeleteCust').style.display = 'none';
+    }
+    document.getElementById('custTotal').oninput = updateRestAmount;
+    document.getElementById('custPaid').oninput = updateRestAmount;
+    modal.style.display = 'flex';
+}
+
+function updateRestAmount() {
+    const total = parseFloat(document.getElementById('custTotal').value) || 0;
+    const paid = parseFloat(document.getElementById('custPaid').value) || 0;
+    document.getElementById('custRest').value = total - paid;
+}
+
+function closeCustomerModal() { document.getElementById('customerModal').style.display = 'none'; }
+
+function saveCustomer() {
+    const name = document.getElementById('custName').value;
+    if (!name) { alert("İsim giriniz."); return; }
+    
+    const newCust = {
+        id: currentCustId || Date.now(),
+        name: name,
+        phone: document.getElementById('custPhone').value,
+        device: document.getElementById('custDevice').value,
+        paymentType: document.getElementById('custPaymentType').value,
+        status: document.getElementById('custStatus').value,
+        totalAmount: parseFloat(document.getElementById('custTotal').value) || 0,
+        paidAmount: parseFloat(document.getElementById('custPaid').value) || 0,
+        notes: document.getElementById('custNotes').value,
+        dateAdded: new Date().toLocaleDateString('tr-TR')
+    };
+
+    if (currentCustId) {
+        const index = customerData.findIndex(x => x.id === currentCustId);
+        customerData[index] = newCust;
+        addLog(`Müşteri Güncellendi: ${name}`);
+    } else {
+        customerData.push(newCust);
+        addLog(`Yeni Müşteri Eklendi: ${name}`);
+    }
+    closeCustomerModal();
+    renderCustomers();
+    // Müşteri eklendiği an "Kaydet" butonu çıksın ki sunucuya gönderebilelim
+    document.getElementById('globalSaveBtn').style.display = 'flex';
+}
+
+function deleteCustomer() {
+    if(confirm("Bu müşteri kaydını silmek istediğinize emin misiniz?")) {
+        customerData = customerData.filter(x => x.id !== currentCustId);
+        addLog("Bir müşteri silindi.");
+        closeCustomerModal();
+        renderCustomers();
+        document.getElementById('globalSaveBtn').style.display = 'flex';
+    }
+}
+
+// --- STOK YÖNETİMİ (V44'den Devam) ---
+function renderTable() {
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = "";
+    const term = document.getElementById('searchInput').value.toLowerCase();
+
+    if (productData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:40px;">Liste Boş.</td></tr>`;
+        calculateTotal(); return;
+    }
+
+    let displayData = productData;
+    if (term) displayData = productData.filter(p => p.name.toLowerCase().includes(term));
+
+    let globalIndex = 1;
+    let lastCategory = null;
+
+    displayData.forEach((item, index) => {
+        // KATEGORİ BAŞLIĞI
+        if (item.category !== lastCategory) {
+            lastCategory = item.category;
+            const isOpen = openCategories.has(lastCategory) || term.length > 0;
+            const iconRotate = isOpen ? 'rotate(-180deg)' : 'rotate(0deg)';
+
+            const trCat = document.createElement('tr');
+            trCat.className = 'cat-row';
+            trCat.addEventListener('dragover', handleDragOver);
+            trCat.addEventListener('dragleave', handleDragLeave);
+            trCat.addEventListener('drop', handleDrop);
+            
+            trCat.innerHTML = `
+                <td colspan="6">
+                    <div class="cat-actions" onclick="toggleCategory('${lastCategory}')" style="flex-grow:1; display:flex; align-items:center; justify-content:space-between;">
+                        <span>${lastCategory}</span>
+                        <i class="fa-solid fa-chevron-down cat-icon" style="transform:${iconRotate}"></i>
+                    </div>
+                    <button class="cat-edit-btn" onclick="event.stopPropagation(); editCategoryName('${lastCategory}')"><i class="fa-solid fa-pen"></i></button>
+                </td>
+            `;
+            tbody.appendChild(trCat);
+        }
+
+        const isVisible = openCategories.has(item.category) || term.length > 0;
+        if (isVisible) {
+            const tr = document.createElement('tr');
+            tr.className = `item-row`;
+            tr.dataset.id = item.id;
+            tr.dataset.idx = index;
+            
+            if(!term) {
+                tr.setAttribute('draggable', true);
+                tr.addEventListener('dragstart', handleDragStart);
+                tr.addEventListener('dragover', handleDragOver);
+                tr.addEventListener('dragleave', handleDragLeave);
+                tr.addEventListener('drop', handleDrop);
+                tr.addEventListener('dragend', handleDragEnd);
+            }
+
+            const pVal = item.price === 0 ? '' : item.price;
+            const qVal = item.qty === 0 ? '' : item.qty;
+            const trashHTML = `<td class="trash-cell" style="text-align:center;"><i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="deleteItem(${item.id}, '${item.name}')"></i></td>`;
+
+            tr.innerHTML = `
+                <td class="index-cell">${globalIndex++}</td>
+                <td data-label="Ürün"><input type="text" class="input-clean" value="${item.name}" oninput="updateData(${item.id}, 'name', this.value)"></td>
+                <td data-label="Fiyat">
+                    <div class="price-wrapper">
+                        <input type="number" class="input-clean price-input" placeholder="0" value="${pVal}" oninput="updateData(${item.id}, 'price', this.value)">
+                        <span class="currency">₺</span>
+                    </div>
+                </td>
+                <td data-label="Adet">
+                    <div class="qty-wrapper">
+                        <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
+                        <input type="number" class="qty-val" placeholder="0" value="${qVal}" oninput="updateQtyManual(${item.id}, this.value)" onfocus="this.select()">
+                        <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
+                    </div>
+                </td>
+                <td data-label="Toplam" style="text-align:right; font-weight:bold; color:var(--primary);" id="total-${item.id}">${(item.price * item.qty).toLocaleString('tr-TR', {minimumFractionDigits:2})} ₺</td>
+                ${trashHTML}
+            `;
+            tbody.appendChild(tr);
+        }
+    });
+    calculateTotal();
+}
+
+// ... (Kategori Düzenleme, Silme, Excel ve Sürükle Bırak Fonksiyonları V44 ile aynı - Aşağıda kısaltılmış olarak veriyorum, hepsi tam çalışır) ...
+
+function updateData(id, field, value) {
+    const item = productData.find(p => p.id === id);
+    if (!item) return;
+    if (field === 'price') item[field] = parseFloat(value) || 0;
+    else item[field] = value;
+    if (field === 'price') document.getElementById(`total-${id}`).innerText = (item.price * item.qty).toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
+    calculateTotal();
+    document.getElementById('globalSaveBtn').style.display = 'flex';
+}
+
+function updateQty(id, delta) {
+    const item = productData.find(p => p.id === id);
+    if (!item) return;
+    let newVal = (item.qty || 0) + delta;
+    if (newVal < 0) newVal = 0;
+    item.qty = newVal;
+    renderTable(); 
+    document.getElementById('globalSaveBtn').style.display = 'flex';
+}
+
+function updateQtyManual(id, value) {
+    const item = productData.find(p => p.id === id);
+    if (!item) return;
+    item.qty = parseInt(value) || 0;
+    document.getElementById(`total-${id}`).innerText = (item.price * item.qty).toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
+    calculateTotal();
+    document.getElementById('globalSaveBtn').style.display = 'flex';
+}
+
+function calculateTotal() {
+    const total = productData.reduce((sum, p) => sum + (p.price * p.qty), 0);
+    document.getElementById('grandTotal').innerText = total.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
+}
+
+function toggleCategory(cat) { 
+    if (openCategories.has(cat)) openCategories.delete(cat); else openCategories.add(cat); 
+    renderTable(); 
+}
+
+function editCategoryName(oldCatName) {
+    const newName = prompt("Kategori adı (Silmek için boş bırakın):", oldCatName);
+    if (newName === null) return;
+    if (newName.trim() === "") {
+        if(confirm(`"${oldCatName}" silinsin mi? Ürünler GENEL LİSTE'ye geçer.`)) {
+            productData.forEach(p => { if(p.category===oldCatName) p.category="GENEL LİSTE"; });
+            openCategories.delete(oldCatName);
+            openCategories.add("GENEL LİSTE");
+            addLog("Kategori Silindi: " + oldCatName);
+            renderTable();
+            document.getElementById('globalSaveBtn').style.display='flex';
+        }
+    } else if (newName !== oldCatName) {
+        productData.forEach(p => { if(p.category===oldCatName) p.category=newName.trim().toUpperCase(); });
+        openCategories.delete(oldCatName);
+        openCategories.add(newName.trim().toUpperCase());
+        addLog("Kategori Değişti: " + oldCatName);
+        renderTable();
+        document.getElementById('globalSaveBtn').style.display='flex';
+    }
+}
+
+function deleteItem(id, name) { 
+    if(confirm(`${name} silinecek?`)) { 
+        productData = productData.filter(p=>p.id!==id); 
+        addLog(`${name} silindi.`); 
+        renderTable(); 
+        document.getElementById('globalSaveBtn').style.display='flex'; 
+    } 
+}
+
+function resetAll() {
+    if(confirm("Tüm stok listesi silinecek?")) {
+        productData = [];
+        addLog("Stok sıfırlandı.");
+        renderTable();
+        document.getElementById('globalSaveBtn').style.display='flex';
+    }
+}
+
+function openModal() {
+    const sel = document.getElementById('newCat');
+    const cats = [...new Set(productData.map(p=>p.category))];
+    sel.innerHTML = `<option>GENEL LİSTE</option>` + cats.map(c=>`<option>${c}</option>`).join('') + `<option value="NEW">+ YENİ</option>`;
+    document.getElementById('addModal').style.display = 'flex';
+}
+function checkNewCat(s) { document.getElementById('newCatText').style.display = s.value==='NEW'?'block':'none'; }
+function closeModal() { document.getElementById('addModal').style.display='none'; }
+
+function addNewProduct() {
+    const sel = document.getElementById('newCat').value;
+    const inp = document.getElementById('newCatText').value;
+    let cat = (sel==='NEW'?inp:sel).trim().toUpperCase();
+    if(!cat) cat="GENEL LİSTE";
+    const name = document.getElementById('newName').value;
+    if(!name) { alert("Ürün adı girin"); return; }
+    
+    productData.push({
+        id: Date.now(), category: cat, name: name, 
+        price: parseFloat(document.getElementById('newPrice').value)||0,
+        qty: parseInt(document.getElementById('newQty').value)||1
+    });
+    addLog(name + " eklendi.");
+    openCategories.add(cat);
+    closeModal();
+    renderTable();
+    document.getElementById('globalSaveBtn').style.display='flex';
+}
+
+function handleSearch() {
+    if(activeTab==='stock') renderTable(); else renderCustomers();
+}
+
+function handleDragStart(e) { draggedItemId=parseFloat(e.target.dataset.id); e.target.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; }
+function handleDragEnd(e) { e.target.classList.remove('dragging'); document.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over-top','drag-over-bottom','drag-over')); }
+function handleDragOver(e) { e.preventDefault(); const tr=e.target.closest('tr'); if(tr && !tr.classList.contains('dragging')) {
+    if(tr.classList.contains('item-row')) {
+        const off=e.clientY-tr.getBoundingClientRect().top;
+        tr.classList.remove('drag-over-top','drag-over-bottom');
+        tr.classList.add(off<tr.offsetHeight/2?'drag-over-top':'drag-over-bottom');
+    } else if(tr.classList.contains('cat-row')) tr.classList.add('drag-over');
+}}
+function handleDragLeave(e) { const tr=e.target.closest('tr'); if(tr) tr.classList.remove('drag-over-top','drag-over-bottom','drag-over'); }
+function handleDrop(e) {
+    e.preventDefault(); e.stopPropagation();
+    if(!draggedItemId) return;
+    const target=e.target.closest('tr');
+    if(!target) return;
+    const item=productData.find(p=>p.id===draggedItemId);
+    const idx=productData.indexOf(item);
+    
+    if(target.classList.contains('cat-row')) {
+        const newCat=target.querySelector('.cat-actions span').innerText;
+        if(item.category!==newCat) {
+            item.category=newCat;
+            productData.splice(idx,1);
+            const firstIdx=productData.findIndex(p=>p.category===newCat);
+            if(firstIdx>-1) productData.splice(firstIdx,0,item); else productData.push(item);
+            openCategories.add(newCat);
+        }
+    } else if(target.classList.contains('item-row')) {
+        const tId=parseFloat(target.dataset.id);
+        const tItem=productData.find(p=>p.id===tId);
+        if(item!==tItem) {
+            if(item.category!==tItem.category) item.category=tItem.category;
+            productData.splice(idx,1);
+            const newIdx=productData.indexOf(tItem);
+            productData.splice(target.classList.contains('drag-over-bottom')?newIdx+1:newIdx,0,item);
+        }
+    }
+    handleDragEnd({target:document.querySelector('.dragging')});
+    renderTable();
+    document.getElementById('globalSaveBtn').style.display='flex';
+}
+
+function processExcel(input) {
+    const file=input.files[0]; if(!file)return;
+    const reader=new FileReader();
+    reader.onload=function(e){
+        const rows=XLSX.utils.sheet_to_json(XLSX.read(e.target.result,{type:'array'}).Sheets[XLSX.read(e.target.result,{type:'array'}).SheetNames[0]],{header:1,defval:""});
+        parseRowsSmart(rows, detectColumns(rows));
+    };
+    reader.readAsArrayBuffer(file);
+    input.value="";
+}
+function detectColumns(rows) {
+    let map={name:0,stock:1,price:2,category:-1,isStructured:false};
+    for(let i=0;i<Math.min(rows.length,10);i++){
+        const r=rows[i].map(x=>String(x).toUpperCase().trim());
+        if(r.includes("ÜRÜN")&&(r.includes("FİYAT")||r.includes("ADET"))){
+            map.isStructured=true; map.name=r.indexOf("ÜRÜN");
+            if(r.includes("ADET"))map.stock=r.indexOf("ADET"); else if(r.includes("STOK"))map.stock=r.indexOf("STOK");
+            if(r.includes("FİYAT"))map.price=r.indexOf("FİYAT"); if(r.includes("KATEGORİ"))map.category=r.indexOf("KATEGORİ");
+            break;
+        }
+    } return map;
+}
+function parseRowsSmart(rows,map) {
+    let added=0; let updated=0; let curCat="GENEL LİSTE";
+    rows.forEach(r=>{
+        if(!r||r.length===0)return;
+        let name="",stock=0,price=0,cat="";
+        if(map.isStructured) {
+            name=(r[map.name]||"").toString().trim();
+            if(!name||["ÜRÜN","STOK","FİYAT"].some(w=>name.toUpperCase().includes(w)))return;
+            stock=cleanPrice(r[map.stock]); price=cleanPrice(r[map.price]);
+            if(map.category>-1&&r[map.category]) { let c=r[map.category].toString().trim(); if(c)curCat=c.toUpperCase(); }
+            cat=curCat;
+        } else {
+            let a=(r[0]||"").toString().trim(), b=(r[1]||"").toString().trim(), c=(r[2]||"").toString().trim();
+            if(!a&&c&&isNaN(cleanPrice(c))){ if(!["TOPLAM","TABLOSU"].some(w=>c.toUpperCase().includes(w)))curCat=c.toUpperCase(); return; }
+            if(!a||["ÜRÜN","STOK"].some(w=>a.toUpperCase().includes(w)))return;
+            name=a; stock=cleanPrice(b); price=cleanPrice(c); cat=curCat;
+        }
+        const ex=productData.find(p=>p.name.trim().toLowerCase()===name.toLowerCase());
+        if(ex) { if(ex.price!==price||ex.qty!==stock){ ex.price=price; ex.qty=stock; updated++; } }
+        else { productData.push({id:Date.now()+Math.random(),category:cat,name:name,price:price,qty:stock}); added++; }
+    });
+    [...new Set(productData.map(p=>p.category))].forEach(c=>openCategories.add(c));
+    if(added>0||updated>0) { addLog(`Excel: ${added} yeni, ${updated} güncel`); alert("Tamamlandı."); document.getElementById('globalSaveBtn').style.display='flex'; renderTable(); }
+}
+function cleanPrice(s){if(typeof s==='number')return s; if(!s)return 0; let c=s.toString().replace(/[^0-9.,]/g,''); if(c.includes(',')&&c.includes('.'))c=c.replace(/\./g,'').replace(',','.'); else if(c.includes(','))c=c.replace(',','.'); else if(c.includes('.')&&c.split('.')[1].length===3)c=c.replace(/\./g,''); return parseFloat(c)||0;}
+
+function exportToExcel() {
+    const list=productData.map(p=>({"KATEGORİ":p.category,"ÜRÜN":p.name,"FİYAT":p.price,"ADET":p.qty,"TOPLAM":p.price*p.qty}));
+    const cust=customerData.map(c=>({"AD SOYAD":c.name,"TELEFON":c.phone,"CİHAZ":c.device,"DURUM":c.status,"TOPLAM":c.totalAmount,"ALINAN":c.paidAmount,"KALAN":c.totalAmount-c.paidAmount,"NOT":c.notes}));
+    const logs=logData.map(l=>({"TARİH":l.date,"KULLANICI":l.user,"AÇIKLAMA":l.action}));
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(list),"Stok Listesi");
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(cust),"Müşteriler");
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(logs),"Loglar");
+    XLSX.writeFile(wb,"Focus_Medikal_Full_Data.xlsx");
+}

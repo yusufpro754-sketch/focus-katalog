@@ -1,1 +1,1 @@
-# focus-katalog
+# focus-stok

@@ -6,7 +6,7 @@ let originalState = {};
 let isAdmin = false;
 let currentUser = "Misafir"; 
 let openCategories = new Set(); 
-let draggedItem = null; 
+let draggedItemId = null; // Sürüklenen ID
 
 window.onload = function() { fetchData(); };
 
@@ -16,6 +16,7 @@ function loginToggle() {
         isAdmin = false;
         currentUser = "Misafir";
         document.getElementById('adminControls').style.display = 'none';
+        document.getElementById('dragHint').style.display = 'none'; // İpucunu gizle
         document.getElementById('loginText').innerText = "Giriş Yap";
         renderTable();
     } else {
@@ -24,6 +25,7 @@ function loginToggle() {
             isAdmin = true;
             currentUser = "Yönetici"; 
             document.getElementById('adminControls').style.display = 'flex';
+            document.getElementById('dragHint').style.display = 'block'; // İpucunu göster
             document.getElementById('loginText').innerText = "Çıkış Yap";
             addLog("Yönetici girişi yapıldı.");
             renderTable();
@@ -33,12 +35,11 @@ function loginToggle() {
     }
 }
 
-// --- VERİ İŞLEMLERİ ---
+// --- VERİ ÇEKME ---
 async function fetchData() {
     try {
         const res = await fetch(API_URL);
         const data = await res.json();
-        
         if (data && data.products) {
             productData = data.products;
             logData = data.logs || [];
@@ -46,13 +47,10 @@ async function fetchData() {
             productData = data;
             logData = [];
         }
-
         productData.forEach(p => { if(!p.id) p.id = Date.now() + Math.random(); });
         storeOriginalState();
-
         const cats = [...new Set(productData.map(p => p.category))];
         cats.forEach(c => openCategories.add(c));
-        
         renderTable();
     } catch (err) { console.error(err); }
     document.getElementById('loading').style.display = 'none';
@@ -63,7 +61,7 @@ function storeOriginalState() {
     productData.forEach(p => { originalState[p.id] = { ...p }; });
 }
 
-// --- LOGLAMA ---
+// --- LOG ---
 function addLog(action) {
     const date = new Date().toLocaleString('tr-TR');
     const logEntry = { id: Date.now(), date: date, user: currentUser, action: action };
@@ -90,9 +88,8 @@ function openLogModal() {
     } else {
         logData.forEach((log, index) => {
             let actionClass = "badge-info";
-            if(log.action.includes("Eklendi") || log.action.includes("girişi") || log.action.includes("artırıldı")) actionClass = "badge-inc";
+            if(log.action.includes("Eklendi") || log.action.includes("artırıldı")) actionClass = "badge-inc";
             if(log.action.includes("Silindi") || log.action.includes("azaltıldı")) actionClass = "badge-dec";
-            
             let parts = log.action.split('|||');
             let mainText = parts[0];
             let noteText = "";
@@ -110,7 +107,7 @@ function openLogModal() {
 }
 function closeLogModal() { document.getElementById('logModal').style.display = 'none'; }
 
-// --- KAYDETME VE DEĞİŞİKLİK RAPORU ---
+// --- KAYDETME VE RAPOR ---
 function openSaveModal() {
     document.getElementById('saveNote').value = "";
     document.getElementById('saveModal').style.display = 'flex';
@@ -120,11 +117,10 @@ function closeSaveModal() { document.getElementById('saveModal').style.display =
 function confirmSave() {
     const note = document.getElementById('saveNote').value.trim();
     closeSaveModal();
-    
     let changesLog = [];
     productData.forEach(p => {
         const old = originalState[p.id];
-        if (!old) return; 
+        if (!old) return;
         if (p.qty !== old.qty) {
             const diff = p.qty - old.qty;
             const direction = diff > 0 ? "artırıldı" : "azaltıldı";
@@ -136,16 +132,17 @@ function confirmSave() {
         if (p.name !== old.name) {
             changesLog.push(`${old.name} ismi "${p.name}" olarak değiştirildi`);
         }
+        // Kategori değişikliği kontrolü
+        if (p.category !== old.category) {
+            changesLog.push(`${p.name}, "${old.category}" kategorisinden "${p.category}" kategorisine taşındı`);
+        }
     });
 
     if (changesLog.length > 0) {
         let finalLogStr = changesLog.length > 10 ? `${changesLog.length} üründe güncelleme yapıldı.` : changesLog.join(', ');
         if (note) finalLogStr += ` |||${note}`;
         addLog(finalLogStr);
-    } else if (note) {
-        addLog(`Genel Not Eklendi|||${note}`);
-    }
-
+    } else if (note) { addLog(`Genel Not Eklendi|||${note}`); }
     saveToCloud();
 }
 
@@ -163,7 +160,7 @@ async function saveToCloud() {
     btn.innerHTML = original;
 }
 
-// --- AKILLI EXCEL OKUYUCU (V40 HIBRIT) ---
+// --- AKILLI EXCEL PARSER (V41) ---
 function processExcel(input) {
     const file = input.files[0];
     if (!file) return;
@@ -171,11 +168,8 @@ function processExcel(input) {
     reader.onload = function(e) {
         const wb = XLSX.read(e.target.result, { type: 'array' });
         const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" }); 
-        
-        // 1. Dosya Tipini Analiz Et
+        // Otomatik Format Algıla
         let map = detectColumns(rows);
-        
-        // 2. Buna göre oku
         parseRowsSmart(rows, map);
     };
     reader.readAsArrayBuffer(file);
@@ -192,27 +186,18 @@ function cleanPrice(str) {
     return parseFloat(clean) || 0;
 }
 
-// Sütunları Tespit Et
 function detectColumns(rows) {
-    let map = { name: 0, stock: 1, price: 2, isStructured: false }; // Varsayılan: Eski Humay Modu (A,B,C)
-    
-    // İlk 10 satırı tara, başlık var mı bak
+    let map = { name: 0, stock: 1, price: 2, category: -1, isStructured: false };
+    // Başlık satırını ara (İlk 10 satır)
     for(let i=0; i<Math.min(rows.length, 10); i++) {
         const row = rows[i].map(x => String(x).toUpperCase().trim());
         if (row.includes("ÜRÜN") && (row.includes("FİYAT") || row.includes("ADET"))) {
-            // Başlık satırı bulundu!
             map.isStructured = true;
             map.name = row.indexOf("ÜRÜN");
-            // Stok için alternatifler
             if (row.includes("ADET")) map.stock = row.indexOf("ADET");
             else if (row.includes("STOK")) map.stock = row.indexOf("STOK");
-            
-            // Fiyat için
             if (row.includes("FİYAT")) map.price = row.indexOf("FİYAT");
-            
-            // Kategori sütunu var mı?
             if (row.includes("KATEGORİ")) map.category = row.indexOf("KATEGORİ");
-            
             break;
         }
     }
@@ -227,42 +212,34 @@ function parseRowsSmart(rows, map) {
 
     rows.forEach(row => {
         if(!row || row.length === 0) return;
-
         let pName = "", pStock = 0, pPrice = 0, pCat = "";
 
         if (map.isStructured) {
-            // DÜZENLİ DOSYA MODU (Yeni dosya gibi)
+            // FORMAT 1: Düzenli Dosya
             let rawName = (row[map.name] || "").toString().trim();
             if (rawName === "" || blacklist.some(w => rawName.toUpperCase().includes(w))) return;
-
             pName = rawName;
             pStock = cleanPrice(row[map.stock]);
             pPrice = cleanPrice(row[map.price]);
-            
-            // Kategori sütunu varsa oradan al, yoksa mevcut kategori devam
-            if (map.category !== undefined && row[map.category]) {
+            // Eğer kategori sütunu varsa ve o satırda doluysa güncelle
+            if (map.category > -1 && row[map.category]) {
                 let catVal = row[map.category].toString().trim();
                 if (catVal !== "") currentCat = catVal.toUpperCase();
             }
-            // Düzenli dosyalarda genelde kategori sütunu her satırda dolu olabilir veya birleşmiş olabilir.
-            // Eğer kategori sütunu tanımlıysa ve o hücre doluysa onu kullan.
             pCat = currentCat;
-
         } else {
-            // KARIŞIK/HUMAY MODU (Eski dosya gibi)
-            // A=İsim, B=Stok, C=Fiyat
+            // FORMAT 2: Humay (A=İsim, B=Stok, C=Fiyat/Kategori)
             let colA = (row[0] || "").toString().trim(); 
             let colB = (row[1] || "").toString().trim(); 
             let colC = (row[2] || "").toString().trim(); 
 
-            // Kategori Tespiti (A boş, C dolu)
+            // Kategori Tespiti
             if (colA === "" && colC !== "" && isNaN(cleanPrice(colC))) {
                 if(!blacklist.some(w => colC.toUpperCase().includes(w))) {
                     currentCat = colC.toUpperCase();
                 }
                 return; 
             }
-
             // Ürün Tespiti
             if (colA !== "") {
                 if (blacklist.some(w => colA.toUpperCase().includes(w))) return;
@@ -270,20 +247,15 @@ function parseRowsSmart(rows, map) {
                 pStock = cleanPrice(colB);
                 pPrice = cleanPrice(colC);
                 pCat = currentCat;
-            } else {
-                return; // Ürün değil, kategori de değil
-            }
+            } else { return; }
         }
 
-        // --- ORTAK EKLEME MANTIĞI ---
         const existingIndex = productData.findIndex(p => p.name.trim().toLowerCase() === pName.toLowerCase());
         if (existingIndex > -1) {
             let oldItem = productData[existingIndex];
             if (oldItem.price !== pPrice || oldItem.qty !== pStock) {
                 productData[existingIndex].price = pPrice;
                 productData[existingIndex].qty = pStock;
-                // Kategori değişmişse güncelle (Opsiyonel, genelde değişmez)
-                // productData[existingIndex].category = pCat; 
                 updatedNames.push(pName);
             }
         } else {
@@ -296,45 +268,23 @@ function parseRowsSmart(rows, map) {
     allCats.forEach(c => openCategories.add(c));
 
     if(addedNames.length > 0 || updatedNames.length > 0) {
-        let logParts = [];
-        if (addedNames.length > 0) logParts.push(`${addedNames.length} Yeni Ürün`);
-        if (updatedNames.length > 0) logParts.push(`${updatedNames.length} Güncelleme`);
-        
-        addLog(`Excel İşlemi: ${logParts.join(", ")}`);
-        alert(`İşlem Tamam!\n${addedNames.length} yeni, ${updatedNames.length} güncelleme.`);
+        addLog(`Excel İşlemi: ${addedNames.length} yeni ürün, ${updatedNames.length} güncelleme.`);
+        alert(`İşlem Tamam!\n${addedNames.length} yeni, ${updatedNames.length} güncellendi.`);
         document.getElementById('globalSaveBtn').style.display = 'flex';
         renderTable();
     }
 }
 
-// --- KATEGORİ DÜZENLEME ---
+// --- KATEGORİ DÜZENLEME & SÜRÜKLE BIRAK ---
 function editCategoryName(oldCatName) {
-    if (!isAdmin) { alert("Sadece yönetici kategori ismini değiştirebilir."); return; }
-    
+    if (!isAdmin) { alert("Yetkisiz işlem."); return; }
     const newName = prompt("Kategori ismini düzenle:", oldCatName);
     if (newName && newName.trim() !== "" && newName !== oldCatName) {
         const finalName = newName.trim().toUpperCase();
         let count = 0;
-        
-        // Veritabanındaki tüm ilgili ürünlerin kategorisini güncelle
-        productData.forEach(p => {
-            if (p.category === oldCatName) {
-                p.category = finalName;
-                count++;
-            }
-        });
-
-        // Açık kategoriler listesini güncelle
-        if(openCategories.has(oldCatName)) {
-            openCategories.delete(oldCatName);
-            openCategories.add(finalName);
-        }
-
-        if (count > 0) {
-            addLog(`Kategori Adı Değişti: ${oldCatName} -> ${finalName}`);
-            renderTable();
-            document.getElementById('globalSaveBtn').style.display = 'flex';
-        }
+        productData.forEach(p => { if (p.category === oldCatName) { p.category = finalName; count++; } });
+        if(openCategories.has(oldCatName)) { openCategories.delete(oldCatName); openCategories.add(finalName); }
+        if (count > 0) { addLog(`Kategori Değişti: ${oldCatName} -> ${finalName}`); renderTable(); document.getElementById('globalSaveBtn').style.display = 'flex'; }
     }
 }
 
@@ -344,7 +294,54 @@ function toggleCategory(cat) {
     renderTable(); 
 }
 
-// --- TABLO RENDER ---
+// DRAG & DROP FONKSİYONLARI
+function handleDragStart(e) {
+    if (!isAdmin) return;
+    draggedItemId = parseFloat(e.target.dataset.id);
+    e.target.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragEnd(e) {
+    e.target.classList.remove('dragging');
+    // Tüm highlightları temizle
+    document.querySelectorAll('.cat-row').forEach(row => row.classList.remove('drag-over'));
+}
+
+function handleDragOverCategory(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const row = e.target.closest('.cat-row');
+    if (row) row.classList.add('drag-over');
+}
+
+function handleDragLeaveCategory(e) {
+    const row = e.target.closest('.cat-row');
+    if (row) row.classList.remove('drag-over');
+}
+
+function handleDropOnCategory(e, catName) {
+    e.preventDefault();
+    const row = e.target.closest('.cat-row');
+    if (row) row.classList.remove('drag-over');
+
+    if (draggedItemId) {
+        const item = productData.find(p => p.id === draggedItemId);
+        if (item && item.category !== catName) {
+            const oldCat = item.category;
+            item.category = catName;
+            // Kategori kapalıysa aç ki ürün görünsün
+            if (!openCategories.has(catName)) openCategories.add(catName);
+            
+            // Loglama yapmayalım çünkü kaydet butonuna basınca toplu loglayacak
+            // Ama kullanıcıya görsel geri bildirim verelim (Tablo yenilenecek)
+            renderTable();
+            document.getElementById('globalSaveBtn').style.display = 'flex';
+        }
+    }
+}
+
+// --- RENDER TABLE ---
 function renderTable() {
     const tbody = document.getElementById('tableBody');
     tbody.innerHTML = "";
@@ -355,7 +352,6 @@ function renderTable() {
         calculateTotal(); return;
     }
 
-    let displayList = productData;
     const grouped = {};
     productData.forEach(p => {
         if (p.name.toLowerCase().includes(term)) {
@@ -374,7 +370,13 @@ function renderTable() {
 
         const trCat = document.createElement('tr');
         trCat.className = 'cat-row';
-        // Kategori satırına tıklayınca aç/kapa, ama düzenle butonuna basınca düzenle
+        // Sürükle Bırak Eventleri (Kategoriye Bırakma)
+        if (isAdmin) {
+            trCat.addEventListener('dragover', handleDragOverCategory);
+            trCat.addEventListener('dragleave', handleDragLeaveCategory);
+            trCat.addEventListener('drop', (e) => handleDropOnCategory(e, cat));
+        }
+
         trCat.innerHTML = `
             <td colspan="6">
                 <div class="cat-actions" onclick="toggleCategory('${cat}')" style="flex-grow:1; display:flex; align-items:center; justify-content:space-between;">
@@ -390,13 +392,11 @@ function renderTable() {
             const tr = document.createElement('tr');
             tr.style.display = displayStyle;
             tr.className = `item-row`;
-            tr.setAttribute('draggable', isAdmin); 
+            tr.setAttribute('draggable', isAdmin); // Sadece admin sürükleyebilir
             tr.dataset.id = item.id;
             
             if(isAdmin) {
                 tr.addEventListener('dragstart', handleDragStart);
-                tr.addEventListener('dragover', handleDragOver);
-                tr.addEventListener('drop', handleDrop);
                 tr.addEventListener('dragend', handleDragEnd);
             }
 
@@ -431,26 +431,6 @@ function renderTable() {
     });
     calculateTotal();
 }
-
-function handleDragStart(e) { draggedItem = this; this.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
-function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
-function handleDrop(e) {
-    e.stopPropagation();
-    const targetRow = e.target.closest('tr.item-row');
-    if (draggedItem !== targetRow && targetRow) {
-        const draggedId = parseFloat(draggedItem.dataset.id);
-        const targetId = parseFloat(targetRow.dataset.id);
-        const fromIndex = productData.findIndex(p => p.id === draggedId);
-        const toIndex = productData.findIndex(p => p.id === targetId);
-        if(fromIndex > -1 && toIndex > -1) {
-            const item = productData.splice(fromIndex, 1)[0];
-            productData.splice(toIndex, 0, item);
-            document.getElementById('globalSaveBtn').style.display = 'flex';
-        }
-    }
-    return false;
-}
-function handleDragEnd(e) { this.classList.remove('dragging'); renderTable(); }
 
 function updateData(id, field, value) {
     if (!isAdmin && (field === 'name' || field === 'price')) return;

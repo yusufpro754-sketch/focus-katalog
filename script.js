@@ -6,7 +6,6 @@ let originalState = {};
 let isAdmin = false;
 let currentUser = "Misafir"; 
 let openCategories = new Set(); 
-// Drag & Drop Değişkenleri
 let draggedItemId = null;
 let draggedItemIndex = -1;
 
@@ -161,7 +160,7 @@ async function saveToCloud() {
     btn.innerHTML = original;
 }
 
-// --- AKILLI EXCEL OKUYUCU ---
+// --- EXCEL OKUMA (ÇİFT MOTORLU) ---
 function processExcel(input) {
     const file = input.files[0];
     if (!file) return;
@@ -268,7 +267,7 @@ function parseRowsSmart(rows, map) {
     }
 }
 
-// --- DÜZENLEME ---
+// --- KATEGORİ YÖNETİMİ ---
 function editCategoryName(oldCatName) {
     if (!isAdmin) { alert("Yetkisiz işlem."); return; }
     const newName = prompt("Kategori ismini düzenle:", oldCatName);
@@ -281,17 +280,35 @@ function editCategoryName(oldCatName) {
     }
 }
 
+// YENİ: KATEGORİ SİLME
+function deleteCategory(catName) {
+    if (!isAdmin) { alert("Yetkisiz işlem."); return; }
+    if (confirm(`"${catName}" kategorisini silmek istediğinize emin misiniz? \nÜrünler "GENEL LİSTE"ye aktarılacaktır.`)) {
+        let count = 0;
+        productData.forEach(p => {
+            if (p.category === catName) {
+                p.category = "GENEL LİSTE";
+                count++;
+            }
+        });
+        openCategories.delete(catName);
+        addLog(`Kategori Silindi: ${catName} (${count} ürün taşındı)`);
+        renderTable();
+        document.getElementById('globalSaveBtn').style.display = 'flex';
+    }
+}
+
 function toggleCategory(cat) { 
     if (openCategories.has(cat)) openCategories.delete(cat); 
     else openCategories.add(cat); 
     renderTable(); 
 }
 
-// --- SÜRÜKLE BIRAK (YENİ VE GELİŞMİŞ) ---
+// --- SÜRÜKLE BIRAK ---
 function handleDragStart(e) {
     if (!isAdmin) return;
     draggedItemId = parseFloat(e.target.dataset.id);
-    draggedItemIndex = parseInt(e.target.dataset.idx); // Render sırasındaki index
+    draggedItemIndex = parseInt(e.target.dataset.idx);
     e.target.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
 }
@@ -310,7 +327,6 @@ function handleDragOver(e) {
     if (!targetRow || targetRow.classList.contains('dragging')) return;
 
     if (targetRow.classList.contains('item-row')) {
-        // Ürün satırı üzerindeyse
         const rect = targetRow.getBoundingClientRect();
         const offset = e.clientY - rect.top;
         targetRow.classList.remove('drag-over-top', 'drag-over-bottom');
@@ -320,7 +336,6 @@ function handleDragOver(e) {
             targetRow.classList.add('drag-over-bottom');
         }
     } else if (targetRow.classList.contains('cat-row')) {
-        // Kategori başlığı üzerindeyse
         targetRow.classList.add('drag-over');
     }
 }
@@ -343,41 +358,33 @@ function handleDrop(e) {
     const draggedItem = productData.find(p => p.id === draggedItemId);
     const draggedIndex = productData.indexOf(draggedItem);
 
+    // KATEGORİYE BIRAKMA
     if (targetRow.classList.contains('cat-row')) {
-        // KATEGORİYE BIRAKMA
         const newCategory = targetRow.querySelector('.cat-actions span').innerText;
         if (draggedItem.category !== newCategory) {
             draggedItem.category = newCategory;
-            // Kategorinin en başına taşı
             productData.splice(draggedIndex, 1);
-            // Hedef kategorinin ilk ürününü bul
             const firstInCatIndex = productData.findIndex(p => p.category === newCategory);
             if(firstInCatIndex > -1) {
                 productData.splice(firstInCatIndex, 0, draggedItem);
             } else {
-                productData.push(draggedItem); // Kategori boşsa sona ekle
+                productData.push(draggedItem);
             }
             if(!openCategories.has(newCategory)) openCategories.add(newCategory);
         }
     } 
+    // ÜRÜNE BIRAKMA (SIRALAMA)
     else if (targetRow.classList.contains('item-row')) {
-        // ÜRÜNE BIRAKMA (SIRALAMA VE KATEGORİ DEĞİŞİMİ)
         const targetId = parseFloat(targetRow.dataset.id);
         const targetItem = productData.find(p => p.id === targetId);
-        const targetIndex = productData.indexOf(targetItem);
-
+        
         if (draggedItem && targetItem && draggedItem !== targetItem) {
-            // Eğer kategori farklıysa güncelle
             if (draggedItem.category !== targetItem.category) {
                 draggedItem.category = targetItem.category;
             }
-
-            // Dizideki yerini değiştir
             productData.splice(draggedIndex, 1);
-            // Tekrar index bul (silindiği için kaymış olabilir)
             const newTargetIndex = productData.indexOf(targetItem);
             
-            // Üstüne mi altına mı?
             if (targetRow.classList.contains('drag-over-bottom')) {
                 productData.splice(newTargetIndex + 1, 0, draggedItem);
             } else {
@@ -386,7 +393,6 @@ function handleDrop(e) {
         }
     }
 
-    // Temizlik ve Yenileme
     handleDragEnd({ target: document.querySelector('.dragging') });
     document.getElementById('globalSaveBtn').style.display = 'flex';
     renderTable();
@@ -403,27 +409,19 @@ function renderTable() {
         calculateTotal(); return;
     }
 
-    // Gruplama sırasını productData sırasına göre yapmalıyız
-    // productData zaten sıralı olduğu için, sırayla dönerken kategorileri oluşturacağız.
-    // Ancak arama yapıldığında işler değişir. Arama yoksa sıralı, varsa filtrelenmiş.
-    
     let displayData = productData;
     if (term) {
         displayData = productData.filter(p => p.name.toLowerCase().includes(term));
     }
 
     const readOnlyNamePrice = isAdmin ? '' : 'readonly';
-    let globalIndex = 1; // Sıra numarası sayacı
+    let globalIndex = 1;
     let lastCategory = null;
 
     displayData.forEach((item, index) => {
-        // Kategori Başlığı (Değiştiyse bas)
         if (item.category !== lastCategory) {
             lastCategory = item.category;
-            // Arama yapılıyorsa kategori başlıklarını gizle/göster mantığına girmeyelim,
-            // sadece başlığı basalım.
-            const isOpen = openCategories.has(lastCategory) || term.length > 0; // Arama varsa hepsi açık
-            const displayStyle = isOpen ? '' : 'none'; // Ürünler için stil
+            const isOpen = openCategories.has(lastCategory) || term.length > 0;
             const iconRotate = isOpen ? 'rotate(-180deg)' : 'rotate(0deg)';
 
             const trCat = document.createElement('tr');
@@ -440,23 +438,26 @@ function renderTable() {
                         <span>${lastCategory}</span>
                         <i class="fa-solid fa-chevron-down cat-icon" style="transform:${iconRotate}"></i>
                     </div>
-                    ${isAdmin ? `<button class="cat-edit-btn" onclick="event.stopPropagation(); editCategoryName('${lastCategory}')"><i class="fa-solid fa-pen"></i></button>` : ''}
+                    ${isAdmin ? `
+                        <div class="cat-btn-group">
+                            <button class="cat-btn" onclick="event.stopPropagation(); editCategoryName('${lastCategory}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="cat-btn delete" onclick="event.stopPropagation(); deleteCategory('${lastCategory}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    ` : ''}
                 </td>
             `;
             tbody.appendChild(trCat);
         }
 
-        // Ürün Satırı
-        // Kategori kapalıysa ve arama yoksa gizle
         const isVisible = openCategories.has(item.category) || term.length > 0;
         
         if (isVisible) {
             const tr = document.createElement('tr');
             tr.className = `item-row`;
             tr.dataset.id = item.id;
-            tr.dataset.idx = index; // Dizi sırası
+            tr.dataset.idx = index;
             
-            if(isAdmin && !term) { // Sadece arama yokken sıralama yapılabilir
+            if(isAdmin && !term) { 
                 tr.setAttribute('draggable', true);
                 tr.addEventListener('dragstart', handleDragStart);
                 tr.addEventListener('dragover', handleDragOver);
@@ -496,6 +497,7 @@ function renderTable() {
     calculateTotal();
 }
 
+// --- DİĞER FONKSİYONLAR ---
 function updateData(id, field, value) {
     if (!isAdmin && (field === 'name' || field === 'price')) return;
     const item = productData.find(p => p.id === id);
@@ -535,14 +537,27 @@ function calculateTotal() {
     document.getElementById('grandTotal').innerText = total.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
 }
 
+// DOĞRU EXCEL ÇIKTISI (GÜNCEL VERİLERLE)
 function exportToExcel() {
-    const list = productData.map(p=>({"KATEGORİ":p.category, "ÜRÜN":p.name, "FİYAT":p.price, "ADET":p.qty, "TOPLAM":p.price*p.qty}));
+    // Ekranda ne görüyorsak (Sıralama dahil) onu çıktı alalım
+    const list = productData.map(p=>({
+        "KATEGORİ": p.category, 
+        "ÜRÜN": p.name, 
+        "FİYAT": p.price, 
+        "ADET": p.qty, 
+        "TOPLAM": p.price * p.qty
+    }));
+    
     const ws = XLSX.utils.json_to_sheet(list);
-    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Liste");
+    const wb = XLSX.utils.book_new(); 
+    XLSX.utils.book_append_sheet(wb, ws, "Stok Listesi");
+    
+    // Logları da ayrı sayfaya ekleyelim
     const logList = logData.map(l=>({"TARİH":l.date, "KULLANICI":l.user, "AÇIKLAMA":l.action}));
     const wsLog = XLSX.utils.json_to_sheet(logList);
     XLSX.utils.book_append_sheet(wb, wsLog, "Hareket Gecmisi");
-    XLSX.writeFile(wb, "Focus_Medikal_Full.xlsx");
+    
+    XLSX.writeFile(wb, "Focus_Medikal_Guncel.xlsx");
 }
 
 function resetAll() { 

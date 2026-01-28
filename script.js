@@ -1,11 +1,14 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbzVyMRnnAtxPGEzezy2Vjj07UmrHS7M-0id6KNi7QhGLbgxnfycMjBstyYFaPtn8SMr/exec'; 
 
 let productData = [];
+let customerData = []; // Müşteriler için yeni dizi
 let logData = []; 
 let originalState = {}; 
 let isAdmin = false;
 let currentUser = "Misafir"; 
 let openCategories = new Set(); 
+let activeTab = 'stock'; // Aktif sekme (stock veya customers)
+let currentCustId = null; // Düzenlenen müşteri ID'si
 let draggedItemId = null;
 let draggedItemIndex = -1;
 
@@ -19,20 +22,49 @@ function loginToggle() {
         document.getElementById('adminControls').style.display = 'none';
         document.getElementById('dragHint').style.display = 'none';
         document.getElementById('loginText').innerText = "Giriş Yap";
-        renderTable();
+        // Yetki gitti, görünümü güncelle
+        refreshCurrentView();
     } else {
         let pass = prompt("Sistem Şifresi:");
         if (pass === "nur27") {
             isAdmin = true;
             currentUser = "Yönetici"; 
-            document.getElementById('adminControls').style.display = 'flex';
-            document.getElementById('dragHint').style.display = 'block';
             document.getElementById('loginText').innerText = "Çıkış Yap";
             addLog("Yönetici girişi yapıldı.");
-            renderTable();
+            // Yetki geldi, görünümü güncelle
+            refreshCurrentView();
         } else if (pass !== null) {
             alert("Hatalı Şifre!");
         }
+    }
+}
+
+// --- SEKME YÖNETİMİ ---
+function switchTab(tabName) {
+    activeTab = tabName;
+    
+    // Buton stilleri
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+
+    // İçerik gizle/göster
+    document.getElementById('stockView').style.display = tabName === 'stock' ? 'block' : 'none';
+    document.getElementById('customerView').style.display = tabName === 'customers' ? 'block' : 'none';
+
+    refreshCurrentView();
+}
+
+function refreshCurrentView() {
+    if(activeTab === 'stock') {
+        document.getElementById('stockControls').style.display = isAdmin ? 'flex' : 'none';
+        document.getElementById('customerControls').style.display = 'none';
+        document.getElementById('dragHint').style.display = isAdmin ? 'block' : 'none';
+        renderTable();
+    } else {
+        document.getElementById('stockControls').style.display = 'none';
+        document.getElementById('customerControls').style.display = isAdmin ? 'flex' : 'none';
+        document.getElementById('dragHint').style.display = 'none';
+        renderCustomers();
     }
 }
 
@@ -41,18 +73,27 @@ async function fetchData() {
     try {
         const res = await fetch(API_URL);
         const data = await res.json();
+        
+        // Veri yapısı kontrolü
         if (data && data.products) {
             productData = data.products;
+            customerData = data.customers || []; // Müşterileri çek
             logData = data.logs || [];
         } else if (Array.isArray(data)) {
+            // Eski format desteği
             productData = data;
+            customerData = [];
             logData = [];
         }
+
         productData.forEach(p => { if(!p.id) p.id = Date.now() + Math.random(); });
+        customerData.forEach(c => { if(!c.id) c.id = Date.now() + Math.random(); });
+
         storeOriginalState();
         const cats = [...new Set(productData.map(p => p.category))];
         cats.forEach(c => openCategories.add(c));
-        renderTable();
+        
+        refreshCurrentView(); // İlk açılışta sayfayı render et
     } catch (err) { console.error(err); }
     document.getElementById('loading').style.display = 'none';
 }
@@ -143,6 +184,9 @@ function confirmSave() {
         if (note) finalLogStr += ` |||${note}`;
         addLog(finalLogStr);
     } else if (note) { addLog(`Genel Not Eklendi|||${note}`); }
+    
+    // Müşterilerdeki değişiklikler anlık kaydedildiği için loga eklemeye gerek yok,
+    // ancak buluta hepsini gönderiyoruz.
     saveToCloud();
 }
 
@@ -151,7 +195,12 @@ async function saveToCloud() {
     const original = btn.innerHTML;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
     try {
-        const payload = { products: productData, logs: logData };
+        // Müşterileri de pakete ekle
+        const payload = { 
+            products: productData, 
+            customers: customerData,
+            logs: logData 
+        };
         await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
         alert("Başarıyla Kaydedildi!");
         storeOriginalState();
@@ -160,7 +209,164 @@ async function saveToCloud() {
     btn.innerHTML = original;
 }
 
-// --- AKILLI EXCEL OKUYUCU ---
+// --- MÜŞTERİ YÖNETİMİ (CRM) ---
+function renderCustomers() {
+    const container = document.getElementById('customerList');
+    container.innerHTML = "";
+    
+    const term = document.getElementById('searchInput').value.toLowerCase();
+    
+    // Filtreleme
+    const filtered = customerData.filter(c => 
+        (c.name && c.name.toLowerCase().includes(term)) || 
+        (c.device && c.device.toLowerCase().includes(term))
+    );
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:#94a3b8; margin-top:20px;">Müşteri bulunamadı.</p>`;
+        return;
+    }
+
+    filtered.forEach(c => {
+        // Durum Rengi Belirle
+        let statusClass = "status-gorusuluyor";
+        if(c.status === "Teklif Verildi") statusClass = "status-teklif";
+        if(c.status === "Kapora Alındı") statusClass = "status-kapora";
+        if(c.status === "Teslim Edildi") statusClass = "status-teslim";
+        if(c.status === "İptal") statusClass = "status-iptal";
+
+        const card = document.createElement('div');
+        card.className = "customer-card";
+        card.onclick = () => openCustomerModal(c.id);
+        
+        card.innerHTML = `
+            <div class="cust-header">
+                <div>
+                    <div class="cust-name">${c.name}</div>
+                    <span class="cust-device">${c.device || 'Cihaz Belirtilmedi'}</span>
+                </div>
+                <span class="cust-status ${statusClass}">${c.status}</span>
+            </div>
+            <div style="font-size:0.85rem; color:#64748b;">
+                <i class="fa-solid fa-phone"></i> ${c.phone || '-'}
+            </div>
+            
+            <div class="cust-actions" onclick="event.stopPropagation()">
+                <a href="tel:${c.phone}" class="action-btn"><i class="fa-solid fa-phone"></i> Ara</a>
+                <a href="https://wa.me/90${c.phone ? c.phone.replace(/^0/,'').replace(/\s/g,'') : ''}" target="_blank" class="action-btn whatsapp"><i class="fa-brands fa-whatsapp"></i> Yaz</a>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function openCustomerModal(id = null) {
+    currentCustId = id;
+    const modal = document.getElementById('customerModal');
+    
+    if (id) {
+        // DÜZENLEME MODU
+        const c = customerData.find(x => x.id === id);
+        document.getElementById('custModalTitle').innerText = "Müşteri Düzenle";
+        document.getElementById('custName').value = c.name;
+        document.getElementById('custPhone').value = c.phone;
+        document.getElementById('custDevice').value = c.device;
+        document.getElementById('custPaymentType').value = c.paymentType;
+        document.getElementById('custStatus').value = c.status;
+        document.getElementById('custTotal').value = c.totalAmount || "";
+        document.getElementById('custPaid').value = c.paidAmount || "";
+        document.getElementById('custNotes').value = c.notes || "";
+        document.getElementById('btnDeleteCust').style.display = 'block';
+        updateRestAmount();
+    } else {
+        // YENİ EKLEME MODU
+        document.getElementById('custModalTitle').innerText = "Yeni Müşteri Ekle";
+        // Formu temizle
+        document.getElementById('custName').value = "";
+        document.getElementById('custPhone').value = "";
+        document.getElementById('custDevice').value = "";
+        document.getElementById('custPaymentType').value = "Peşin";
+        document.getElementById('custStatus').value = "Görüşülüyor";
+        document.getElementById('custTotal').value = "";
+        document.getElementById('custPaid').value = "";
+        document.getElementById('custRest').value = "";
+        document.getElementById('custNotes').value = "";
+        document.getElementById('btnDeleteCust').style.display = 'none';
+    }
+    
+    // Tutar değiştikçe kalanı hesapla
+    document.getElementById('custTotal').oninput = updateRestAmount;
+    document.getElementById('custPaid').oninput = updateRestAmount;
+
+    modal.style.display = 'flex';
+}
+
+function updateRestAmount() {
+    const total = parseFloat(document.getElementById('custTotal').value) || 0;
+    const paid = parseFloat(document.getElementById('custPaid').value) || 0;
+    document.getElementById('custRest').value = total - paid;
+}
+
+function closeCustomerModal() {
+    document.getElementById('customerModal').style.display = 'none';
+}
+
+function saveCustomer() {
+    const name = document.getElementById('custName').value;
+    if (!name) { alert("İsim giriniz."); return; }
+
+    const newCust = {
+        id: currentCustId || Date.now() + Math.random(),
+        name: name,
+        phone: document.getElementById('custPhone').value,
+        device: document.getElementById('custDevice').value,
+        paymentType: document.getElementById('custPaymentType').value,
+        status: document.getElementById('custStatus').value,
+        totalAmount: parseFloat(document.getElementById('custTotal').value) || 0,
+        paidAmount: parseFloat(document.getElementById('custPaid').value) || 0,
+        notes: document.getElementById('custNotes').value,
+        dateAdded: new Date().toLocaleDateString('tr-TR')
+    };
+
+    if (currentCustId) {
+        // Güncelleme
+        const index = customerData.findIndex(x => x.id === currentCustId);
+        customerData[index] = newCust;
+        addLog(`Müşteri Güncellendi: ${name} (${newCust.status})`);
+    } else {
+        // Yeni Ekleme
+        customerData.push(newCust);
+        addLog(`Yeni Müşteri Eklendi: ${name}`);
+    }
+
+    closeCustomerModal();
+    renderCustomers();
+    document.getElementById('globalSaveBtn').style.display = 'flex'; // Kaydet butonunu aktif et
+}
+
+function deleteCustomer() {
+    if(confirm("Bu müşteri kaydını silmek istediğinize emin misiniz?")) {
+        const c = customerData.find(x => x.id === currentCustId);
+        customerData = customerData.filter(x => x.id !== currentCustId);
+        addLog(`Müşteri Silindi: ${c.name}`);
+        closeCustomerModal();
+        renderCustomers();
+        document.getElementById('globalSaveBtn').style.display = 'flex';
+    }
+}
+
+// --- ARAMA YÖNLENDİRİCİ ---
+function handleSearch() {
+    if (activeTab === 'stock') {
+        renderTable();
+    } else {
+        renderCustomers();
+    }
+}
+
+// --- EXCEL OKUMA VE DİĞER STOK FONKSİYONLARI ---
+// (Buradaki kodlar V44 ile aynı, sadece processExcel ve renderTable korunuyor)
+
 function processExcel(input) {
     const file = input.files[0];
     if (!file) return;
@@ -267,25 +473,16 @@ function parseRowsSmart(rows, map) {
     }
 }
 
-// --- KATEGORİ YÖNETİMİ (SİLME DAHİL) ---
+// --- KATEGORİ YÖNETİMİ ---
 function editCategoryName(oldCatName) {
     if (!isAdmin) { alert("Yetkisiz işlem."); return; }
-    
-    // Varsayılan değer olarak eski ismi gösteriyoruz
     const newName = prompt("Kategori ismini düzenle (Silmek için kutuyu boş bırakıp Tamam'a basın):", oldCatName);
-    
-    if (newName === null) return; // İptal edildi
+    if (newName === null) return; 
 
     if (newName.trim() === "") {
-        // İsim boş bırakıldıysa SİLMEK İSTİYOR
         if (confirm(`"${oldCatName}" kategorisi silinsin mi? \nÜrünler "GENEL LİSTE"ye taşınacak.`)) {
             let count = 0;
-            productData.forEach(p => {
-                if (p.category === oldCatName) {
-                    p.category = "GENEL LİSTE";
-                    count++;
-                }
-            });
+            productData.forEach(p => { if (p.category === oldCatName) { p.category = "GENEL LİSTE"; count++; } });
             openCategories.delete(oldCatName);
             if(!openCategories.has("GENEL LİSTE")) openCategories.add("GENEL LİSTE");
             addLog(`Kategori Silindi: ${oldCatName} (${count} ürün taşındı)`);
@@ -294,7 +491,6 @@ function editCategoryName(oldCatName) {
         }
     } 
     else if (newName !== oldCatName) {
-        // İsim değiştiyse GÜNCELLE
         const finalName = newName.trim().toUpperCase();
         let count = 0;
         productData.forEach(p => { if (p.category === oldCatName) { p.category = finalName; count++; } });
@@ -307,98 +503,6 @@ function toggleCategory(cat) {
     if (openCategories.has(cat)) openCategories.delete(cat); 
     else openCategories.add(cat); 
     renderTable(); 
-}
-
-// --- SÜRÜKLE BIRAK ---
-function handleDragStart(e) {
-    if (!isAdmin) return;
-    draggedItemId = parseFloat(e.target.dataset.id);
-    draggedItemIndex = parseInt(e.target.dataset.idx);
-    e.target.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-}
-
-function handleDragEnd(e) {
-    e.target.classList.remove('dragging');
-    document.querySelectorAll('tr').forEach(row => {
-        row.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over');
-    });
-}
-
-function handleDragOver(e) {
-    e.preventDefault();
-    if (!isAdmin) return;
-    const targetRow = e.target.closest('tr');
-    if (!targetRow || targetRow.classList.contains('dragging')) return;
-
-    if (targetRow.classList.contains('item-row')) {
-        const rect = targetRow.getBoundingClientRect();
-        const offset = e.clientY - rect.top;
-        targetRow.classList.remove('drag-over-top', 'drag-over-bottom');
-        if (offset < rect.height / 2) {
-            targetRow.classList.add('drag-over-top');
-        } else {
-            targetRow.classList.add('drag-over-bottom');
-        }
-    } else if (targetRow.classList.contains('cat-row')) {
-        targetRow.classList.add('drag-over');
-    }
-}
-
-function handleDragLeave(e) {
-    const targetRow = e.target.closest('tr');
-    if (targetRow) {
-        targetRow.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over');
-    }
-}
-
-function handleDrop(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isAdmin || !draggedItemId) return;
-
-    const targetRow = e.target.closest('tr');
-    if (!targetRow) return;
-
-    const draggedItem = productData.find(p => p.id === draggedItemId);
-    const draggedIndex = productData.indexOf(draggedItem);
-
-    if (targetRow.classList.contains('cat-row')) {
-        const newCategory = targetRow.querySelector('.cat-actions span').innerText;
-        if (draggedItem.category !== newCategory) {
-            draggedItem.category = newCategory;
-            productData.splice(draggedIndex, 1);
-            const firstInCatIndex = productData.findIndex(p => p.category === newCategory);
-            if(firstInCatIndex > -1) {
-                productData.splice(firstInCatIndex, 0, draggedItem);
-            } else {
-                productData.push(draggedItem);
-            }
-            if(!openCategories.has(newCategory)) openCategories.add(newCategory);
-        }
-    } 
-    else if (targetRow.classList.contains('item-row')) {
-        const targetId = parseFloat(targetRow.dataset.id);
-        const targetItem = productData.find(p => p.id === targetId);
-        
-        if (draggedItem && targetItem && draggedItem !== targetItem) {
-            if (draggedItem.category !== targetItem.category) {
-                draggedItem.category = targetItem.category;
-            }
-            productData.splice(draggedIndex, 1);
-            const newTargetIndex = productData.indexOf(targetItem);
-            
-            if (targetRow.classList.contains('drag-over-bottom')) {
-                productData.splice(newTargetIndex + 1, 0, draggedItem);
-            } else {
-                productData.splice(newTargetIndex, 0, draggedItem);
-            }
-        }
-    }
-
-    handleDragEnd({ target: document.querySelector('.dragging') });
-    document.getElementById('globalSaveBtn').style.display = 'flex';
-    renderTable();
 }
 
 // --- RENDER TABLE ---
@@ -495,7 +599,6 @@ function renderTable() {
     calculateTotal();
 }
 
-// --- DİĞER FONKSİYONLAR ---
 function updateData(id, field, value) {
     if (!isAdmin && (field === 'name' || field === 'price')) return;
     const item = productData.find(p => p.id === id);
@@ -535,8 +638,8 @@ function calculateTotal() {
     document.getElementById('grandTotal').innerText = total.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
 }
 
-// DOĞRU EXCEL ÇIKTISI (TAM LİSTE)
 function exportToExcel() {
+    // ÜRÜNLER
     const list = productData.map(p=>({
         "KATEGORİ": p.category, 
         "ÜRÜN": p.name, 
@@ -545,20 +648,34 @@ function exportToExcel() {
         "TOPLAM": p.price * p.qty
     }));
     
+    // MÜŞTERİLER
+    const custList = customerData.map(c=>({
+        "AD SOYAD": c.name,
+        "TELEFON": c.phone,
+        "CİHAZ": c.device,
+        "DURUM": c.status,
+        "TOPLAM TUTAR": c.totalAmount,
+        "ALINAN": c.paidAmount,
+        "KALAN": c.totalAmount - c.paidAmount,
+        "NOTLAR": c.notes
+    }));
+
     const ws = XLSX.utils.json_to_sheet(list);
+    const wsCust = XLSX.utils.json_to_sheet(custList);
     const wb = XLSX.utils.book_new(); 
-    XLSX.utils.book_append_sheet(wb, ws, "Stok Listesi");
     
-    // Logları da ayrı sayfaya ekleyelim
+    XLSX.utils.book_append_sheet(wb, ws, "Stok Listesi");
+    XLSX.utils.book_append_sheet(wb, wsCust, "Müşteriler");
+    
     const logList = logData.map(l=>({"TARİH":l.date, "KULLANICI":l.user, "AÇIKLAMA":l.action}));
     const wsLog = XLSX.utils.json_to_sheet(logList);
     XLSX.utils.book_append_sheet(wb, wsLog, "Hareket Gecmisi");
     
-    XLSX.writeFile(wb, "Focus_Medikal_Guncel.xlsx");
+    XLSX.writeFile(wb, "Focus_Medikal_Full_Data.xlsx");
 }
 
 function resetAll() { 
-    if(confirm("Tüm liste silinecek (Loglar KORUNACAK)?")) { 
+    if(confirm("Tüm STOK listesi silinecek (Müşteriler kalacak)?")) { 
         productData=[]; 
         addLog("Ürün listesi sıfırlandı."); 
         renderTable(); document.getElementById('globalSaveBtn').style.display='flex'; 
@@ -600,4 +717,96 @@ function addNewProduct() {
         document.getElementById('newQty').value = "1";
         document.getElementById('globalSaveBtn').style.display='flex';
     } else { alert("Ürün adı giriniz."); }
+}
+
+// SÜRÜKLE BIRAK FONKSİYONLARI (V44)
+function handleDragStart(e) {
+    if (!isAdmin) return;
+    draggedItemId = parseFloat(e.target.dataset.id);
+    draggedItemIndex = parseInt(e.target.dataset.idx);
+    e.target.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragEnd(e) {
+    e.target.classList.remove('dragging');
+    document.querySelectorAll('tr').forEach(row => {
+        row.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over');
+    });
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    if (!isAdmin) return;
+    const targetRow = e.target.closest('tr');
+    if (!targetRow || targetRow.classList.contains('dragging')) return;
+
+    if (targetRow.classList.contains('item-row')) {
+        const rect = targetRow.getBoundingClientRect();
+        const offset = e.clientY - rect.top;
+        targetRow.classList.remove('drag-over-top', 'drag-over-bottom');
+        if (offset < rect.height / 2) {
+            targetRow.classList.add('drag-over-top');
+        } else {
+            targetRow.classList.add('drag-over-bottom');
+        }
+    } else if (targetRow.classList.contains('cat-row')) {
+        targetRow.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    const targetRow = e.target.closest('tr');
+    if (targetRow) {
+        targetRow.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over');
+    }
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isAdmin || !draggedItemId) return;
+
+    const targetRow = e.target.closest('tr');
+    if (!targetRow) return;
+
+    const draggedItem = productData.find(p => p.id === draggedItemId);
+    const draggedIndex = productData.indexOf(draggedItem);
+
+    if (targetRow.classList.contains('cat-row')) {
+        const newCategory = targetRow.querySelector('.cat-actions span').innerText;
+        if (draggedItem.category !== newCategory) {
+            draggedItem.category = newCategory;
+            productData.splice(draggedIndex, 1);
+            const firstInCatIndex = productData.findIndex(p => p.category === newCategory);
+            if(firstInCatIndex > -1) {
+                productData.splice(firstInCatIndex, 0, draggedItem);
+            } else {
+                productData.push(draggedItem);
+            }
+            if(!openCategories.has(newCategory)) openCategories.add(newCategory);
+        }
+    } 
+    else if (targetRow.classList.contains('item-row')) {
+        const targetId = parseFloat(targetRow.dataset.id);
+        const targetItem = productData.find(p => p.id === targetId);
+        
+        if (draggedItem && targetItem && draggedItem !== targetItem) {
+            if (draggedItem.category !== targetItem.category) {
+                draggedItem.category = targetItem.category;
+            }
+            productData.splice(draggedIndex, 1);
+            const newTargetIndex = productData.indexOf(targetItem);
+            
+            if (targetRow.classList.contains('drag-over-bottom')) {
+                productData.splice(newTargetIndex + 1, 0, draggedItem);
+            } else {
+                productData.splice(newTargetIndex, 0, draggedItem);
+            }
+        }
+    }
+
+    handleDragEnd({ target: document.querySelector('.dragging') });
+    document.getElementById('globalSaveBtn').style.display = 'flex';
+    renderTable();
 }

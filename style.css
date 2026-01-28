@@ -35,13 +35,13 @@ table { width: 100%; border-collapse: collapse; }
 th { background: #f1f5f9; padding: 15px; text-align: left; font-size: 0.75rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
 td { padding: 12px 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 
-/* KATEGORİ BAŞLIĞI DÜZENLEME */
+/* KATEGORİ BAŞLIĞI */
 .cat-row { cursor: pointer; transition: background 0.2s; }
 .cat-row:hover td { background: #334155; }
+/* Sürükle-Bırak Hedefi Olduğunda */
+.cat-row.drag-over td { background: #22c55e !important; box-shadow: inset 0 0 0 4px #bbf7d0; transform: scale(1.01); transition: 0.2s; }
+
 .cat-row td { background: #1e293b; color: white; font-weight: bold; padding: 12px 20px; font-size: 0.95rem; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
-.cat-title { flex-grow: 1; }
-.cat-actions { display: flex; gap: 10px; align-items: center; }
-.cat-icon { transition: transform 0.3s; }
 .cat-edit-btn { background: rgba(255,255,255,0.1); border:none; color:white; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .cat-edit-btn:hover { background: rgba(255,255,255,0.3); }
 
@@ -49,7 +49,7 @@ td { padding: 12px 15px; border-bottom: 1px solid var(--border); vertical-align:
 .input-clean:not([readonly]):focus { background: white; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
 .price-wrapper { position: relative; width: 100%; }
 .price-input { text-align: right; font-family: 'Consolas', monospace; padding-right: 25px; }
-.currency { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.8rem; pointer-events: none; font-weight: bold; }
+.currency { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.8rem; pointer-events: none; font-weight:bold; }
 
 .qty-wrapper { display: flex; background: #f1f5f9; border-radius: 6px; border: 1px solid var(--border); width: fit-content; margin: 0 auto; }
 .qty-btn { width: 32px; height: 32px; border: none; background: white; cursor: pointer; color: var(--primary); font-weight: bold; font-size: 1.2rem; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
@@ -57,9 +57,10 @@ td { padding: 12px 15px; border-bottom: 1px solid var(--border); vertical-align:
 .qty-val { width: 45px; text-align: center; background: transparent; border: none; font-weight: bold; outline: none; font-size: 1rem; }
 .qty-val:focus { background: white; box-shadow: inset 0 0 0 2px var(--primary); border-radius: 4px; }
 
+/* SÜRÜKLE BIRAK */
 .drag-handle { cursor: grab; color: #cbd5e1; padding: 10px; transition: color 0.2s; }
 .drag-handle:hover { color: var(--primary); }
-tr.dragging { opacity: 0.5; background: #f1f5f9; }
+tr.dragging { opacity: 0.5; background: #f1f5f9; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
 .log-table th { background: #334155; color: white; position: sticky; top: 0; z-index: 10; }
 .log-table td { font-size: 0.85rem; border-bottom: 1px solid #e2e8f0; }

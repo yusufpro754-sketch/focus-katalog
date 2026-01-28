@@ -2,7 +2,7 @@
 * { box-sizing: border-box; }
 body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; color: var(--text); }
 
-/* GİRİŞ EKRANI STİLİ */
+/* GİRİŞ EKRANI */
 #loginScreen {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -24,7 +24,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; paddi
 }
 .login-box button:active { transform: scale(0.98); }
 
-/* ANA UYGULAMA STİLLERİ */
+/* ANA YAPI */
 .header { background: var(--white); padding: 15px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
 .header-content { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
 
@@ -70,7 +70,15 @@ td { padding: 12px 15px; border-bottom: 1px solid var(--border); vertical-align:
 .cat-edit-btn { background: rgba(255,255,255,0.1); border:none; color:white; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .cat-edit-btn:hover { background: rgba(255,255,255,0.3); }
 
+/* TABLO VE LOG STİLLERİ */
 .index-cell { font-weight: bold; color: #94a3b8; text-align: center; font-size: 0.9rem; }
+.log-table th { background: #334155; color: white; position: sticky; top: 0; z-index: 10; }
+.log-table td { font-size: 0.85rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+/* Log Açıklaması (Turuncu ve İtalik) */
+.log-extra-note { display: block; margin-top: 5px; color: #f97316; font-style: italic; font-weight: 600; font-size: 0.8rem; }
+.log-edit-btn { background: transparent; border: none; color: #cbd5e1; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+.log-edit-btn:hover { color: var(--primary); }
+
 .input-clean { width: 100%; padding: 8px; border: 1px solid transparent; border-radius: 6px; background: transparent; font-weight: 600; outline: none; font-size: 0.95rem; color: #334155; transition: 0.2s; }
 .input-clean:not([readonly]):focus { background: white; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
 .price-wrapper { position: relative; width: 100%; }
@@ -83,6 +91,7 @@ td { padding: 12px 15px; border-bottom: 1px solid var(--border); vertical-align:
 .qty-val { width: 45px; text-align: center; background: transparent; border: none; font-weight: bold; outline: none; font-size: 1rem; }
 .qty-val:focus { background: white; box-shadow: inset 0 0 0 2px var(--primary); border-radius: 4px; }
 
+/* MÜŞTERİ KARTLARI */
 .customer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; padding: 10px 0; }
 .customer-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
 .customer-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-color: var(--primary); }
@@ -107,14 +116,11 @@ tr.dragging { opacity: 0.5; background: #f1f5f9; box-shadow: 0 2px 8px rgba(0,0,
 .item-row.drag-over-top { border-top: 2px solid var(--primary); }
 .item-row.drag-over-bottom { border-bottom: 2px solid var(--primary); }
 
-.log-table th { background: #334155; color: white; position: sticky; top: 0; z-index: 10; }
-.log-table td { font-size: 0.85rem; border-bottom: 1px solid #e2e8f0; }
 .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
 .badge-admin { background: #dbeafe; color: #1e40af; }
 .badge-info { background: #e0f2fe; color: #0369a1; }
 .badge-inc { background: #dcfce7; color: #166534; }
 .badge-dec { background: #fee2e2; color: #991b1b; }
-.log-note { display: block; margin-top: 6px; font-size: 0.85rem; color: #f97316; font-style: italic; font-weight: 600; background: #fff7ed; padding: 4px 8px; border-left: 3px solid #f97316; border-radius: 0 4px 4px 0; }
 
 .footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; z-index: 100; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
 .total-amount { font-size: 1.4rem; font-weight: 800; color: var(--primary); }

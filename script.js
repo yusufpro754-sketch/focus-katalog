@@ -160,7 +160,7 @@ async function saveToCloud() {
     btn.innerHTML = original;
 }
 
-// --- EXCEL OKUMA (ÇİFT MOTORLU) ---
+// --- AKILLI EXCEL OKUYUCU ---
 function processExcel(input) {
     const file = input.files[0];
     if (!file) return;
@@ -267,34 +267,39 @@ function parseRowsSmart(rows, map) {
     }
 }
 
-// --- KATEGORİ YÖNETİMİ ---
+// --- KATEGORİ YÖNETİMİ (SİLME DAHİL) ---
 function editCategoryName(oldCatName) {
     if (!isAdmin) { alert("Yetkisiz işlem."); return; }
-    const newName = prompt("Kategori ismini düzenle:", oldCatName);
-    if (newName && newName.trim() !== "" && newName !== oldCatName) {
+    
+    // Varsayılan değer olarak eski ismi gösteriyoruz
+    const newName = prompt("Kategori ismini düzenle (Silmek için kutuyu boş bırakıp Tamam'a basın):", oldCatName);
+    
+    if (newName === null) return; // İptal edildi
+
+    if (newName.trim() === "") {
+        // İsim boş bırakıldıysa SİLMEK İSTİYOR
+        if (confirm(`"${oldCatName}" kategorisi silinsin mi? \nÜrünler "GENEL LİSTE"ye taşınacak.`)) {
+            let count = 0;
+            productData.forEach(p => {
+                if (p.category === oldCatName) {
+                    p.category = "GENEL LİSTE";
+                    count++;
+                }
+            });
+            openCategories.delete(oldCatName);
+            if(!openCategories.has("GENEL LİSTE")) openCategories.add("GENEL LİSTE");
+            addLog(`Kategori Silindi: ${oldCatName} (${count} ürün taşındı)`);
+            renderTable();
+            document.getElementById('globalSaveBtn').style.display = 'flex';
+        }
+    } 
+    else if (newName !== oldCatName) {
+        // İsim değiştiyse GÜNCELLE
         const finalName = newName.trim().toUpperCase();
         let count = 0;
         productData.forEach(p => { if (p.category === oldCatName) { p.category = finalName; count++; } });
         if(openCategories.has(oldCatName)) { openCategories.delete(oldCatName); openCategories.add(finalName); }
         if (count > 0) { addLog(`Kategori Değişti: ${oldCatName} -> ${finalName}`); renderTable(); document.getElementById('globalSaveBtn').style.display = 'flex'; }
-    }
-}
-
-// YENİ: KATEGORİ SİLME
-function deleteCategory(catName) {
-    if (!isAdmin) { alert("Yetkisiz işlem."); return; }
-    if (confirm(`"${catName}" kategorisini silmek istediğinize emin misiniz? \nÜrünler "GENEL LİSTE"ye aktarılacaktır.`)) {
-        let count = 0;
-        productData.forEach(p => {
-            if (p.category === catName) {
-                p.category = "GENEL LİSTE";
-                count++;
-            }
-        });
-        openCategories.delete(catName);
-        addLog(`Kategori Silindi: ${catName} (${count} ürün taşındı)`);
-        renderTable();
-        document.getElementById('globalSaveBtn').style.display = 'flex';
     }
 }
 
@@ -358,7 +363,6 @@ function handleDrop(e) {
     const draggedItem = productData.find(p => p.id === draggedItemId);
     const draggedIndex = productData.indexOf(draggedItem);
 
-    // KATEGORİYE BIRAKMA
     if (targetRow.classList.contains('cat-row')) {
         const newCategory = targetRow.querySelector('.cat-actions span').innerText;
         if (draggedItem.category !== newCategory) {
@@ -373,7 +377,6 @@ function handleDrop(e) {
             if(!openCategories.has(newCategory)) openCategories.add(newCategory);
         }
     } 
-    // ÜRÜNE BIRAKMA (SIRALAMA)
     else if (targetRow.classList.contains('item-row')) {
         const targetId = parseFloat(targetRow.dataset.id);
         const targetItem = productData.find(p => p.id === targetId);
@@ -438,12 +441,7 @@ function renderTable() {
                         <span>${lastCategory}</span>
                         <i class="fa-solid fa-chevron-down cat-icon" style="transform:${iconRotate}"></i>
                     </div>
-                    ${isAdmin ? `
-                        <div class="cat-btn-group">
-                            <button class="cat-btn" onclick="event.stopPropagation(); editCategoryName('${lastCategory}')"><i class="fa-solid fa-pen"></i></button>
-                            <button class="cat-btn delete" onclick="event.stopPropagation(); deleteCategory('${lastCategory}')"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    ` : ''}
+                    ${isAdmin ? `<button class="cat-edit-btn" onclick="event.stopPropagation(); editCategoryName('${lastCategory}')"><i class="fa-solid fa-pen"></i></button>` : ''}
                 </td>
             `;
             tbody.appendChild(trCat);
@@ -537,9 +535,8 @@ function calculateTotal() {
     document.getElementById('grandTotal').innerText = total.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
 }
 
-// DOĞRU EXCEL ÇIKTISI (GÜNCEL VERİLERLE)
+// DOĞRU EXCEL ÇIKTISI (TAM LİSTE)
 function exportToExcel() {
-    // Ekranda ne görüyorsak (Sıralama dahil) onu çıktı alalım
     const list = productData.map(p=>({
         "KATEGORİ": p.category, 
         "ÜRÜN": p.name, 

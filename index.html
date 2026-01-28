@@ -2,13 +2,14 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Focus Medikal - Panel V46</title>
+    <title>Focus Medikal - Panel V48</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3063/3063822.png">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -87,7 +88,7 @@
         <div class="container">
             <div id="stockView" class="table-wrapper">
                 <div id="dragHint" style="text-align:center; padding:10px; background:#e0f2fe; color:#0369a1; border-radius:8px; margin-bottom:15px; font-size:0.9rem;">
-                    <i class="fa-solid fa-arrows-up-down-left-right"></i> Ürünleri taşımak için sürükleyin. Kategori silmek için ismini silin.
+                    <i class="fa-solid fa-arrows-up-down-left-right"></i> Sıralama değiştirmek için sürükleyin. Numaralar otomatik güncellenir.
                 </div>
                 <table id="mainTable">
                     <thead>
@@ -201,7 +202,7 @@
                             <th style="padding:10px;">Tarih</th>
                             <th style="padding:10px;">Kullanıcı</th>
                             <th style="padding:10px;">Açıklama</th>
-                            <th style="padding:10px; width:40px;"></th>
+                            <th style="padding:10px; width:50px;"></th>
                         </tr>
                     </thead>
                     <tbody id="logTableBody" style="background:white;"></tbody>

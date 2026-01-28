@@ -1,69 +1,63 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbzVyMRnnAtxPGEzezy2Vjj07UmrHS7M-0id6KNi7QhGLbgxnfycMjBstyYFaPtn8SMr/exec'; 
+const SYSTEM_PASS = "358034"; // YENİ ŞİFRE
 
 let productData = [];
-let customerData = []; // Müşteriler için yeni dizi
+let customerData = [];
 let logData = []; 
 let originalState = {}; 
-let isAdmin = false;
-let currentUser = "Misafir"; 
+let isAdmin = false; // Başlangıçta kimse admin değil
+let currentUser = "Yönetici"; 
 let openCategories = new Set(); 
-let activeTab = 'stock'; // Aktif sekme (stock veya customers)
-let currentCustId = null; // Düzenlenen müşteri ID'si
+let activeTab = 'stock';
+let currentCustId = null;
 let draggedItemId = null;
 let draggedItemIndex = -1;
 
-window.onload = function() { fetchData(); };
+window.onload = function() { 
+    // Sayfa açılınca veri çekme işlemi başlasın ama ekran kapalı kalsın
+    fetchData(); 
+};
 
-// --- GİRİŞ / ÇIKIŞ ---
-function loginToggle() {
-    if (isAdmin) {
-        isAdmin = false;
-        currentUser = "Misafir";
-        document.getElementById('adminControls').style.display = 'none';
-        document.getElementById('dragHint').style.display = 'none';
-        document.getElementById('loginText').innerText = "Giriş Yap";
-        // Yetki gitti, görünümü güncelle
+// --- GİRİŞ İŞLEMLERİ ---
+function verifyLogin() {
+    const input = document.getElementById('loginPassword').value;
+    const errorMsg = document.getElementById('loginError');
+    
+    if (input === SYSTEM_PASS) {
+        isAdmin = true;
+        // Giriş ekranını gizle, uygulamayı göster
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'block';
+        addLog("Sisteme giriş yapıldı.");
         refreshCurrentView();
     } else {
-        let pass = prompt("Sistem Şifresi:");
-        if (pass === "nur27") {
-            isAdmin = true;
-            currentUser = "Yönetici"; 
-            document.getElementById('loginText').innerText = "Çıkış Yap";
-            addLog("Yönetici girişi yapıldı.");
-            // Yetki geldi, görünümü güncelle
-            refreshCurrentView();
-        } else if (pass !== null) {
-            alert("Hatalı Şifre!");
-        }
+        errorMsg.style.display = 'block';
     }
+}
+
+function logout() {
+    location.reload(); // Sayfayı yenileyerek çıkış yap
 }
 
 // --- SEKME YÖNETİMİ ---
 function switchTab(tabName) {
     activeTab = tabName;
-    
-    // Buton stilleri
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
     event.currentTarget.classList.add('active');
-
-    // İçerik gizle/göster
     document.getElementById('stockView').style.display = tabName === 'stock' ? 'block' : 'none';
     document.getElementById('customerView').style.display = tabName === 'customers' ? 'block' : 'none';
-
     refreshCurrentView();
 }
 
 function refreshCurrentView() {
+    // Sadece admin ise kontrolleri göster (ki zaten giriş yapmadan buraya gelinmez)
     if(activeTab === 'stock') {
-        document.getElementById('stockControls').style.display = isAdmin ? 'flex' : 'none';
+        document.getElementById('stockControls').style.display = 'flex';
         document.getElementById('customerControls').style.display = 'none';
-        document.getElementById('dragHint').style.display = isAdmin ? 'block' : 'none';
         renderTable();
     } else {
         document.getElementById('stockControls').style.display = 'none';
-        document.getElementById('customerControls').style.display = isAdmin ? 'flex' : 'none';
-        document.getElementById('dragHint').style.display = 'none';
+        document.getElementById('customerControls').style.display = 'flex';
         renderCustomers();
     }
 }
@@ -74,13 +68,11 @@ async function fetchData() {
         const res = await fetch(API_URL);
         const data = await res.json();
         
-        // Veri yapısı kontrolü
         if (data && data.products) {
             productData = data.products;
-            customerData = data.customers || []; // Müşterileri çek
+            customerData = data.customers || [];
             logData = data.logs || [];
         } else if (Array.isArray(data)) {
-            // Eski format desteği
             productData = data;
             customerData = [];
             logData = [];
@@ -93,9 +85,9 @@ async function fetchData() {
         const cats = [...new Set(productData.map(p => p.category))];
         cats.forEach(c => openCategories.add(c));
         
-        refreshCurrentView(); // İlk açılışta sayfayı render et
+        // Veri geldiğinde loading ekranını kaldır (Login ekranının altındaki loading)
+        document.getElementById('loading').style.display = 'none';
     } catch (err) { console.error(err); }
-    document.getElementById('loading').style.display = 'none';
 }
 
 function storeOriginalState() {
@@ -109,17 +101,6 @@ function addLog(action) {
     const logEntry = { id: Date.now(), date: date, user: currentUser, action: action };
     logData.unshift(logEntry);
     if(logData.length > 5000) logData.pop(); 
-}
-
-function editLogDesc(index) {
-    const currentDesc = logData[index].action;
-    const note = prompt("Bu işleme eklenecek notu yazın:");
-    if(note && note.trim() !== "") {
-        const timestamp = new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
-        logData[index].action = currentDesc + `|||${note} (${timestamp})`;
-        saveToCloud();
-        openLogModal();
-    }
 }
 
 function openLogModal() {
@@ -140,8 +121,7 @@ function openLogModal() {
                     noteText += `<span class="log-note"><i class="fa-solid fa-comment-dots"></i> ${parts[i]}</span>`;
                 }
             }
-            const editBtn = isAdmin ? `<i class="fa-solid fa-pen-to-square" style="cursor:pointer; color:#94a3b8;" onclick="editLogDesc(${index})"></i>` : '';
-            const row = `<tr><td style="padding:10px;">${log.date}</td><td style="padding:10px;"><span class="badge badge-admin">${log.user}</span></td><td style="padding:10px;"><span class="${actionClass}" style="padding:2px 5px; border-radius:3px;">${mainText}</span>${noteText}</td><td style="text-align:center;">${editBtn}</td></tr>`;
+            const row = `<tr><td style="padding:10px;">${log.date}</td><td style="padding:10px;"><span class="badge badge-admin">${log.user}</span></td><td style="padding:10px;"><span class="${actionClass}" style="padding:2px 5px; border-radius:3px;">${mainText}</span>${noteText}</td><td style="text-align:center;"></td></tr>`;
             tbody.innerHTML += row;
         });
     }
@@ -185,8 +165,6 @@ function confirmSave() {
         addLog(finalLogStr);
     } else if (note) { addLog(`Genel Not Eklendi|||${note}`); }
     
-    // Müşterilerdeki değişiklikler anlık kaydedildiği için loga eklemeye gerek yok,
-    // ancak buluta hepsini gönderiyoruz.
     saveToCloud();
 }
 
@@ -195,12 +173,7 @@ async function saveToCloud() {
     const original = btn.innerHTML;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
     try {
-        // Müşterileri de pakete ekle
-        const payload = { 
-            products: productData, 
-            customers: customerData,
-            logs: logData 
-        };
+        const payload = { products: productData, customers: customerData, logs: logData };
         await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
         alert("Başarıyla Kaydedildi!");
         storeOriginalState();
@@ -209,18 +182,12 @@ async function saveToCloud() {
     btn.innerHTML = original;
 }
 
-// --- MÜŞTERİ YÖNETİMİ (CRM) ---
+// --- MÜŞTERİ YÖNETİMİ ---
 function renderCustomers() {
     const container = document.getElementById('customerList');
     container.innerHTML = "";
-    
     const term = document.getElementById('searchInput').value.toLowerCase();
-    
-    // Filtreleme
-    const filtered = customerData.filter(c => 
-        (c.name && c.name.toLowerCase().includes(term)) || 
-        (c.device && c.device.toLowerCase().includes(term))
-    );
+    const filtered = customerData.filter(c => (c.name && c.name.toLowerCase().includes(term)) || (c.device && c.device.toLowerCase().includes(term)));
 
     if (filtered.length === 0) {
         container.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:#94a3b8; margin-top:20px;">Müşteri bulunamadı.</p>`;
@@ -228,7 +195,6 @@ function renderCustomers() {
     }
 
     filtered.forEach(c => {
-        // Durum Rengi Belirle
         let statusClass = "status-gorusuluyor";
         if(c.status === "Teklif Verildi") statusClass = "status-teklif";
         if(c.status === "Kapora Alındı") statusClass = "status-kapora";
@@ -250,7 +216,6 @@ function renderCustomers() {
             <div style="font-size:0.85rem; color:#64748b;">
                 <i class="fa-solid fa-phone"></i> ${c.phone || '-'}
             </div>
-            
             <div class="cust-actions" onclick="event.stopPropagation()">
                 <a href="tel:${c.phone}" class="action-btn"><i class="fa-solid fa-phone"></i> Ara</a>
                 <a href="https://wa.me/90${c.phone ? c.phone.replace(/^0/,'').replace(/\s/g,'') : ''}" target="_blank" class="action-btn whatsapp"><i class="fa-brands fa-whatsapp"></i> Yaz</a>
@@ -263,9 +228,7 @@ function renderCustomers() {
 function openCustomerModal(id = null) {
     currentCustId = id;
     const modal = document.getElementById('customerModal');
-    
     if (id) {
-        // DÜZENLEME MODU
         const c = customerData.find(x => x.id === id);
         document.getElementById('custModalTitle').innerText = "Müşteri Düzenle";
         document.getElementById('custName').value = c.name;
@@ -279,9 +242,7 @@ function openCustomerModal(id = null) {
         document.getElementById('btnDeleteCust').style.display = 'block';
         updateRestAmount();
     } else {
-        // YENİ EKLEME MODU
         document.getElementById('custModalTitle').innerText = "Yeni Müşteri Ekle";
-        // Formu temizle
         document.getElementById('custName').value = "";
         document.getElementById('custPhone').value = "";
         document.getElementById('custDevice').value = "";
@@ -293,11 +254,8 @@ function openCustomerModal(id = null) {
         document.getElementById('custNotes').value = "";
         document.getElementById('btnDeleteCust').style.display = 'none';
     }
-    
-    // Tutar değiştikçe kalanı hesapla
     document.getElementById('custTotal').oninput = updateRestAmount;
     document.getElementById('custPaid').oninput = updateRestAmount;
-
     modal.style.display = 'flex';
 }
 
@@ -307,14 +265,11 @@ function updateRestAmount() {
     document.getElementById('custRest').value = total - paid;
 }
 
-function closeCustomerModal() {
-    document.getElementById('customerModal').style.display = 'none';
-}
+function closeCustomerModal() { document.getElementById('customerModal').style.display = 'none'; }
 
 function saveCustomer() {
     const name = document.getElementById('custName').value;
     if (!name) { alert("İsim giriniz."); return; }
-
     const newCust = {
         id: currentCustId || Date.now() + Math.random(),
         name: name,
@@ -327,21 +282,17 @@ function saveCustomer() {
         notes: document.getElementById('custNotes').value,
         dateAdded: new Date().toLocaleDateString('tr-TR')
     };
-
     if (currentCustId) {
-        // Güncelleme
         const index = customerData.findIndex(x => x.id === currentCustId);
         customerData[index] = newCust;
         addLog(`Müşteri Güncellendi: ${name} (${newCust.status})`);
     } else {
-        // Yeni Ekleme
         customerData.push(newCust);
         addLog(`Yeni Müşteri Eklendi: ${name}`);
     }
-
     closeCustomerModal();
     renderCustomers();
-    document.getElementById('globalSaveBtn').style.display = 'flex'; // Kaydet butonunu aktif et
+    document.getElementById('globalSaveBtn').style.display = 'flex';
 }
 
 function deleteCustomer() {
@@ -355,18 +306,11 @@ function deleteCustomer() {
     }
 }
 
-// --- ARAMA YÖNLENDİRİCİ ---
 function handleSearch() {
-    if (activeTab === 'stock') {
-        renderTable();
-    } else {
-        renderCustomers();
-    }
+    if (activeTab === 'stock') renderTable(); else renderCustomers();
 }
 
-// --- EXCEL OKUMA VE DİĞER STOK FONKSİYONLARI ---
-// (Buradaki kodlar V44 ile aynı, sadece processExcel ve renderTable korunuyor)
-
+// --- EXCEL PARSER ---
 function processExcel(input) {
     const file = input.files[0];
     if (!file) return;
@@ -475,7 +419,6 @@ function parseRowsSmart(rows, map) {
 
 // --- KATEGORİ YÖNETİMİ ---
 function editCategoryName(oldCatName) {
-    if (!isAdmin) { alert("Yetkisiz işlem."); return; }
     const newName = prompt("Kategori ismini düzenle (Silmek için kutuyu boş bırakıp Tamam'a basın):", oldCatName);
     if (newName === null) return; 
 
@@ -505,7 +448,96 @@ function toggleCategory(cat) {
     renderTable(); 
 }
 
-// --- RENDER TABLE ---
+// --- SÜRÜKLE BIRAK ---
+function handleDragStart(e) {
+    draggedItemId = parseFloat(e.target.dataset.id);
+    draggedItemIndex = parseInt(e.target.dataset.idx);
+    e.target.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragEnd(e) {
+    e.target.classList.remove('dragging');
+    document.querySelectorAll('tr').forEach(row => {
+        row.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over');
+    });
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    const targetRow = e.target.closest('tr');
+    if (!targetRow || targetRow.classList.contains('dragging')) return;
+
+    if (targetRow.classList.contains('item-row')) {
+        const rect = targetRow.getBoundingClientRect();
+        const offset = e.clientY - rect.top;
+        targetRow.classList.remove('drag-over-top', 'drag-over-bottom');
+        if (offset < rect.height / 2) {
+            targetRow.classList.add('drag-over-top');
+        } else {
+            targetRow.classList.add('drag-over-bottom');
+        }
+    } else if (targetRow.classList.contains('cat-row')) {
+        targetRow.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    const targetRow = e.target.closest('tr');
+    if (targetRow) {
+        targetRow.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over');
+    }
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!draggedItemId) return;
+
+    const targetRow = e.target.closest('tr');
+    if (!targetRow) return;
+
+    const draggedItem = productData.find(p => p.id === draggedItemId);
+    const draggedIndex = productData.indexOf(draggedItem);
+
+    if (targetRow.classList.contains('cat-row')) {
+        const newCategory = targetRow.querySelector('.cat-actions span').innerText;
+        if (draggedItem.category !== newCategory) {
+            draggedItem.category = newCategory;
+            productData.splice(draggedIndex, 1);
+            const firstInCatIndex = productData.findIndex(p => p.category === newCategory);
+            if(firstInCatIndex > -1) {
+                productData.splice(firstInCatIndex, 0, draggedItem);
+            } else {
+                productData.push(draggedItem);
+            }
+            if(!openCategories.has(newCategory)) openCategories.add(newCategory);
+        }
+    } 
+    else if (targetRow.classList.contains('item-row')) {
+        const targetId = parseFloat(targetRow.dataset.id);
+        const targetItem = productData.find(p => p.id === targetId);
+        
+        if (draggedItem && targetItem && draggedItem !== targetItem) {
+            if (draggedItem.category !== targetItem.category) {
+                draggedItem.category = targetItem.category;
+            }
+            productData.splice(draggedIndex, 1);
+            const newTargetIndex = productData.indexOf(targetItem);
+            
+            if (targetRow.classList.contains('drag-over-bottom')) {
+                productData.splice(newTargetIndex + 1, 0, draggedItem);
+            } else {
+                productData.splice(newTargetIndex, 0, draggedItem);
+            }
+        }
+    }
+
+    handleDragEnd({ target: document.querySelector('.dragging') });
+    document.getElementById('globalSaveBtn').style.display = 'flex';
+    renderTable();
+}
+
 function renderTable() {
     const tbody = document.getElementById('tableBody');
     tbody.innerHTML = "";
@@ -521,7 +553,7 @@ function renderTable() {
         displayData = productData.filter(p => p.name.toLowerCase().includes(term));
     }
 
-    const readOnlyNamePrice = isAdmin ? '' : 'readonly';
+    const readOnlyNamePrice = ''; // Admin olduğu için her zaman açık
     let globalIndex = 1;
     let lastCategory = null;
 
@@ -533,11 +565,9 @@ function renderTable() {
 
             const trCat = document.createElement('tr');
             trCat.className = 'cat-row';
-            if (isAdmin) {
-                trCat.addEventListener('dragover', handleDragOver);
-                trCat.addEventListener('dragleave', handleDragLeave);
-                trCat.addEventListener('drop', handleDrop);
-            }
+            trCat.addEventListener('dragover', handleDragOver);
+            trCat.addEventListener('dragleave', handleDragLeave);
+            trCat.addEventListener('drop', handleDrop);
             
             trCat.innerHTML = `
                 <td colspan="6">
@@ -545,7 +575,7 @@ function renderTable() {
                         <span>${lastCategory}</span>
                         <i class="fa-solid fa-chevron-down cat-icon" style="transform:${iconRotate}"></i>
                     </div>
-                    ${isAdmin ? `<button class="cat-edit-btn" onclick="event.stopPropagation(); editCategoryName('${lastCategory}')"><i class="fa-solid fa-pen"></i></button>` : ''}
+                    <button class="cat-edit-btn" onclick="event.stopPropagation(); editCategoryName('${lastCategory}')"><i class="fa-solid fa-pen"></i></button>
                 </td>
             `;
             tbody.appendChild(trCat);
@@ -559,7 +589,7 @@ function renderTable() {
             tr.dataset.id = item.id;
             tr.dataset.idx = index;
             
-            if(isAdmin && !term) { 
+            if(!term) { 
                 tr.setAttribute('draggable', true);
                 tr.addEventListener('dragstart', handleDragStart);
                 tr.addEventListener('dragover', handleDragOver);
@@ -570,16 +600,16 @@ function renderTable() {
 
             const pVal = item.price === 0 ? '' : item.price;
             const qVal = item.qty === 0 ? '' : item.qty;
-            const trashHTML = isAdmin ? `<td class="trash-cell" style="text-align:center;"><i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="deleteItem(${item.id}, '${item.name}')"></i></td>` : '<td></td>';
+            const trashHTML = `<td class="trash-cell" style="text-align:center;"><i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="deleteItem(${item.id}, '${item.name}')"></i></td>`;
 
             tr.innerHTML = `
                 <td class="index-cell">${globalIndex++}</td>
                 <td data-label="Ürün">
-                    <input type="text" class="input-clean" value="${item.name}" ${readOnlyNamePrice} oninput="updateData(${item.id}, 'name', this.value)">
+                    <input type="text" class="input-clean" value="${item.name}" oninput="updateData(${item.id}, 'name', this.value)">
                 </td>
                 <td data-label="Fiyat">
                     <div class="price-wrapper">
-                        <input type="number" class="input-clean price-input" placeholder="0" value="${pVal}" ${readOnlyNamePrice} oninput="updateData(${item.id}, 'price', this.value)">
+                        <input type="number" class="input-clean price-input" placeholder="0" value="${pVal}" oninput="updateData(${item.id}, 'price', this.value)">
                         <span class="currency">₺</span>
                     </div>
                 </td>
@@ -600,7 +630,6 @@ function renderTable() {
 }
 
 function updateData(id, field, value) {
-    if (!isAdmin && (field === 'name' || field === 'price')) return;
     const item = productData.find(p => p.id === id);
     if (!item) return;
     if (field === 'price') item[field] = parseFloat(value) || 0;
@@ -639,7 +668,6 @@ function calculateTotal() {
 }
 
 function exportToExcel() {
-    // ÜRÜNLER
     const list = productData.map(p=>({
         "KATEGORİ": p.category, 
         "ÜRÜN": p.name, 
@@ -648,7 +676,6 @@ function exportToExcel() {
         "TOPLAM": p.price * p.qty
     }));
     
-    // MÜŞTERİLER
     const custList = customerData.map(c=>({
         "AD SOYAD": c.name,
         "TELEFON": c.phone,
@@ -717,96 +744,4 @@ function addNewProduct() {
         document.getElementById('newQty').value = "1";
         document.getElementById('globalSaveBtn').style.display='flex';
     } else { alert("Ürün adı giriniz."); }
-}
-
-// SÜRÜKLE BIRAK FONKSİYONLARI (V44)
-function handleDragStart(e) {
-    if (!isAdmin) return;
-    draggedItemId = parseFloat(e.target.dataset.id);
-    draggedItemIndex = parseInt(e.target.dataset.idx);
-    e.target.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-}
-
-function handleDragEnd(e) {
-    e.target.classList.remove('dragging');
-    document.querySelectorAll('tr').forEach(row => {
-        row.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over');
-    });
-}
-
-function handleDragOver(e) {
-    e.preventDefault();
-    if (!isAdmin) return;
-    const targetRow = e.target.closest('tr');
-    if (!targetRow || targetRow.classList.contains('dragging')) return;
-
-    if (targetRow.classList.contains('item-row')) {
-        const rect = targetRow.getBoundingClientRect();
-        const offset = e.clientY - rect.top;
-        targetRow.classList.remove('drag-over-top', 'drag-over-bottom');
-        if (offset < rect.height / 2) {
-            targetRow.classList.add('drag-over-top');
-        } else {
-            targetRow.classList.add('drag-over-bottom');
-        }
-    } else if (targetRow.classList.contains('cat-row')) {
-        targetRow.classList.add('drag-over');
-    }
-}
-
-function handleDragLeave(e) {
-    const targetRow = e.target.closest('tr');
-    if (targetRow) {
-        targetRow.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over');
-    }
-}
-
-function handleDrop(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isAdmin || !draggedItemId) return;
-
-    const targetRow = e.target.closest('tr');
-    if (!targetRow) return;
-
-    const draggedItem = productData.find(p => p.id === draggedItemId);
-    const draggedIndex = productData.indexOf(draggedItem);
-
-    if (targetRow.classList.contains('cat-row')) {
-        const newCategory = targetRow.querySelector('.cat-actions span').innerText;
-        if (draggedItem.category !== newCategory) {
-            draggedItem.category = newCategory;
-            productData.splice(draggedIndex, 1);
-            const firstInCatIndex = productData.findIndex(p => p.category === newCategory);
-            if(firstInCatIndex > -1) {
-                productData.splice(firstInCatIndex, 0, draggedItem);
-            } else {
-                productData.push(draggedItem);
-            }
-            if(!openCategories.has(newCategory)) openCategories.add(newCategory);
-        }
-    } 
-    else if (targetRow.classList.contains('item-row')) {
-        const targetId = parseFloat(targetRow.dataset.id);
-        const targetItem = productData.find(p => p.id === targetId);
-        
-        if (draggedItem && targetItem && draggedItem !== targetItem) {
-            if (draggedItem.category !== targetItem.category) {
-                draggedItem.category = targetItem.category;
-            }
-            productData.splice(draggedIndex, 1);
-            const newTargetIndex = productData.indexOf(targetItem);
-            
-            if (targetRow.classList.contains('drag-over-bottom')) {
-                productData.splice(newTargetIndex + 1, 0, draggedItem);
-            } else {
-                productData.splice(newTargetIndex, 0, draggedItem);
-            }
-        }
-    }
-
-    handleDragEnd({ target: document.querySelector('.dragging') });
-    document.getElementById('globalSaveBtn').style.display = 'flex';
-    renderTable();
 }

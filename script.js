@@ -175,14 +175,23 @@ function confirmSave() {
     saveToCloud();
 }
 
-// --- MÜŞTERİ YÖNETİMİ (DETAYLI LOG) ---
 function renderCustomers() {
     const container = document.getElementById('customerList');
     container.innerHTML = "";
     const term = document.getElementById('searchInput').value.toLowerCase();
-    const filtered = customerData.filter(c => (c.name && c.name.toLowerCase().includes(term)) || (c.device && c.device.toLowerCase().includes(term)));
+    
+    // Hata önleyici: Eğer customerData boşsa veya hatalıysa boş dizi kabul et
+    const safeData = Array.isArray(customerData) ? customerData : [];
 
-    if (filtered.length === 0) { container.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:#94a3b8; margin-top:20px;">Kayıt bulunamadı.</p>`; return; }
+    const filtered = safeData.filter(c => 
+        (c.name && String(c.name).toLowerCase().includes(term)) || 
+        (c.device && String(c.device).toLowerCase().includes(term))
+    );
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:#94a3b8; margin-top:20px;">Kayıt bulunamadı.</p>`;
+        return;
+    }
 
     filtered.forEach(c => {
         let statusClass = "status-gorusuluyor";
@@ -191,20 +200,32 @@ function renderCustomers() {
         if(c.status === "Teslim Edildi") statusClass = "status-teslim";
         if(c.status === "İptal") statusClass = "status-iptal";
 
+        // TELEFON NUMARASI DÜZELTME (CRASH FIX)
+        // Numarayı kesinlikle String'e çeviriyoruz ki .replace çalışsın
+        let rawPhone = c.phone ? String(c.phone) : "";
+        let cleanPhone = rawPhone.replace(/^0/,'').replace(/\s/g,'').replace(/-/g,'');
+
         const card = document.createElement('div');
         card.className = "customer-card";
         card.onclick = () => openCustomerModal(c.id);
         
         card.innerHTML = `
             <div class="cust-header">
-                <div><div class="cust-name">${c.name}</div><span class="cust-device">${c.device || ''}</span></div>
+                <div>
+                    <div class="cust-name">${c.name}</div>
+                    <span class="cust-device">${c.device || ''}</span>
+                </div>
                 <span class="cust-status ${statusClass}">${c.status}</span>
             </div>
-            <div style="font-size:0.85rem; color:#64748b; margin-bottom:10px;"><i class="fa-solid fa-phone"></i> ${c.phone || '-'}</div>
-            <div style="font-size:0.8rem; background:#f1f5f9; padding:5px; border-radius:4px;"><b>Kalan:</b> ${(c.totalAmount - c.paidAmount).toLocaleString('tr-TR')} ₺</div>
+            <div style="font-size:0.85rem; color:#64748b; margin-bottom:10px;">
+                <i class="fa-solid fa-phone"></i> ${rawPhone || '-'}
+            </div>
+            <div style="font-size:0.8rem; background:#f1f5f9; padding:5px; border-radius:4px;">
+                <b>Kalan:</b> ${(c.totalAmount - c.paidAmount).toLocaleString('tr-TR')} ₺
+            </div>
             <div class="cust-actions" onclick="event.stopPropagation()">
-                <a href="tel:${c.phone}" class="action-btn"><i class="fa-solid fa-phone"></i> Ara</a>
-                <a href="https://wa.me/90${c.phone ? c.phone.replace(/^0/,'').replace(/\s/g,'') : ''}" target="_blank" class="action-btn whatsapp"><i class="fa-brands fa-whatsapp"></i> Yaz</a>
+                <a href="tel:${cleanPhone}" class="action-btn"><i class="fa-solid fa-phone"></i> Ara</a>
+                <a href="https://wa.me/90${cleanPhone}" target="_blank" class="action-btn whatsapp"><i class="fa-brands fa-whatsapp"></i> Yaz</a>
             </div>
         `;
         container.appendChild(card);

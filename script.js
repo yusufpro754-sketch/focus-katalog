@@ -1,1 +1,465 @@
-function _0x18f9(_0x29d6fa,_0x1432f6){_0x29d6fa=_0x29d6fa-0x1c7;const _0x29ded1=_0x29de();let _0x18f97a=_0x29ded1[_0x29d6fa];return _0x18f97a;}const _0x3bf18e=_0x18f9;(function(_0x1e97a3,_0x3e1ccf){const _0x130fcc=_0x18f9,_0x23efb0=_0x1e97a3();while(!![]){try{const _0x43f889=-parseInt(_0x130fcc(0x28f))/0x1+-parseInt(_0x130fcc(0x2ae))/0x2+parseInt(_0x130fcc(0x2ab))/0x3*(parseInt(_0x130fcc(0x27a))/0x4)+parseInt(_0x130fcc(0x222))/0x5+-parseInt(_0x130fcc(0x275))/0x6*(-parseInt(_0x130fcc(0x277))/0x7)+-parseInt(_0x130fcc(0x266))/0x8*(-parseInt(_0x130fcc(0x1d1))/0x9)+parseInt(_0x130fcc(0x284))/0xa*(-parseInt(_0x130fcc(0x202))/0xb);if(_0x43f889===_0x3e1ccf)break;else _0x23efb0['push'](_0x23efb0['shift']());}catch(_0x17df65){_0x23efb0['push'](_0x23efb0['shift']());}}}(_0x29de,0xcc02b));const API_URL=_0x3bf18e(0x20b),ENCRYPTED_PASS=_0x3bf18e(0x2a7);let productData=[],customerData=[],logData=[],originalState={},isAdmin=![],currentUser='Yönetici',openCategories=new Set(),activeTab=_0x3bf18e(0x212),currentCustId=null,draggedItemId=null,draggedItemIndex=-0x1;window[_0x3bf18e(0x201)]=function(){fetchData();};function verifyLogin(){const _0x24b56a=_0x3bf18e,_0x19e28a=document[_0x24b56a(0x1ee)](_0x24b56a(0x1d6))[_0x24b56a(0x227)],_0x127d66=document[_0x24b56a(0x1ee)](_0x24b56a(0x200));btoa(_0x19e28a)===ENCRYPTED_PASS?(isAdmin=!![],document[_0x24b56a(0x1ee)](_0x24b56a(0x21b))[_0x24b56a(0x249)]['display']=_0x24b56a(0x248),document[_0x24b56a(0x1ee)](_0x24b56a(0x24b))[_0x24b56a(0x249)][_0x24b56a(0x2a3)]=_0x24b56a(0x267),addLog(_0x24b56a(0x1da)),refreshCurrentView()):(_0x127d66['style'][_0x24b56a(0x2a3)]=_0x24b56a(0x267),document[_0x24b56a(0x1ee)](_0x24b56a(0x1d6))['value']='');}function logout(){const _0x460c7d=_0x3bf18e;location[_0x460c7d(0x285)]();}function switchTab(_0x572b0d){const _0x6c6c23=_0x3bf18e;activeTab=_0x572b0d,document[_0x6c6c23(0x2b4)]('.nav-btn')[_0x6c6c23(0x1f4)](_0x5ef88b=>_0x5ef88b['classList'][_0x6c6c23(0x295)]('active')),event[_0x6c6c23(0x1ff)][_0x6c6c23(0x25a)]['add']('active'),document['getElementById'](_0x6c6c23(0x231))[_0x6c6c23(0x249)][_0x6c6c23(0x2a3)]=_0x572b0d===_0x6c6c23(0x212)?_0x6c6c23(0x267):_0x6c6c23(0x248),document['getElementById'](_0x6c6c23(0x27b))[_0x6c6c23(0x249)][_0x6c6c23(0x2a3)]=_0x572b0d===_0x6c6c23(0x237)?'block':_0x6c6c23(0x248),refreshCurrentView();}function refreshCurrentView(){const _0x4bf7f0=_0x3bf18e;activeTab==='stock'?(document['getElementById']('stockControls')['style'][_0x4bf7f0(0x2a3)]=_0x4bf7f0(0x226),document[_0x4bf7f0(0x1ee)]('customerControls')[_0x4bf7f0(0x249)][_0x4bf7f0(0x2a3)]=_0x4bf7f0(0x248),renderTable()):(document[_0x4bf7f0(0x1ee)](_0x4bf7f0(0x1e9))['style'][_0x4bf7f0(0x2a3)]=_0x4bf7f0(0x248),document[_0x4bf7f0(0x1ee)](_0x4bf7f0(0x29f))[_0x4bf7f0(0x249)][_0x4bf7f0(0x2a3)]=_0x4bf7f0(0x226),renderCustomers());}async function fetchData(){const _0x2a64d9=_0x3bf18e;try{const _0x334e26=await fetch(API_URL),_0x128229=await _0x334e26[_0x2a64d9(0x1f2)]();_0x128229&&(productData=_0x128229[_0x2a64d9(0x1d9)]||[],customerData=_0x128229[_0x2a64d9(0x237)]||[],logData=_0x128229[_0x2a64d9(0x1e6)]||[]);productData[_0x2a64d9(0x1f4)](_0x2714d5=>{const _0x17b783=_0x2a64d9;if(!_0x2714d5['id'])_0x2714d5['id']=Date[_0x17b783(0x1e7)]()+Math['random']();}),customerData[_0x2a64d9(0x1f4)](_0x5798be=>{const _0x80dd23=_0x2a64d9;if(!_0x5798be['id'])_0x5798be['id']=Date['now']()+Math[_0x80dd23(0x1dd)]();}),storeOriginalState();const _0x1a960a=[...new Set(productData[_0x2a64d9(0x1d5)](_0x15f585=>_0x15f585['category']))];_0x1a960a[_0x2a64d9(0x1f4)](_0x466e5f=>openCategories['add'](_0x466e5f)),document['getElementById'](_0x2a64d9(0x1db))[_0x2a64d9(0x249)][_0x2a64d9(0x2a3)]=_0x2a64d9(0x248);}catch(_0x54c3e0){console[_0x2a64d9(0x274)](_0x54c3e0),document[_0x2a64d9(0x1ee)](_0x2a64d9(0x1db))[_0x2a64d9(0x249)][_0x2a64d9(0x2a3)]=_0x2a64d9(0x248);}}function storeOriginalState(){const _0x1074cd=_0x3bf18e;originalState={},productData[_0x1074cd(0x1f4)](_0x442981=>{originalState[_0x442981['id']]={..._0x442981};});}function addLog(_0xad1fc1){const _0x53abd2=_0x3bf18e,_0x2a1035=new Date()['toLocaleString'](_0x53abd2(0x29c));logData[_0x53abd2(0x1f8)]({'id':Date[_0x53abd2(0x1e7)](),'date':_0x2a1035,'user':currentUser,'action':_0xad1fc1,'note':''});if(logData[_0x53abd2(0x1d8)]>0x1388)logData[_0x53abd2(0x256)]();}function editLogDesc(_0x3c3c15){const _0x5d7c8d=_0x3bf18e,_0x469ebb=logData[_0x3c3c15][_0x5d7c8d(0x27f)]||'',_0x229a65=prompt(_0x5d7c8d(0x28b),_0x469ebb);_0x229a65!==null&&(logData[_0x3c3c15]['note']=_0x229a65,saveToCloud(),openLogModal());}function openLogModal(){const _0x42515f=_0x3bf18e,_0x377217=document[_0x42515f(0x1ee)](_0x42515f(0x1e1));_0x377217[_0x42515f(0x21e)]='',logData[_0x42515f(0x1f4)]((_0x1a50e3,_0x47d602)=>{const _0xd146ac=_0x42515f;let _0xdcc28f='badge-info';if(_0x1a50e3[_0xd146ac(0x25c)]['includes'](_0xd146ac(0x291))||_0x1a50e3[_0xd146ac(0x25c)][_0xd146ac(0x207)]('artırıldı'))_0xdcc28f=_0xd146ac(0x1cc);if(_0x1a50e3[_0xd146ac(0x25c)]['includes'](_0xd146ac(0x265))||_0x1a50e3[_0xd146ac(0x25c)][_0xd146ac(0x207)]('azaltıldı')||_0x1a50e3['action'][_0xd146ac(0x207)](_0xd146ac(0x287)))_0xdcc28f=_0xd146ac(0x1d4);const _0x14839b=_0x1a50e3['note']?_0xd146ac(0x1ed)+_0x1a50e3[_0xd146ac(0x27f)]+_0xd146ac(0x23d):'',_0x57144f=_0xd146ac(0x25f)+_0x1a50e3[_0xd146ac(0x1d3)]+_0xd146ac(0x1d2)+_0x1a50e3[_0xd146ac(0x1c8)]+'</span></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:10px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22'+_0xdcc28f+'\x22\x20style=\x22padding:2px\x205px;\x20border-radius:3px;\x22>'+_0x1a50e3[_0xd146ac(0x25c)]+_0xd146ac(0x264)+_0x14839b+_0xd146ac(0x209)+_0x47d602+_0xd146ac(0x21a);_0x377217[_0xd146ac(0x21e)]+=_0x57144f;}),document[_0x42515f(0x1ee)](_0x42515f(0x204))[_0x42515f(0x249)][_0x42515f(0x2a3)]=_0x42515f(0x226);}function closeLogModal(){const _0x4a5b4f=_0x3bf18e;document['getElementById'](_0x4a5b4f(0x204))[_0x4a5b4f(0x249)]['display']=_0x4a5b4f(0x248);}async function saveToCloud(){const _0x10eec9=_0x3bf18e,_0xb4ce65=document['getElementById'](_0x10eec9(0x1d7)),_0xbaa749=_0xb4ce65[_0x10eec9(0x21e)];_0xb4ce65['innerHTML']=_0x10eec9(0x259);try{const _0x60231a={'products':productData,'customers':customerData,'logs':logData};await fetch(API_URL,{'method':_0x10eec9(0x224),'mode':_0x10eec9(0x1dc),'body':JSON[_0x10eec9(0x20a)](_0x60231a)}),alert(_0x10eec9(0x27c)),storeOriginalState(),_0xb4ce65['style'][_0x10eec9(0x2a3)]='none';}catch(_0x22a0c2){alert(_0x10eec9(0x1ca));}_0xb4ce65[_0x10eec9(0x21e)]=_0xbaa749;}function openSaveModal(){const _0x3220e1=_0x3bf18e;document['getElementById'](_0x3220e1(0x2b3))[_0x3220e1(0x227)]='',document[_0x3220e1(0x1ee)](_0x3220e1(0x299))[_0x3220e1(0x249)][_0x3220e1(0x2a3)]=_0x3220e1(0x226);}function closeSaveModal(){const _0x4e0c46=_0x3bf18e;document['getElementById']('saveModal')[_0x4e0c46(0x249)]['display']=_0x4e0c46(0x248);}function confirmSave(){const _0x4dbc16=_0x3bf18e,_0x3c7d9c=document[_0x4dbc16(0x1ee)](_0x4dbc16(0x2b3))['value'][_0x4dbc16(0x213)]();closeSaveModal();let _0x593b90=[];productData[_0x4dbc16(0x1f4)](_0x3c1c6c=>{const _0x8145fc=_0x4dbc16,_0x28f05b=originalState[_0x3c1c6c['id']];if(!_0x28f05b)return;if(_0x3c1c6c[_0x8145fc(0x229)]!==_0x28f05b[_0x8145fc(0x229)]){const _0x28a60f=_0x3c1c6c[_0x8145fc(0x229)]-_0x28f05b[_0x8145fc(0x229)],_0x4153e0=_0x28a60f>0x0?_0x8145fc(0x203):_0x8145fc(0x245);_0x593b90[_0x8145fc(0x20d)](_0x3c1c6c[_0x8145fc(0x289)]+_0x8145fc(0x24f)+_0x28f05b[_0x8145fc(0x229)]+_0x8145fc(0x29d)+_0x3c1c6c[_0x8145fc(0x229)]+'\x20('+Math[_0x8145fc(0x22f)](_0x28a60f)+_0x8145fc(0x235)+_0x4153e0+')');}_0x3c1c6c[_0x8145fc(0x2a9)]!==_0x28f05b['price']&&_0x593b90['push'](_0x3c1c6c[_0x8145fc(0x289)]+_0x8145fc(0x279)+_0x28f05b['price']+'₺\x20->\x20'+_0x3c1c6c[_0x8145fc(0x2a9)]+'₺\x20Olarak\x20Güncellendi');});if(_0x593b90[_0x4dbc16(0x1d8)]>0x0){const _0xa88f65=_0x593b90[_0x4dbc16(0x2a0)]('\x20|\x20');addLog(_0xa88f65+(_0x3c7d9c?_0x4dbc16(0x2b5)+_0x3c7d9c+')':''));}else _0x3c7d9c&&addLog('Genel\x20Not:\x20'+_0x3c7d9c);saveToCloud();}function renderCustomers(){const _0x1628d4=_0x3bf18e,_0x27ad22=document['getElementById']('customerList');_0x27ad22[_0x1628d4(0x21e)]='';const _0x4b13be=document[_0x1628d4(0x1ee)](_0x1628d4(0x252))[_0x1628d4(0x227)][_0x1628d4(0x2a2)](),_0x2f0e19=customerData[_0x1628d4(0x1e4)](_0x5367e3=>_0x5367e3[_0x1628d4(0x289)]&&_0x5367e3['name'][_0x1628d4(0x2a2)]()[_0x1628d4(0x207)](_0x4b13be)||_0x5367e3[_0x1628d4(0x26e)]&&_0x5367e3[_0x1628d4(0x26e)][_0x1628d4(0x2a2)]()[_0x1628d4(0x207)](_0x4b13be));if(_0x2f0e19[_0x1628d4(0x1d8)]===0x0){_0x27ad22[_0x1628d4(0x21e)]='<p\x20style=\x22grid-column:1/-1;\x20text-align:center;\x20color:#94a3b8;\x20margin-top:20px;\x22>Kayıt\x20bulunamadı.</p>';return;}_0x2f0e19[_0x1628d4(0x1f4)](_0x177ceb=>{const _0x91e1d1=_0x1628d4;let _0x54e3fa=_0x91e1d1(0x1ec);if(_0x177ceb[_0x91e1d1(0x1eb)]===_0x91e1d1(0x22e))_0x54e3fa='status-teklif';if(_0x177ceb[_0x91e1d1(0x1eb)]==='Kapora\x20Alındı')_0x54e3fa='status-kapora';if(_0x177ceb[_0x91e1d1(0x1eb)]===_0x91e1d1(0x29b))_0x54e3fa='status-teslim';if(_0x177ceb[_0x91e1d1(0x1eb)]===_0x91e1d1(0x20c))_0x54e3fa='status-iptal';const _0x2c62a5=document['createElement'](_0x91e1d1(0x24c));_0x2c62a5[_0x91e1d1(0x1e5)]='customer-card',_0x2c62a5[_0x91e1d1(0x251)]=()=>openCustomerModal(_0x177ceb['id']),_0x2c62a5[_0x91e1d1(0x21e)]=_0x91e1d1(0x268)+_0x177ceb[_0x91e1d1(0x289)]+_0x91e1d1(0x1fc)+(_0x177ceb[_0x91e1d1(0x26e)]||'')+'</span></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22cust-status\x20'+_0x54e3fa+'\x22>'+_0x177ceb['status']+_0x91e1d1(0x294)+(_0x177ceb['phone']||'-')+_0x91e1d1(0x1c7)+(_0x177ceb['totalAmount']-_0x177ceb[_0x91e1d1(0x232)])[_0x91e1d1(0x2a8)](_0x91e1d1(0x29c))+_0x91e1d1(0x26a)+_0x177ceb['phone']+'\x22\x20class=\x22action-btn\x22><i\x20class=\x22fa-solid\x20fa-phone\x22></i>\x20Ara</a>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<a\x20href=\x22https://wa.me/90'+(_0x177ceb[_0x91e1d1(0x298)]?_0x177ceb[_0x91e1d1(0x298)]['replace'](/^0/,'')[_0x91e1d1(0x23b)](/\s/g,''):'')+_0x91e1d1(0x25d),_0x27ad22[_0x91e1d1(0x257)](_0x2c62a5);});}function openCustomerModal(_0xbc00=null){const _0x2ed154=_0x3bf18e;currentCustId=_0xbc00;const _0x40d18e=document[_0x2ed154(0x1ee)]('customerModal');if(_0xbc00){const _0xea9ba3=customerData[_0x2ed154(0x26d)](_0x2deb9b=>_0x2deb9b['id']===_0xbc00);document[_0x2ed154(0x1ee)](_0x2ed154(0x1de))[_0x2ed154(0x218)]=_0x2ed154(0x293),document[_0x2ed154(0x1ee)](_0x2ed154(0x2af))[_0x2ed154(0x227)]=_0xea9ba3[_0x2ed154(0x289)],document[_0x2ed154(0x1ee)](_0x2ed154(0x216))[_0x2ed154(0x227)]=_0xea9ba3[_0x2ed154(0x298)],document[_0x2ed154(0x1ee)](_0x2ed154(0x1fd))[_0x2ed154(0x227)]=_0xea9ba3[_0x2ed154(0x26e)],document[_0x2ed154(0x1ee)](_0x2ed154(0x26c))[_0x2ed154(0x227)]=_0xea9ba3['paymentType'],document[_0x2ed154(0x1ee)](_0x2ed154(0x233))[_0x2ed154(0x227)]=_0xea9ba3[_0x2ed154(0x1eb)],document[_0x2ed154(0x1ee)](_0x2ed154(0x230))['value']=_0xea9ba3[_0x2ed154(0x214)]||'',document[_0x2ed154(0x1ee)]('custPaid')[_0x2ed154(0x227)]=_0xea9ba3[_0x2ed154(0x232)]||'',document[_0x2ed154(0x1ee)](_0x2ed154(0x271))[_0x2ed154(0x227)]=_0xea9ba3[_0x2ed154(0x270)]||'',document[_0x2ed154(0x1ee)](_0x2ed154(0x286))['style'][_0x2ed154(0x2a3)]='block',updateRestAmount();}else document[_0x2ed154(0x1ee)](_0x2ed154(0x1de))[_0x2ed154(0x218)]=_0x2ed154(0x242),document[_0x2ed154(0x1ee)](_0x2ed154(0x2af))[_0x2ed154(0x227)]='',document[_0x2ed154(0x1ee)](_0x2ed154(0x216))['value']='',document[_0x2ed154(0x1ee)](_0x2ed154(0x1fd))[_0x2ed154(0x227)]='',document[_0x2ed154(0x1ee)](_0x2ed154(0x26c))[_0x2ed154(0x227)]=_0x2ed154(0x1fa),document[_0x2ed154(0x1ee)]('custStatus')[_0x2ed154(0x227)]=_0x2ed154(0x260),document[_0x2ed154(0x1ee)]('custTotal')[_0x2ed154(0x227)]='',document['getElementById']('custPaid')[_0x2ed154(0x227)]='',document[_0x2ed154(0x1ee)](_0x2ed154(0x254))[_0x2ed154(0x227)]='',document['getElementById'](_0x2ed154(0x271))[_0x2ed154(0x227)]='',document[_0x2ed154(0x1ee)](_0x2ed154(0x286))[_0x2ed154(0x249)]['display']='none';document[_0x2ed154(0x1ee)](_0x2ed154(0x230))[_0x2ed154(0x28c)]=updateRestAmount,document[_0x2ed154(0x1ee)](_0x2ed154(0x283))['oninput']=updateRestAmount,_0x40d18e[_0x2ed154(0x249)][_0x2ed154(0x2a3)]=_0x2ed154(0x226);}function updateRestAmount(){const _0x5c0695=_0x3bf18e,_0x535291=parseFloat(document['getElementById'](_0x5c0695(0x230))[_0x5c0695(0x227)])||0x0,_0x6fa699=parseFloat(document[_0x5c0695(0x1ee)](_0x5c0695(0x283))[_0x5c0695(0x227)])||0x0;document[_0x5c0695(0x1ee)](_0x5c0695(0x254))[_0x5c0695(0x227)]=_0x535291-_0x6fa699;}function closeCustomerModal(){const _0x188b97=_0x3bf18e;document[_0x188b97(0x1ee)](_0x188b97(0x263))['style']['display']=_0x188b97(0x248);}function saveCustomer(){const _0x2b7bd6=_0x3bf18e,_0x3409a0=document['getElementById']('custName')[_0x2b7bd6(0x227)];if(!_0x3409a0){alert(_0x2b7bd6(0x273));return;}const _0x5d3459={'id':currentCustId||Date[_0x2b7bd6(0x1e7)](),'name':_0x3409a0,'phone':document['getElementById'](_0x2b7bd6(0x216))['value'],'device':document['getElementById'](_0x2b7bd6(0x1fd))['value'],'paymentType':document['getElementById'](_0x2b7bd6(0x26c))['value'],'status':document[_0x2b7bd6(0x1ee)](_0x2b7bd6(0x233))[_0x2b7bd6(0x227)],'totalAmount':parseFloat(document[_0x2b7bd6(0x1ee)](_0x2b7bd6(0x230))[_0x2b7bd6(0x227)])||0x0,'paidAmount':parseFloat(document[_0x2b7bd6(0x1ee)](_0x2b7bd6(0x283))['value'])||0x0,'notes':document[_0x2b7bd6(0x1ee)](_0x2b7bd6(0x271))['value'],'dateAdded':new Date()['toLocaleDateString'](_0x2b7bd6(0x29c))};if(currentCustId){const _0x49ce6e=customerData['findIndex'](_0x25b347=>_0x25b347['id']===currentCustId),_0x5be531=customerData[_0x49ce6e];customerData[_0x49ce6e]=_0x5d3459;let _0x27799e=[];if(_0x5be531[_0x2b7bd6(0x214)]!==_0x5d3459[_0x2b7bd6(0x214)])_0x27799e[_0x2b7bd6(0x20d)](_0x2b7bd6(0x238)+_0x5be531[_0x2b7bd6(0x214)]+_0x2b7bd6(0x29d)+_0x5d3459[_0x2b7bd6(0x214)]);if(_0x5be531['paidAmount']!==_0x5d3459[_0x2b7bd6(0x232)])_0x27799e[_0x2b7bd6(0x20d)](_0x2b7bd6(0x21d)+_0x5be531[_0x2b7bd6(0x232)]+_0x2b7bd6(0x29d)+_0x5d3459[_0x2b7bd6(0x232)]);if(_0x5be531[_0x2b7bd6(0x1eb)]!==_0x5d3459[_0x2b7bd6(0x1eb)])_0x27799e[_0x2b7bd6(0x20d)](_0x2b7bd6(0x223)+_0x5be531[_0x2b7bd6(0x1eb)]+_0x2b7bd6(0x29d)+_0x5d3459[_0x2b7bd6(0x1eb)]);const _0x257d18=_0x27799e[_0x2b7bd6(0x1d8)]>0x0?'\x20('+_0x27799e['join'](',\x20')+')':'';addLog(_0x2b7bd6(0x1ea)+_0x3409a0+_0x257d18);}else{customerData[_0x2b7bd6(0x20d)](_0x5d3459);const _0x165dc7=_0x5d3459['totalAmount']-_0x5d3459[_0x2b7bd6(0x232)];addLog('Yeni\x20Müşteri\x20Eklendi:\x20'+_0x3409a0+_0x2b7bd6(0x2a5)+_0x5d3459[_0x2b7bd6(0x26e)]+_0x2b7bd6(0x2b8)+_0x5d3459[_0x2b7bd6(0x214)]+'₺\x20|\x20Alınan:\x20'+_0x5d3459[_0x2b7bd6(0x232)]+_0x2b7bd6(0x1e3)+_0x165dc7+'₺');}closeCustomerModal(),renderCustomers(),document['getElementById'](_0x2b7bd6(0x1d7))[_0x2b7bd6(0x249)]['display']=_0x2b7bd6(0x226);}function deleteCustomer(){const _0x9617c=_0x3bf18e;if(confirm('Bu\x20müşteri\x20kaydını\x20silmek\x20istediğinize\x20emin\x20misiniz?')){const _0x36872f=customerData[_0x9617c(0x26d)](_0x21794a=>_0x21794a['id']===currentCustId);customerData=customerData[_0x9617c(0x1e4)](_0x51824=>_0x51824['id']!==currentCustId),addLog(_0x9617c(0x282)+_0x36872f[_0x9617c(0x289)]),closeCustomerModal(),renderCustomers(),document[_0x9617c(0x1ee)]('globalSaveBtn')[_0x9617c(0x249)][_0x9617c(0x2a3)]=_0x9617c(0x226);}}function handleSearch(){const _0xb0e155=_0x3bf18e;if(activeTab===_0xb0e155(0x212))renderTable();else renderCustomers();}function handleDragStart(_0x10df2e){const _0x22165d=_0x3bf18e;draggedItemId=parseFloat(_0x10df2e[_0x22165d(0x280)]['dataset']['id']),_0x10df2e[_0x22165d(0x280)][_0x22165d(0x25a)][_0x22165d(0x269)](_0x22165d(0x236)),_0x10df2e[_0x22165d(0x22b)][_0x22165d(0x292)]='move';}function handleDragEnd(_0x200f29){const _0xa6acb7=_0x3bf18e;_0x200f29[_0xa6acb7(0x280)]['classList']['remove']('dragging'),document[_0xa6acb7(0x2b4)]('tr')['forEach'](_0x50accf=>_0x50accf['classList']['remove']('drag-over-top','drag-over-bottom',_0xa6acb7(0x262)));}function handleDragOver(_0xabfb0d){const _0x31f0c6=_0x3bf18e;_0xabfb0d['preventDefault']();const _0x2170c5=_0xabfb0d[_0x31f0c6(0x280)][_0x31f0c6(0x21f)]('tr');if(_0x2170c5&&!_0x2170c5['classList'][_0x31f0c6(0x281)]('dragging')){if(_0x2170c5['classList'][_0x31f0c6(0x281)](_0x31f0c6(0x247))){const _0x29b31e=_0xabfb0d[_0x31f0c6(0x2ba)]-_0x2170c5['getBoundingClientRect']()[_0x31f0c6(0x2b7)];_0x2170c5[_0x31f0c6(0x25a)][_0x31f0c6(0x295)](_0x31f0c6(0x29e),_0x31f0c6(0x220)),_0x2170c5['classList'][_0x31f0c6(0x269)](_0x29b31e<_0x2170c5[_0x31f0c6(0x1e0)]/0x2?_0x31f0c6(0x29e):'drag-over-bottom');}else{if(_0x2170c5[_0x31f0c6(0x25a)][_0x31f0c6(0x281)](_0x31f0c6(0x1f6)))_0x2170c5[_0x31f0c6(0x25a)][_0x31f0c6(0x269)](_0x31f0c6(0x262));}}}function handleDragLeave(_0x50b6fb){const _0x22b495=_0x3bf18e,_0x460609=_0x50b6fb[_0x22b495(0x280)][_0x22b495(0x21f)]('tr');if(_0x460609)_0x460609['classList']['remove'](_0x22b495(0x29e),'drag-over-bottom',_0x22b495(0x262));}function handleDrop(_0x452847){const _0x521bd3=_0x3bf18e;_0x452847['preventDefault'](),_0x452847['stopPropagation']();if(!draggedItemId)return;const _0x250e13=_0x452847[_0x521bd3(0x280)]['closest']('tr');if(!_0x250e13)return;const _0x98ee71=productData[_0x521bd3(0x26d)](_0x239a2c=>_0x239a2c['id']===draggedItemId),_0x548d9e=productData[_0x521bd3(0x221)](_0x98ee71);if(_0x250e13['classList']['contains'](_0x521bd3(0x1f6))){const _0x4a142b=_0x250e13['querySelector'](_0x521bd3(0x23e))['innerText'];if(_0x98ee71[_0x521bd3(0x243)]!==_0x4a142b){_0x98ee71[_0x521bd3(0x243)]=_0x4a142b,productData[_0x521bd3(0x27e)](_0x548d9e,0x1);const _0x205f2b=productData[_0x521bd3(0x27d)](_0x45b001=>_0x45b001[_0x521bd3(0x243)]===_0x4a142b);if(_0x205f2b>-0x1)productData['splice'](_0x205f2b,0x0,_0x98ee71);else productData[_0x521bd3(0x20d)](_0x98ee71);openCategories['add'](_0x4a142b);}}else{if(_0x250e13[_0x521bd3(0x25a)][_0x521bd3(0x281)](_0x521bd3(0x247))){const _0x405e4e=parseFloat(_0x250e13[_0x521bd3(0x1fb)]['id']),_0xaf1e21=productData['find'](_0x2196dc=>_0x2196dc['id']===_0x405e4e);if(_0x98ee71!==_0xaf1e21){if(_0x98ee71[_0x521bd3(0x243)]!==_0xaf1e21[_0x521bd3(0x243)])_0x98ee71[_0x521bd3(0x243)]=_0xaf1e21[_0x521bd3(0x243)];productData['splice'](_0x548d9e,0x1);const _0x29e0ec=productData['indexOf'](_0xaf1e21);productData['splice'](_0x250e13[_0x521bd3(0x25a)]['contains']('drag-over-bottom')?_0x29e0ec+0x1:_0x29e0ec,0x0,_0x98ee71);}}}handleDragEnd({'target':document[_0x521bd3(0x2ad)]('.dragging')}),renderTable(),document[_0x521bd3(0x1ee)](_0x521bd3(0x1d7))['style'][_0x521bd3(0x2a3)]=_0x521bd3(0x226);}function renderTable(){const _0x45a3dd=_0x3bf18e,_0x178088=document[_0x45a3dd(0x1ee)]('tableBody');_0x178088[_0x45a3dd(0x21e)]='';const _0x3f18eb=document[_0x45a3dd(0x1ee)](_0x45a3dd(0x252))[_0x45a3dd(0x227)]['toLowerCase']();if(productData[_0x45a3dd(0x1d8)]===0x0){_0x178088[_0x45a3dd(0x21e)]=_0x45a3dd(0x253),calculateTotal();return;}let _0x2024d5=productData;if(_0x3f18eb)_0x2024d5=productData[_0x45a3dd(0x1e4)](_0x5f5316=>_0x5f5316[_0x45a3dd(0x289)][_0x45a3dd(0x2a2)]()['includes'](_0x3f18eb));let _0x1a40bf=null;_0x2024d5[_0x45a3dd(0x1f4)](_0x1d6ca6=>{const _0x13d1f1=_0x45a3dd,_0x505050=productData[_0x13d1f1(0x221)](_0x1d6ca6)+0x1;if(_0x1d6ca6[_0x13d1f1(0x243)]!==_0x1a40bf){_0x1a40bf=_0x1d6ca6[_0x13d1f1(0x243)];const _0x56ef9e=openCategories[_0x13d1f1(0x2b9)](_0x1a40bf)||_0x3f18eb[_0x13d1f1(0x1d8)]>0x0,_0x137921=_0x56ef9e?_0x13d1f1(0x276):_0x13d1f1(0x296),_0x47b739=document[_0x13d1f1(0x22c)]('tr');_0x47b739[_0x13d1f1(0x1e5)]=_0x13d1f1(0x1f6),_0x47b739['addEventListener'](_0x13d1f1(0x250),handleDragOver),_0x47b739['addEventListener'](_0x13d1f1(0x20f),handleDragLeave),_0x47b739[_0x13d1f1(0x26b)](_0x13d1f1(0x21c),handleDrop),_0x47b739['innerHTML']=_0x13d1f1(0x246)+_0x1a40bf+_0x13d1f1(0x261)+_0x1a40bf+_0x13d1f1(0x1f7)+_0x137921+_0x13d1f1(0x278)+_0x1a40bf+'\x27)\x22><i\x20class=\x22fa-solid\x20fa-pen\x22></i></button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',_0x178088[_0x13d1f1(0x257)](_0x47b739);}const _0x46601f=openCategories[_0x13d1f1(0x2b9)](_0x1d6ca6['category'])||_0x3f18eb[_0x13d1f1(0x1d8)]>0x0;if(_0x46601f){const _0x57c375=document[_0x13d1f1(0x22c)]('tr');_0x57c375[_0x13d1f1(0x1e5)]=_0x13d1f1(0x247),_0x57c375[_0x13d1f1(0x1fb)]['id']=_0x1d6ca6['id'];!_0x3f18eb&&(_0x57c375[_0x13d1f1(0x2ac)](_0x13d1f1(0x205),!![]),_0x57c375[_0x13d1f1(0x26b)](_0x13d1f1(0x1fe),handleDragStart),_0x57c375[_0x13d1f1(0x26b)](_0x13d1f1(0x250),handleDragOver),_0x57c375[_0x13d1f1(0x26b)](_0x13d1f1(0x20f),handleDragLeave),_0x57c375['addEventListener'](_0x13d1f1(0x21c),handleDrop),_0x57c375[_0x13d1f1(0x26b)](_0x13d1f1(0x20e),handleDragEnd));const _0x2989a7=_0x1d6ca6[_0x13d1f1(0x2a9)]===0x0?'':_0x1d6ca6[_0x13d1f1(0x2a9)],_0x24f72b=_0x1d6ca6['qty']===0x0?'':_0x1d6ca6[_0x13d1f1(0x229)],_0x2e0bda=_0x13d1f1(0x258)+_0x1d6ca6['id']+_0x13d1f1(0x1d0)+_0x1d6ca6['name']+_0x13d1f1(0x1f9);_0x57c375[_0x13d1f1(0x21e)]=_0x13d1f1(0x1f3)+_0x505050+_0x13d1f1(0x1ce)+_0x1d6ca6[_0x13d1f1(0x289)]+_0x13d1f1(0x255)+_0x1d6ca6['id']+_0x13d1f1(0x2b6)+_0x2989a7+_0x13d1f1(0x255)+_0x1d6ca6['id']+_0x13d1f1(0x206)+_0x1d6ca6['id']+_0x13d1f1(0x2b2)+_0x24f72b+_0x13d1f1(0x23c)+_0x1d6ca6['id']+_0x13d1f1(0x225)+_0x1d6ca6['id']+',\x201)\x22>+</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20data-label=\x22Toplam\x22\x20style=\x22text-align:right;\x20font-weight:bold;\x20color:var(--primary);\x22\x20id=\x22total-'+_0x1d6ca6['id']+'\x22>'+(_0x1d6ca6[_0x13d1f1(0x2a9)]*_0x1d6ca6[_0x13d1f1(0x229)])[_0x13d1f1(0x2a8)]('tr-TR',{'minimumFractionDigits':0x2})+_0x13d1f1(0x1cf)+_0x2e0bda+_0x13d1f1(0x2a1),_0x178088[_0x13d1f1(0x257)](_0x57c375);}}),calculateTotal();}function updateData(_0x3b9cd2,_0x2c3702,_0x372164){const _0x146495=_0x3bf18e,_0x3766f2=productData[_0x146495(0x26d)](_0x513842=>_0x513842['id']===_0x3b9cd2);if(!_0x3766f2)return;if(_0x2c3702==='price')_0x3766f2[_0x2c3702]=parseFloat(_0x372164)||0x0;else _0x3766f2[_0x2c3702]=_0x372164;if(_0x2c3702===_0x146495(0x2a9))document['getElementById']('total-'+_0x3b9cd2)[_0x146495(0x218)]=(_0x3766f2['price']*_0x3766f2[_0x146495(0x229)])[_0x146495(0x2a8)]('tr-TR',{'minimumFractionDigits':0x2})+'\x20₺';calculateTotal(),document[_0x146495(0x1ee)](_0x146495(0x1d7))[_0x146495(0x249)]['display']=_0x146495(0x226);}function updateQty(_0x37c280,_0x5396fa){const _0x20699a=_0x3bf18e,_0x4a63e2=productData['find'](_0x51429a=>_0x51429a['id']===_0x37c280);if(!_0x4a63e2)return;let _0x1d14eb=(_0x4a63e2[_0x20699a(0x229)]||0x0)+_0x5396fa;if(_0x1d14eb<0x0)_0x1d14eb=0x0;_0x4a63e2['qty']=_0x1d14eb,renderTable(),document[_0x20699a(0x1ee)](_0x20699a(0x1d7))[_0x20699a(0x249)][_0x20699a(0x2a3)]=_0x20699a(0x226);}function updateQtyManual(_0x54edc4,_0x56c7f8){const _0x26baae=_0x3bf18e,_0x343556=productData['find'](_0xe1ddad=>_0xe1ddad['id']===_0x54edc4);if(!_0x343556)return;_0x343556[_0x26baae(0x229)]=parseInt(_0x56c7f8)||0x0,document[_0x26baae(0x1ee)]('total-'+_0x54edc4)[_0x26baae(0x218)]=(_0x343556[_0x26baae(0x2a9)]*_0x343556[_0x26baae(0x229)])['toLocaleString']('tr-TR',{'minimumFractionDigits':0x2})+'\x20₺',calculateTotal(),document[_0x26baae(0x1ee)](_0x26baae(0x1d7))[_0x26baae(0x249)][_0x26baae(0x2a3)]=_0x26baae(0x226);}function calculateTotal(){const _0x129f88=_0x3bf18e,_0x9da8d9=productData['reduce']((_0x56d15e,_0x25adcc)=>_0x56d15e+_0x25adcc[_0x129f88(0x2a9)]*_0x25adcc['qty'],0x0);document[_0x129f88(0x1ee)]('grandTotal')[_0x129f88(0x218)]=_0x9da8d9[_0x129f88(0x2a8)](_0x129f88(0x29c),{'minimumFractionDigits':0x2})+'\x20₺';}function toggleCategory(_0x3918d5){const _0x3452fd=_0x3bf18e;if(openCategories[_0x3452fd(0x2b9)](_0x3918d5))openCategories[_0x3452fd(0x2a4)](_0x3918d5);else openCategories['add'](_0x3918d5);renderTable();}function editCategoryName(_0x5af213){const _0x33dc71=_0x3bf18e,_0x16f63a=prompt(_0x33dc71(0x2b1),_0x5af213);if(_0x16f63a===null)return;if(_0x16f63a[_0x33dc71(0x213)]()==='')confirm('\x22'+_0x5af213+'\x22\x20silinsin\x20mi?\x20Ürünler\x20GENEL\x20LİSTE\x27ye\x20geçer.')&&(productData[_0x33dc71(0x1f4)](_0x4ead4b=>{const _0xbea66=_0x33dc71;if(_0x4ead4b[_0xbea66(0x243)]===_0x5af213)_0x4ead4b[_0xbea66(0x243)]='GENEL\x20LİSTE';}),openCategories[_0x33dc71(0x2a4)](_0x5af213),openCategories['add'](_0x33dc71(0x29a)),addLog(_0x33dc71(0x1f5)+_0x5af213),renderTable(),document[_0x33dc71(0x1ee)]('globalSaveBtn')[_0x33dc71(0x249)][_0x33dc71(0x2a3)]=_0x33dc71(0x226));else _0x16f63a!==_0x5af213&&(productData[_0x33dc71(0x1f4)](_0x172900=>{const _0x370ffb=_0x33dc71;if(_0x172900[_0x370ffb(0x243)]===_0x5af213)_0x172900[_0x370ffb(0x243)]=_0x16f63a['trim']()[_0x370ffb(0x215)]();}),openCategories[_0x33dc71(0x2a4)](_0x5af213),openCategories[_0x33dc71(0x269)](_0x16f63a['trim']()['toUpperCase']()),addLog(_0x33dc71(0x23a)+_0x5af213),renderTable(),document[_0x33dc71(0x1ee)]('globalSaveBtn')[_0x33dc71(0x249)][_0x33dc71(0x2a3)]=_0x33dc71(0x226));}function deleteItem(_0x2fb263,_0x1d26c3){const _0x1b1bdd=_0x3bf18e;confirm(_0x1d26c3+_0x1b1bdd(0x1e2))&&(productData=productData[_0x1b1bdd(0x1e4)](_0x487291=>_0x487291['id']!==_0x2fb263),addLog(_0x1d26c3+'\x20silindi.'),renderTable(),document[_0x1b1bdd(0x1ee)](_0x1b1bdd(0x1d7))[_0x1b1bdd(0x249)][_0x1b1bdd(0x2a3)]=_0x1b1bdd(0x226));}function resetAll(){const _0x309c4b=_0x3bf18e;confirm(_0x309c4b(0x24a))&&(productData=[],addLog(_0x309c4b(0x1ef)),renderTable(),document[_0x309c4b(0x1ee)]('globalSaveBtn')[_0x309c4b(0x249)][_0x309c4b(0x2a3)]=_0x309c4b(0x226));}function openModal(){const _0x3562dd=_0x3bf18e,_0x129e03=document['getElementById']('newCat'),_0x175e7f=[...new Set(productData[_0x3562dd(0x1d5)](_0x4c43c9=>_0x4c43c9['category']))];_0x129e03[_0x3562dd(0x21e)]=_0x3562dd(0x1e8)+_0x175e7f[_0x3562dd(0x1d5)](_0x515171=>_0x3562dd(0x28e)+_0x515171+_0x3562dd(0x2b0))['join']('')+'<option\x20value=\x22NEW\x22>+\x20YENİ</option>',document[_0x3562dd(0x1ee)](_0x3562dd(0x210))[_0x3562dd(0x249)][_0x3562dd(0x2a3)]=_0x3562dd(0x226);}function checkNewCat(_0x18cb5f){const _0x353d40=_0x3bf18e;document[_0x353d40(0x1ee)]('newCatText')[_0x353d40(0x249)]['display']=_0x18cb5f[_0x353d40(0x227)]==='NEW'?_0x353d40(0x267):'none';}function closeModal(){const _0x2165c0=_0x3bf18e;document[_0x2165c0(0x1ee)]('addModal')['style'][_0x2165c0(0x2a3)]=_0x2165c0(0x248);}function addNewProduct(){const _0x117e01=_0x3bf18e,_0x20f9f9=document[_0x117e01(0x1ee)](_0x117e01(0x22a))[_0x117e01(0x227)],_0x23114f=document[_0x117e01(0x1ee)]('newCatText')[_0x117e01(0x227)];let _0x3a4bae=(_0x20f9f9==='NEW'?_0x23114f:_0x20f9f9)[_0x117e01(0x213)]()[_0x117e01(0x215)]();if(!_0x3a4bae)_0x3a4bae='GENEL\x20LİSTE';const _0x1e00e6=document[_0x117e01(0x1ee)]('newName')[_0x117e01(0x227)];if(!_0x1e00e6){alert(_0x117e01(0x211));return;}productData[_0x117e01(0x20d)]({'id':Date[_0x117e01(0x1e7)](),'category':_0x3a4bae,'name':_0x1e00e6,'price':parseFloat(document[_0x117e01(0x1ee)](_0x117e01(0x208))['value'])||0x0,'qty':parseInt(document[_0x117e01(0x1ee)]('newQty')[_0x117e01(0x227)])||0x1}),addLog(_0x1e00e6+_0x117e01(0x1f1)),openCategories[_0x117e01(0x269)](_0x3a4bae),closeModal(),renderTable(),document[_0x117e01(0x1ee)](_0x117e01(0x1d7))[_0x117e01(0x249)]['display']=_0x117e01(0x226);}function processExcel(_0x42eecd){const _0x584f33=_0x3bf18e,_0x11b299=_0x42eecd[_0x584f33(0x1f0)][0x0];if(!_0x11b299)return;const _0xa0befc=new FileReader();_0xa0befc[_0x584f33(0x201)]=function(_0x388570){const _0x38ef68=_0x584f33,_0x402ad5=XLSX[_0x38ef68(0x217)][_0x38ef68(0x272)](XLSX['read'](_0x388570[_0x38ef68(0x280)][_0x38ef68(0x288)],{'type':_0x38ef68(0x1c9)})[_0x38ef68(0x219)][XLSX[_0x38ef68(0x24d)](_0x388570[_0x38ef68(0x280)][_0x38ef68(0x288)],{'type':_0x38ef68(0x1c9)})[_0x38ef68(0x26f)][0x0]],{'header':0x1,'defval':''});parseRowsSmart(_0x402ad5,detectColumns(_0x402ad5));},_0xa0befc['readAsArrayBuffer'](_0x11b299),_0x42eecd[_0x584f33(0x227)]='';}function _0x29de(){const _0xd45cbd=['customers','Tutar:\x20','KATEGORİ','Kategori\x20Değişti:\x20','replace','\x22\x20oninput=\x22updateQtyManual(','</span>','.cat-actions\x20span','book_new','number','ADET','Yeni\x20Müşteri\x20Ekle','category','ÜRÜN','Azaldı','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20colspan=\x226\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22cat-actions\x22\x20onclick=\x22toggleCategory(\x27','item-row','none','style','Tüm\x20stok\x20listesi\x20silinecek?','appContainer','div','read','Tamamlandı.','\x20Stoğu:\x20','dragover','onclick','searchInput','<tr><td\x20colspan=\x226\x22\x20style=\x22text-align:center;\x20padding:40px;\x22>Liste\x20Boş.</td></tr>','custRest','\x22\x20oninput=\x22updateData(','pop','appendChild','<td\x20class=\x22trash-cell\x22\x20style=\x22text-align:center;\x22><i\x20class=\x22fa-solid\x20fa-trash\x22\x20style=\x22color:#ef4444;\x20cursor:pointer;\x22\x20onclick=\x22deleteItem(','<i\x20class=\x22fa-solid\x20fa-spinner\x20fa-spin\x22></i>','classList','book_append_sheet','action','\x22\x20target=\x22_blank\x22\x20class=\x22action-btn\x20whatsapp\x22><i\x20class=\x22fa-brands\x20fa-whatsapp\x22></i>\x20Yaz</a>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','Excel:\x20','<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:10px;\x22>','Görüşülüyor','\x27)\x22\x20style=\x22flex-grow:1;\x20display:flex;\x20align-items:center;\x20justify-content:space-between;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span>','drag-over','customerModal','</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Silindi','71136sMtbod','block','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22cust-header\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><div\x20class=\x22cust-name\x22>','add','\x20₺</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22cust-actions\x22\x20onclick=\x22event.stopPropagation()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<a\x20href=\x22tel:','addEventListener','custPaymentType','find','device','SheetNames','notes','custNotes','sheet_to_json','İsim\x20giriniz.','error','9643098myWUMj','rotate(-180deg)','7Btsbvk','\x22></i>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22cat-edit-btn\x22\x20onclick=\x22event.stopPropagation();\x20editCategoryName(\x27','\x20Fiyatı:\x20','11012xjcKjg','customerView','Başarıyla\x20Kaydedildi!','findIndex','splice','note','target','contains','Müşteri\x20Silindi:\x20','custPaid','2410270auFKHh','reload','btnDeleteCust','düştü','result','name','STOK','Eklemek\x20istediğiniz\x20not:','oninput','Müşteriler','<option>','1058244GHliYM','Focus_Medikal_Full_Data.xlsx','Eklendi','effectAllowed','Müşteri\x20Düzenle','</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:0.85rem;\x20color:#64748b;\x20margin-bottom:10px;\x22><i\x20class=\x22fa-solid\x20fa-phone\x22></i>\x20','remove','rotate(0deg)','min','phone','saveModal','GENEL\x20LİSTE','Teslim\x20Edildi','tr-TR','\x20->\x20','drag-over-top','customerControls','join','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','toLowerCase','display','delete','\x20|\x20Cihaz:\x20','\x20yeni,\x20','MzU4MDM0','toLocaleString','price','some','447mlGPQw','setAttribute','querySelector','1722890ZCIyOo','custName','</option>','Kategori\x20adı\x20(Silmek\x20için\x20boş\x20bırakın):',',\x20-1)\x22>-</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22number\x22\x20class=\x22qty-val\x22\x20placeholder=\x220\x22\x20value=\x22','saveNote','querySelectorAll','\x20(Not:\x20',',\x20\x27name\x27,\x20this.value)\x22></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20data-label=\x22Fiyat\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22price-wrapper\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22number\x22\x20class=\x22input-clean\x20price-input\x22\x20placeholder=\x220\x22\x20value=\x22','top','\x20|\x20Anlaşılan:\x20','has','clientY','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:0.8rem;\x20background:#f1f5f9;\x20padding:5px;\x20border-radius:4px;\x22><b>Kalan:</b>\x20','user','array','Hata\x20oluştu.','FİYAT','badge-inc','Stok\x20Listesi','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20data-label=\x22Ürün\x22><input\x20type=\x22text\x22\x20class=\x22input-clean\x22\x20value=\x22','\x20₺</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',',\x20\x27','1278fXvQdr','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:10px;\x22><span\x20class=\x22badge\x20badge-admin\x22>','date','badge-dec','map','loginPassword','globalSaveBtn','length','products','Sisteme\x20giriş\x20yapıldı.','loading','no-cors','random','custModalTitle','toString','offsetHeight','logTableBody','\x20silinecek?','₺\x20|\x20Kalan:\x20','filter','className','logs','now','<option>GENEL\x20LİSTE</option>','stockControls','Müşteri\x20Güncellendi:\x20','status','status-gorusuluyor','<span\x20class=\x22log-extra-note\x22><i\x20class=\x22fa-solid\x20fa-comment-dots\x22></i>\x20','getElementById','Stok\x20sıfırlandı.','files','\x20eklendi.','json','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20class=\x22index-cell\x22>','forEach','Kategori\x20Silindi:\x20','cat-row','</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<i\x20class=\x22fa-solid\x20fa-chevron-down\x20cat-icon\x22\x20style=\x22transform:','unshift','\x27)\x22></i></td>','Peşin','dataset','</div><span\x20class=\x22cust-device\x22>','custDevice','dragstart','currentTarget','loginError','onload','88RQIDKx','Arttı','logModal','draggable',',\x20\x27price\x27,\x20this.value)\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22currency\x22>₺</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20data-label=\x22Adet\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22qty-wrapper\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22qty-btn\x22\x20onclick=\x22updateQty(','includes','newPrice','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22text-align:center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22log-edit-btn\x22\x20onclick=\x22editLogDesc(','stringify','https://script.google.com/macros/s/AKfycbwD1FGTyl8mKNugEc3ysxzHEeTUnoNSW4eE8azQvyR9_1kydvhsUQy_BMn15NnMnpnv/exec','İptal','push','dragend','dragleave','addModal','Ürün\x20adı\x20girin','stock','trim','totalAmount','toUpperCase','custPhone','utils','innerText','Sheets',')\x22><i\x20class=\x22fa-solid\x20fa-pen-to-square\x22></i></button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</tr>','loginScreen','drop','Ödenen:\x20','innerHTML','closest','drag-over-bottom','indexOf','7017440lrgpOw','Durum:\x20','POST',',\x20this.value)\x22\x20onfocus=\x22this.select()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22qty-btn\x22\x20onclick=\x22updateQty(','flex','value','TABLOSU','qty','newCat','dataTransfer','createElement','json_to_sheet','Teklif\x20Verildi','abs','custTotal','stockView','paidAmount','custStatus','isStructured','\x20Adet\x20','dragging'];_0x29de=function(){return _0xd45cbd;};return _0x29de();}function detectColumns(_0x11f25d){const _0x560bf3=_0x3bf18e;let _0x1ef407={'name':0x0,'stock':0x1,'price':0x2,'category':-0x1,'isStructured':![]};for(let _0x3f03a7=0x0;_0x3f03a7<Math[_0x560bf3(0x297)](_0x11f25d[_0x560bf3(0x1d8)],0xa);_0x3f03a7++){const _0x4af899=_0x11f25d[_0x3f03a7][_0x560bf3(0x1d5)](_0x4b2e53=>String(_0x4b2e53)[_0x560bf3(0x215)]()[_0x560bf3(0x213)]());if(_0x4af899[_0x560bf3(0x207)]('ÜRÜN')&&(_0x4af899[_0x560bf3(0x207)](_0x560bf3(0x1cb))||_0x4af899[_0x560bf3(0x207)](_0x560bf3(0x241)))){_0x1ef407[_0x560bf3(0x234)]=!![],_0x1ef407[_0x560bf3(0x289)]=_0x4af899[_0x560bf3(0x221)](_0x560bf3(0x244));if(_0x4af899[_0x560bf3(0x207)](_0x560bf3(0x241)))_0x1ef407[_0x560bf3(0x212)]=_0x4af899[_0x560bf3(0x221)](_0x560bf3(0x241));else{if(_0x4af899[_0x560bf3(0x207)](_0x560bf3(0x28a)))_0x1ef407[_0x560bf3(0x212)]=_0x4af899['indexOf'](_0x560bf3(0x28a));}if(_0x4af899['includes'](_0x560bf3(0x1cb)))_0x1ef407['price']=_0x4af899[_0x560bf3(0x221)](_0x560bf3(0x1cb));if(_0x4af899[_0x560bf3(0x207)](_0x560bf3(0x239)))_0x1ef407[_0x560bf3(0x243)]=_0x4af899[_0x560bf3(0x221)]('KATEGORİ');break;}}return _0x1ef407;}function parseRowsSmart(_0x4ff8d7,_0x4a4d49){const _0x49b328=_0x3bf18e;let _0x264db7=0x0,_0x3ceda7=0x0,_0x47668e=_0x49b328(0x29a);_0x4ff8d7[_0x49b328(0x1f4)](_0x36dc8e=>{const _0xff8873=_0x49b328;if(!_0x36dc8e||_0x36dc8e['length']===0x0)return;let _0x4cfb1a='',_0x2515c5=0x0,_0x462cce=0x0,_0xae785b='';if(_0x4a4d49[_0xff8873(0x234)]){_0x4cfb1a=(_0x36dc8e[_0x4a4d49[_0xff8873(0x289)]]||'')['toString']()[_0xff8873(0x213)]();if(!_0x4cfb1a||[_0xff8873(0x244),_0xff8873(0x28a),'FİYAT'][_0xff8873(0x2aa)](_0x5b754e=>_0x4cfb1a[_0xff8873(0x215)]()[_0xff8873(0x207)](_0x5b754e)))return;_0x2515c5=cleanPrice(_0x36dc8e[_0x4a4d49['stock']]),_0x462cce=cleanPrice(_0x36dc8e[_0x4a4d49[_0xff8873(0x2a9)]]);if(_0x4a4d49[_0xff8873(0x243)]>-0x1&&_0x36dc8e[_0x4a4d49['category']]){let _0x5979c5=_0x36dc8e[_0x4a4d49[_0xff8873(0x243)]][_0xff8873(0x1df)]()[_0xff8873(0x213)]();if(_0x5979c5)_0x47668e=_0x5979c5['toUpperCase']();}_0xae785b=_0x47668e;}else{let _0x41ec49=(_0x36dc8e[0x0]||'')['toString']()[_0xff8873(0x213)](),_0x495a2e=(_0x36dc8e[0x1]||'')['toString']()[_0xff8873(0x213)](),_0x3e5f69=(_0x36dc8e[0x2]||'')[_0xff8873(0x1df)]()[_0xff8873(0x213)]();if(!_0x41ec49&&_0x3e5f69&&isNaN(cleanPrice(_0x3e5f69))){if(!['TOPLAM',_0xff8873(0x228)]['some'](_0x2f1f99=>_0x3e5f69[_0xff8873(0x215)]()[_0xff8873(0x207)](_0x2f1f99)))_0x47668e=_0x3e5f69[_0xff8873(0x215)]();return;}if(!_0x41ec49||['ÜRÜN',_0xff8873(0x28a)]['some'](_0x5c172d=>_0x41ec49[_0xff8873(0x215)]()[_0xff8873(0x207)](_0x5c172d)))return;_0x4cfb1a=_0x41ec49,_0x2515c5=cleanPrice(_0x495a2e),_0x462cce=cleanPrice(_0x3e5f69),_0xae785b=_0x47668e;}const _0x5520e3=productData[_0xff8873(0x26d)](_0x3511a6=>_0x3511a6[_0xff8873(0x289)][_0xff8873(0x213)]()['toLowerCase']()===_0x4cfb1a[_0xff8873(0x2a2)]());_0x5520e3?(_0x5520e3[_0xff8873(0x2a9)]!==_0x462cce||_0x5520e3[_0xff8873(0x229)]!==_0x2515c5)&&(_0x5520e3[_0xff8873(0x2a9)]=_0x462cce,_0x5520e3[_0xff8873(0x229)]=_0x2515c5,_0x3ceda7++):(productData[_0xff8873(0x20d)]({'id':Date[_0xff8873(0x1e7)]()+Math['random'](),'category':_0xae785b,'name':_0x4cfb1a,'price':_0x462cce,'qty':_0x2515c5}),_0x264db7++);}),[...new Set(productData[_0x49b328(0x1d5)](_0x35ea15=>_0x35ea15[_0x49b328(0x243)]))][_0x49b328(0x1f4)](_0x1caf92=>openCategories[_0x49b328(0x269)](_0x1caf92)),(_0x264db7>0x0||_0x3ceda7>0x0)&&(addLog(_0x49b328(0x25e)+_0x264db7+_0x49b328(0x2a6)+_0x3ceda7+'\x20güncel'),alert(_0x49b328(0x24e)),document[_0x49b328(0x1ee)](_0x49b328(0x1d7))[_0x49b328(0x249)][_0x49b328(0x2a3)]='flex',renderTable());}function cleanPrice(_0x2e051b){const _0xfee38c=_0x3bf18e;if(typeof _0x2e051b===_0xfee38c(0x240))return _0x2e051b;if(!_0x2e051b)return 0x0;let _0x1b0dfe=_0x2e051b[_0xfee38c(0x1df)]()[_0xfee38c(0x23b)](/[^0-9.,]/g,'');if(_0x1b0dfe[_0xfee38c(0x207)](',')&&_0x1b0dfe[_0xfee38c(0x207)]('.'))_0x1b0dfe=_0x1b0dfe[_0xfee38c(0x23b)](/\./g,'')[_0xfee38c(0x23b)](',','.');else{if(_0x1b0dfe[_0xfee38c(0x207)](','))_0x1b0dfe=_0x1b0dfe[_0xfee38c(0x23b)](',','.');else{if(_0x1b0dfe[_0xfee38c(0x207)]('.')&&_0x1b0dfe['split']('.')[0x1][_0xfee38c(0x1d8)]===0x3)_0x1b0dfe=_0x1b0dfe[_0xfee38c(0x23b)](/\./g,'');}}return parseFloat(_0x1b0dfe)||0x0;}function exportToExcel(){const _0x188dbd=_0x3bf18e,_0x6340f6=productData[_0x188dbd(0x1d5)](_0x139689=>({'KATEGORİ':_0x139689[_0x188dbd(0x243)],'ÜRÜN':_0x139689['name'],'FİYAT':_0x139689[_0x188dbd(0x2a9)],'ADET':_0x139689['qty'],'TOPLAM':_0x139689['price']*_0x139689[_0x188dbd(0x229)]})),_0x3c2cc5=customerData[_0x188dbd(0x1d5)](_0x1b9f68=>({'AD\x20SOYAD':_0x1b9f68['name'],'TELEFON':_0x1b9f68[_0x188dbd(0x298)],'CİHAZ':_0x1b9f68[_0x188dbd(0x26e)],'DURUM':_0x1b9f68[_0x188dbd(0x1eb)],'TOPLAM':_0x1b9f68[_0x188dbd(0x214)],'ALINAN':_0x1b9f68[_0x188dbd(0x232)],'KALAN':_0x1b9f68[_0x188dbd(0x214)]-_0x1b9f68['paidAmount'],'NOT':_0x1b9f68[_0x188dbd(0x270)]})),_0xcd2377=logData[_0x188dbd(0x1d5)](_0x463fd2=>({'TARİH':_0x463fd2['date'],'KULLANICI':_0x463fd2[_0x188dbd(0x1c8)],'AÇIKLAMA':_0x463fd2[_0x188dbd(0x25c)],'NOT':_0x463fd2['note']||''})),_0xfe135e=XLSX[_0x188dbd(0x217)][_0x188dbd(0x23f)]();XLSX[_0x188dbd(0x217)][_0x188dbd(0x25b)](_0xfe135e,XLSX['utils'][_0x188dbd(0x22d)](_0x6340f6),_0x188dbd(0x1cd)),XLSX[_0x188dbd(0x217)]['book_append_sheet'](_0xfe135e,XLSX[_0x188dbd(0x217)]['json_to_sheet'](_0x3c2cc5),_0x188dbd(0x28d)),XLSX[_0x188dbd(0x217)][_0x188dbd(0x25b)](_0xfe135e,XLSX['utils'][_0x188dbd(0x22d)](_0xcd2377),'Loglar'),XLSX['writeFile'](_0xfe135e,_0x188dbd(0x290));}
+// GÜNCEL API LİNKİ
+const API_URL = 'https://script.google.com/macros/s/AKfycbwD1FGTyl8mKNugEc3ysxzHEeTUnoNSW4eE8azQvyR9_1kydvhsUQy_BMn15NnMnpnv/exec'; 
+const ENCRYPTED_PASS = "MzU4MDM0"; 
+
+let productData = [];
+let customerData = [];
+let logData = []; 
+let originalState = {}; 
+let isAdmin = false;
+let currentUser = "Yönetici"; 
+let openCategories = new Set(); 
+let activeTab = 'stock';
+let currentCustId = null;
+let draggedItemId = null;
+let draggedItemIndex = -1;
+
+window.onload = function() { fetchData(); };
+
+// --- GİRİŞ ---
+function verifyLogin() {
+    const input = document.getElementById('loginPassword').value;
+    const errorMsg = document.getElementById('loginError');
+    if (btoa(input) === ENCRYPTED_PASS) {
+        isAdmin = true;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'block';
+        addLog("Sisteme giriş yapıldı.");
+        refreshCurrentView();
+    } else {
+        errorMsg.style.display = 'block';
+        document.getElementById('loginPassword').value = "";
+    }
+}
+function logout() { location.reload(); }
+
+// --- SEKME ---
+function switchTab(tabName) {
+    activeTab = tabName;
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    document.getElementById('stockView').style.display = tabName === 'stock' ? 'block' : 'none';
+    document.getElementById('customerView').style.display = tabName === 'customers' ? 'block' : 'none';
+    refreshCurrentView();
+}
+
+function refreshCurrentView() {
+    if(activeTab === 'stock') {
+        document.getElementById('stockControls').style.display = 'flex';
+        document.getElementById('customerControls').style.display = 'none';
+        renderTable();
+    } else {
+        document.getElementById('stockControls').style.display = 'none';
+        document.getElementById('customerControls').style.display = 'flex';
+        renderCustomers();
+    }
+}
+
+// --- VERİ ÇEKME ---
+async function fetchData() {
+    try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        if (data) {
+            productData = data.products || [];
+            customerData = data.customers || [];
+            logData = data.logs || [];
+        }
+        productData.forEach(p => { if(!p.id) p.id = Date.now() + Math.random(); });
+        customerData.forEach(c => { if(!c.id) c.id = Date.now() + Math.random(); });
+        storeOriginalState();
+        const cats = [...new Set(productData.map(p => p.category))];
+        cats.forEach(c => openCategories.add(c));
+        document.getElementById('loading').style.display = 'none';
+    } catch (err) { console.error(err); document.getElementById('loading').style.display = 'none'; }
+}
+
+function storeOriginalState() {
+    originalState = {};
+    productData.forEach(p => { originalState[p.id] = { ...p }; });
+}
+
+// --- LOG İŞLEMLERİ ---
+function addLog(action) {
+    const date = new Date().toLocaleString('tr-TR');
+    logData.unshift({ id: Date.now(), date: date, user: currentUser, action: action, note: "" });
+    if(logData.length > 5000) logData.pop(); 
+}
+
+function editLogDesc(index) {
+    // Sadece notu değiştirir, action'ı korur
+    const currentNote = logData[index].note || "";
+    const newNote = prompt("Eklemek istediğiniz not:", currentNote);
+    
+    if (newNote !== null) {
+        logData[index].note = newNote; // Action değişmez
+        saveToCloud();
+        openLogModal();
+    }
+}
+
+function openLogModal() {
+    const tbody = document.getElementById('logTableBody');
+    tbody.innerHTML = "";
+    logData.forEach((log, index) => {
+        let actionClass = "badge-info";
+        if(log.action.includes("Eklendi") || log.action.includes("artırıldı")) actionClass = "badge-inc";
+        if(log.action.includes("Silindi") || log.action.includes("azaltıldı") || log.action.includes("düştü")) actionClass = "badge-dec";
+        
+        // Not varsa altına ekle
+        const noteHtml = log.note ? `<span class="log-extra-note"><i class="fa-solid fa-comment-dots"></i> ${log.note}</span>` : '';
+
+        const row = `<tr>
+            <td style="padding:10px;">${log.date}</td>
+            <td style="padding:10px;"><span class="badge badge-admin">${log.user}</span></td>
+            <td style="padding:10px;">
+                <span class="${actionClass}" style="padding:2px 5px; border-radius:3px;">${log.action}</span>
+                ${noteHtml}
+            </td>
+            <td style="text-align:center;">
+                <button class="log-edit-btn" onclick="editLogDesc(${index})"><i class="fa-solid fa-pen-to-square"></i></button>
+            </td>
+        </tr>`;
+        tbody.innerHTML += row;
+    });
+    document.getElementById('logModal').style.display = 'flex';
+}
+function closeLogModal() { document.getElementById('logModal').style.display = 'none'; }
+
+// --- KAYDETME (DETAYLI ANALİZ) ---
+async function saveToCloud() {
+    const btn = document.getElementById('globalSaveBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    try {
+        const payload = { products: productData, customers: customerData, logs: logData };
+        await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+        alert("Başarıyla Kaydedildi!");
+        storeOriginalState();
+        btn.style.display = 'none';
+    } catch(e) { alert("Hata oluştu."); }
+    btn.innerHTML = originalText;
+}
+
+function openSaveModal() { document.getElementById('saveNote').value=""; document.getElementById('saveModal').style.display='flex'; }
+function closeSaveModal() { document.getElementById('saveModal').style.display='none'; }
+
+function confirmSave() {
+    const note = document.getElementById('saveNote').value.trim();
+    closeSaveModal();
+    let changesLog = [];
+    
+    // Stok Değişiklik Analizi
+    productData.forEach(p => {
+        const old = originalState[p.id];
+        if (!old) return;
+        
+        if (p.qty !== old.qty) {
+            const diff = p.qty - old.qty;
+            const dir = diff > 0 ? "Arttı" : "Azaldı";
+            changesLog.push(`${p.name} Stoğu: ${old.qty} -> ${p.qty} (${Math.abs(diff)} Adet ${dir})`);
+        }
+        if (p.price !== old.price) {
+            changesLog.push(`${p.name} Fiyatı: ${old.price}₺ -> ${p.price}₺ Olarak Güncellendi`);
+        }
+    });
+
+    if (changesLog.length > 0) {
+        // Çoklu satır formatı
+        const finalLog = changesLog.join(" | ");
+        addLog(finalLog + (note ? ` (Not: ${note})` : ""));
+    } else if (note) {
+        addLog(`Genel Not: ${note}`);
+    }
+    
+    saveToCloud();
+}
+
+// --- MÜŞTERİ YÖNETİMİ (DETAYLI LOG) ---
+function renderCustomers() {
+    const container = document.getElementById('customerList');
+    container.innerHTML = "";
+    const term = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = customerData.filter(c => (c.name && c.name.toLowerCase().includes(term)) || (c.device && c.device.toLowerCase().includes(term)));
+
+    if (filtered.length === 0) { container.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:#94a3b8; margin-top:20px;">Kayıt bulunamadı.</p>`; return; }
+
+    filtered.forEach(c => {
+        let statusClass = "status-gorusuluyor";
+        if(c.status === "Teklif Verildi") statusClass = "status-teklif";
+        if(c.status === "Kapora Alındı") statusClass = "status-kapora";
+        if(c.status === "Teslim Edildi") statusClass = "status-teslim";
+        if(c.status === "İptal") statusClass = "status-iptal";
+
+        const card = document.createElement('div');
+        card.className = "customer-card";
+        card.onclick = () => openCustomerModal(c.id);
+        
+        card.innerHTML = `
+            <div class="cust-header">
+                <div><div class="cust-name">${c.name}</div><span class="cust-device">${c.device || ''}</span></div>
+                <span class="cust-status ${statusClass}">${c.status}</span>
+            </div>
+            <div style="font-size:0.85rem; color:#64748b; margin-bottom:10px;"><i class="fa-solid fa-phone"></i> ${c.phone || '-'}</div>
+            <div style="font-size:0.8rem; background:#f1f5f9; padding:5px; border-radius:4px;"><b>Kalan:</b> ${(c.totalAmount - c.paidAmount).toLocaleString('tr-TR')} ₺</div>
+            <div class="cust-actions" onclick="event.stopPropagation()">
+                <a href="tel:${c.phone}" class="action-btn"><i class="fa-solid fa-phone"></i> Ara</a>
+                <a href="https://wa.me/90${c.phone ? c.phone.replace(/^0/,'').replace(/\s/g,'') : ''}" target="_blank" class="action-btn whatsapp"><i class="fa-brands fa-whatsapp"></i> Yaz</a>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function openCustomerModal(id = null) {
+    currentCustId = id;
+    const modal = document.getElementById('customerModal');
+    if (id) {
+        const c = customerData.find(x => x.id === id);
+        document.getElementById('custModalTitle').innerText = "Müşteri Düzenle";
+        document.getElementById('custName').value = c.name;
+        document.getElementById('custPhone').value = c.phone;
+        document.getElementById('custDevice').value = c.device;
+        document.getElementById('custPaymentType').value = c.paymentType;
+        document.getElementById('custStatus').value = c.status;
+        document.getElementById('custTotal').value = c.totalAmount || "";
+        document.getElementById('custPaid').value = c.paidAmount || "";
+        document.getElementById('custNotes').value = c.notes || "";
+        document.getElementById('btnDeleteCust').style.display = 'block';
+        updateRestAmount();
+    } else {
+        document.getElementById('custModalTitle').innerText = "Yeni Müşteri Ekle";
+        document.getElementById('custName').value = "";
+        document.getElementById('custPhone').value = "";
+        document.getElementById('custDevice').value = "";
+        document.getElementById('custPaymentType').value = "Peşin";
+        document.getElementById('custStatus').value = "Görüşülüyor";
+        document.getElementById('custTotal').value = "";
+        document.getElementById('custPaid').value = "";
+        document.getElementById('custRest').value = "";
+        document.getElementById('custNotes').value = "";
+        document.getElementById('btnDeleteCust').style.display = 'none';
+    }
+    document.getElementById('custTotal').oninput = updateRestAmount;
+    document.getElementById('custPaid').oninput = updateRestAmount;
+    modal.style.display = 'flex';
+}
+
+function updateRestAmount() {
+    const total = parseFloat(document.getElementById('custTotal').value) || 0;
+    const paid = parseFloat(document.getElementById('custPaid').value) || 0;
+    document.getElementById('custRest').value = total - paid;
+}
+
+function closeCustomerModal() { document.getElementById('customerModal').style.display = 'none'; }
+
+function saveCustomer() {
+    const name = document.getElementById('custName').value;
+    if (!name) { alert("İsim giriniz."); return; }
+    
+    const newCust = {
+        id: currentCustId || Date.now(),
+        name: name,
+        phone: document.getElementById('custPhone').value,
+        device: document.getElementById('custDevice').value,
+        paymentType: document.getElementById('custPaymentType').value,
+        status: document.getElementById('custStatus').value,
+        totalAmount: parseFloat(document.getElementById('custTotal').value) || 0,
+        paidAmount: parseFloat(document.getElementById('custPaid').value) || 0,
+        notes: document.getElementById('custNotes').value,
+        dateAdded: new Date().toLocaleDateString('tr-TR')
+    };
+
+    if (currentCustId) {
+        const index = customerData.findIndex(x => x.id === currentCustId);
+        const oldCust = customerData[index];
+        customerData[index] = newCust;
+        
+        // Detaylı Güncelleme Logu
+        let details = [];
+        if(oldCust.totalAmount !== newCust.totalAmount) details.push(`Tutar: ${oldCust.totalAmount} -> ${newCust.totalAmount}`);
+        if(oldCust.paidAmount !== newCust.paidAmount) details.push(`Ödenen: ${oldCust.paidAmount} -> ${newCust.paidAmount}`);
+        if(oldCust.status !== newCust.status) details.push(`Durum: ${oldCust.status} -> ${newCust.status}`);
+        
+        const detailStr = details.length > 0 ? ` (${details.join(', ')})` : "";
+        addLog(`Müşteri Güncellendi: ${name}${detailStr}`);
+        
+    } else {
+        customerData.push(newCust);
+        const rest = newCust.totalAmount - newCust.paidAmount;
+        addLog(`Yeni Müşteri Eklendi: ${name} | Cihaz: ${newCust.device} | Anlaşılan: ${newCust.totalAmount}₺ | Alınan: ${newCust.paidAmount}₺ | Kalan: ${rest}₺`);
+    }
+    
+    closeCustomerModal();
+    renderCustomers();
+    document.getElementById('globalSaveBtn').style.display = 'flex';
+}
+
+function deleteCustomer() {
+    if(confirm("Bu müşteri kaydını silmek istediğinize emin misiniz?")) {
+        const c = customerData.find(x => x.id === currentCustId);
+        customerData = customerData.filter(x => x.id !== currentCustId);
+        addLog(`Müşteri Silindi: ${c.name}`);
+        closeCustomerModal();
+        renderCustomers();
+        document.getElementById('globalSaveBtn').style.display = 'flex';
+    }
+}
+
+function handleSearch() { if (activeTab === 'stock') renderTable(); else renderCustomers(); }
+
+// ... (STOK, DRAG DROP, EXCEL VB. AYNEN KORUNDU) ...
+function handleDragStart(e) { draggedItemId=parseFloat(e.target.dataset.id); e.target.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; }
+function handleDragEnd(e) { e.target.classList.remove('dragging'); document.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over-top','drag-over-bottom','drag-over')); }
+function handleDragOver(e) { e.preventDefault(); const tr=e.target.closest('tr'); if(tr && !tr.classList.contains('dragging')) {
+    if(tr.classList.contains('item-row')) {
+        const off=e.clientY-tr.getBoundingClientRect().top;
+        tr.classList.remove('drag-over-top','drag-over-bottom');
+        tr.classList.add(off<tr.offsetHeight/2?'drag-over-top':'drag-over-bottom');
+    } else if(tr.classList.contains('cat-row')) tr.classList.add('drag-over');
+}}
+function handleDragLeave(e) { const tr=e.target.closest('tr'); if(tr) tr.classList.remove('drag-over-top','drag-over-bottom','drag-over'); }
+function handleDrop(e) {
+    e.preventDefault(); e.stopPropagation();
+    if(!draggedItemId) return;
+    const target=e.target.closest('tr');
+    if(!target) return;
+    const item=productData.find(p=>p.id===draggedItemId);
+    const idx=productData.indexOf(item);
+    
+    if(target.classList.contains('cat-row')) {
+        const newCat=target.querySelector('.cat-actions span').innerText;
+        if(item.category!==newCat) {
+            item.category=newCat;
+            productData.splice(idx,1);
+            const firstIdx=productData.findIndex(p=>p.category===newCat);
+            if(firstIdx>-1) productData.splice(firstIdx,0,item); else productData.push(item);
+            openCategories.add(newCat);
+        }
+    } else if(target.classList.contains('item-row')) {
+        const tId=parseFloat(target.dataset.id);
+        const tItem=productData.find(p=>p.id===tId);
+        if(item!==tItem) {
+            if(item.category!==tItem.category) item.category=tItem.category;
+            productData.splice(idx,1);
+            const newIdx=productData.indexOf(tItem);
+            productData.splice(target.classList.contains('drag-over-bottom')?newIdx+1:newIdx,0,item);
+        }
+    }
+    handleDragEnd({target:document.querySelector('.dragging')});
+    renderTable();
+    document.getElementById('globalSaveBtn').style.display='flex';
+}
+
+function renderTable() {
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = "";
+    const term = document.getElementById('searchInput').value.toLowerCase();
+
+    if (productData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:40px;">Liste Boş.</td></tr>`;
+        calculateTotal(); return;
+    }
+
+    let displayData = productData;
+    if (term) displayData = productData.filter(p => p.name.toLowerCase().includes(term));
+
+    let lastCategory = null;
+
+    displayData.forEach((item) => {
+        // SABİT GLOBAL SIRA NO (Listenin gerçek sırası)
+        const globalIndex = productData.indexOf(item) + 1;
+
+        if (item.category !== lastCategory) {
+            lastCategory = item.category;
+            const isOpen = openCategories.has(lastCategory) || term.length > 0;
+            const iconRotate = isOpen ? 'rotate(-180deg)' : 'rotate(0deg)';
+
+            const trCat = document.createElement('tr');
+            trCat.className = 'cat-row';
+            trCat.addEventListener('dragover', handleDragOver);
+            trCat.addEventListener('dragleave', handleDragLeave);
+            trCat.addEventListener('drop', handleDrop);
+            
+            trCat.innerHTML = `
+                <td colspan="6">
+                    <div class="cat-actions" onclick="toggleCategory('${lastCategory}')" style="flex-grow:1; display:flex; align-items:center; justify-content:space-between;">
+                        <span>${lastCategory}</span>
+                        <i class="fa-solid fa-chevron-down cat-icon" style="transform:${iconRotate}"></i>
+                    </div>
+                    <button class="cat-edit-btn" onclick="event.stopPropagation(); editCategoryName('${lastCategory}')"><i class="fa-solid fa-pen"></i></button>
+                </td>
+            `;
+            tbody.appendChild(trCat);
+        }
+
+        const isVisible = openCategories.has(item.category) || term.length > 0;
+        if (isVisible) {
+            const tr = document.createElement('tr');
+            tr.className = `item-row`;
+            tr.dataset.id = item.id;
+            
+            if(!term) {
+                tr.setAttribute('draggable', true);
+                tr.addEventListener('dragstart', handleDragStart);
+                tr.addEventListener('dragover', handleDragOver);
+                tr.addEventListener('dragleave', handleDragLeave);
+                tr.addEventListener('drop', handleDrop);
+                tr.addEventListener('dragend', handleDragEnd);
+            }
+
+            const pVal = item.price === 0 ? '' : item.price;
+            const qVal = item.qty === 0 ? '' : item.qty;
+            const trashHTML = `<td class="trash-cell" style="text-align:center;"><i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="deleteItem(${item.id}, '${item.name}')"></i></td>`;
+
+            tr.innerHTML = `
+                <td class="index-cell">${globalIndex}</td>
+                <td data-label="Ürün"><input type="text" class="input-clean" value="${item.name}" oninput="updateData(${item.id}, 'name', this.value)"></td>
+                <td data-label="Fiyat">
+                    <div class="price-wrapper">
+                        <input type="number" class="input-clean price-input" placeholder="0" value="${pVal}" oninput="updateData(${item.id}, 'price', this.value)">
+                        <span class="currency">₺</span>
+                    </div>
+                </td>
+                <td data-label="Adet">
+                    <div class="qty-wrapper">
+                        <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
+                        <input type="number" class="qty-val" placeholder="0" value="${qVal}" oninput="updateQtyManual(${item.id}, this.value)" onfocus="this.select()">
+                        <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
+                    </div>
+                </td>
+                <td data-label="Toplam" style="text-align:right; font-weight:bold; color:var(--primary);" id="total-${item.id}">${(item.price * item.qty).toLocaleString('tr-TR', {minimumFractionDigits:2})} ₺</td>
+                ${trashHTML}
+            `;
+            tbody.appendChild(tr);
+        }
+    });
+    calculateTotal();
+}
+
+// (Diğer yardımcı fonksiyonlar aynen duruyor)
+function updateData(id, field, value) {
+    const item = productData.find(p => p.id === id);
+    if (!item) return;
+    if (field === 'price') item[field] = parseFloat(value) || 0;
+    else item[field] = value;
+    if (field === 'price') document.getElementById(`total-${id}`).innerText = (item.price * item.qty).toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
+    calculateTotal();
+    document.getElementById('globalSaveBtn').style.display = 'flex';
+}
+function updateQty(id, delta) { const item = productData.find(p => p.id === id); if (!item) return; let newVal = (item.qty || 0) + delta; if (newVal < 0) newVal = 0; item.qty = newVal; renderTable(); document.getElementById('globalSaveBtn').style.display = 'flex'; }
+function updateQtyManual(id, value) { const item = productData.find(p => p.id === id); if (!item) return; item.qty = parseInt(value) || 0; document.getElementById(`total-${id}`).innerText = (item.price * item.qty).toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺'; calculateTotal(); document.getElementById('globalSaveBtn').style.display = 'flex'; }
+function calculateTotal() { const total = productData.reduce((sum, p) => sum + (p.price * p.qty), 0); document.getElementById('grandTotal').innerText = total.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺'; }
+function toggleCategory(cat) { if (openCategories.has(cat)) openCategories.delete(cat); else openCategories.add(cat); renderTable(); }
+function editCategoryName(oldCatName) { const newName = prompt("Kategori adı (Silmek için boş bırakın):", oldCatName); if (newName === null) return; if (newName.trim() === "") { if(confirm(`"${oldCatName}" silinsin mi? Ürünler GENEL LİSTE'ye geçer.`)) { productData.forEach(p => { if(p.category===oldCatName) p.category="GENEL LİSTE"; }); openCategories.delete(oldCatName); openCategories.add("GENEL LİSTE"); addLog("Kategori Silindi: " + oldCatName); renderTable(); document.getElementById('globalSaveBtn').style.display='flex'; } } else if (newName !== oldCatName) { productData.forEach(p => { if(p.category===oldCatName) p.category=newName.trim().toUpperCase(); }); openCategories.delete(oldCatName); openCategories.add(newName.trim().toUpperCase()); addLog("Kategori Değişti: " + oldCatName); renderTable(); document.getElementById('globalSaveBtn').style.display='flex'; } }
+function deleteItem(id, name) { if(confirm(`${name} silinecek?`)) { productData = productData.filter(p=>p.id!==id); addLog(`${name} silindi.`); renderTable(); document.getElementById('globalSaveBtn').style.display='flex'; } }
+function resetAll() { if(confirm("Tüm stok listesi silinecek?")) { productData = []; addLog("Stok sıfırlandı."); renderTable(); document.getElementById('globalSaveBtn').style.display='flex'; } }
+function openModal() { const sel = document.getElementById('newCat'); const cats = [...new Set(productData.map(p=>p.category))]; sel.innerHTML = `<option>GENEL LİSTE</option>` + cats.map(c=>`<option>${c}</option>`).join('') + `<option value="NEW">+ YENİ</option>`; document.getElementById('addModal').style.display = 'flex'; }
+function checkNewCat(s) { document.getElementById('newCatText').style.display = s.value==='NEW'?'block':'none'; }
+function closeModal() { document.getElementById('addModal').style.display='none'; }
+function addNewProduct() { const sel = document.getElementById('newCat').value; const inp = document.getElementById('newCatText').value; let cat = (sel==='NEW'?inp:sel).trim().toUpperCase(); if(!cat) cat="GENEL LİSTE"; const name = document.getElementById('newName').value; if(!name) { alert("Ürün adı girin"); return; } productData.push({ id: Date.now(), category: cat, name: name, price: parseFloat(document.getElementById('newPrice').value)||0, qty: parseInt(document.getElementById('newQty').value)||1 }); addLog(name + " eklendi."); openCategories.add(cat); closeModal(); renderTable(); document.getElementById('globalSaveBtn').style.display='flex'; }
+function processExcel(input) { const file=input.files[0]; if(!file)return; const reader=new FileReader(); reader.onload=function(e){ const rows=XLSX.utils.sheet_to_json(XLSX.read(e.target.result,{type:'array'}).Sheets[XLSX.read(e.target.result,{type:'array'}).SheetNames[0]],{header:1,defval:""}); parseRowsSmart(rows, detectColumns(rows)); }; reader.readAsArrayBuffer(file); input.value=""; }
+function detectColumns(rows) { let map={name:0,stock:1,price:2,category:-1,isStructured:false}; for(let i=0;i<Math.min(rows.length,10);i++){ const r=rows[i].map(x=>String(x).toUpperCase().trim()); if(r.includes("ÜRÜN")&&(r.includes("FİYAT")||r.includes("ADET"))){ map.isStructured=true; map.name=r.indexOf("ÜRÜN"); if(r.includes("ADET"))map.stock=r.indexOf("ADET"); else if(r.includes("STOK"))map.stock=r.indexOf("STOK"); if(r.includes("FİYAT"))map.price=r.indexOf("FİYAT"); if(r.includes("KATEGORİ"))map.category=r.indexOf("KATEGORİ"); break; } } return map; }
+function parseRowsSmart(rows,map) { let added=0; let updated=0; let curCat="GENEL LİSTE"; rows.forEach(r=>{ if(!r||r.length===0)return; let name="",stock=0,price=0,cat=""; if(map.isStructured) { name=(r[map.name]||"").toString().trim(); if(!name||["ÜRÜN","STOK","FİYAT"].some(w=>name.toUpperCase().includes(w)))return; stock=cleanPrice(r[map.stock]); price=cleanPrice(r[map.price]); if(map.category>-1&&r[map.category]) { let c=r[map.category].toString().trim(); if(c)curCat=c.toUpperCase(); } cat=curCat; } else { let a=(r[0]||"").toString().trim(), b=(r[1]||"").toString().trim(), c=(r[2]||"").toString().trim(); if(!a&&c&&isNaN(cleanPrice(c))){ if(!["TOPLAM","TABLOSU"].some(w=>c.toUpperCase().includes(w)))curCat=c.toUpperCase(); return; } if(!a||["ÜRÜN","STOK"].some(w=>a.toUpperCase().includes(w)))return; name=a; stock=cleanPrice(b); price=cleanPrice(c); cat=curCat; } const ex=productData.find(p=>p.name.trim().toLowerCase()===name.toLowerCase()); if(ex) { if(ex.price!==price||ex.qty!==stock){ ex.price=price; ex.qty=stock; updated++; } } else { productData.push({id:Date.now()+Math.random(),category:cat,name:name,price:price,qty:stock}); added++; } }); [...new Set(productData.map(p=>p.category))].forEach(c=>openCategories.add(c)); if(added>0||updated>0) { addLog(`Excel: ${added} yeni, ${updated} güncel`); alert("Tamamlandı."); document.getElementById('globalSaveBtn').style.display='flex'; renderTable(); } }
+function cleanPrice(s){if(typeof s==='number')return s; if(!s)return 0; let c=s.toString().replace(/[^0-9.,]/g,''); if(c.includes(',')&&c.includes('.'))c=c.replace(/\./g,'').replace(',','.'); else if(c.includes(','))c=c.replace(',','.'); else if(c.includes('.')&&c.split('.')[1].length===3)c=c.replace(/\./g,''); return parseFloat(c)||0;}
+function exportToExcel() { const list=productData.map(p=>({"KATEGORİ":p.category,"ÜRÜN":p.name,"FİYAT":p.price,"ADET":p.qty,"TOPLAM":p.price*p.qty})); const cust=customerData.map(c=>({"AD SOYAD":c.name,"TELEFON":c.phone,"CİHAZ":c.device,"DURUM":c.status,"TOPLAM":c.totalAmount,"ALINAN":c.paidAmount,"KALAN":c.totalAmount-c.paidAmount,"NOT":c.notes})); const logs=logData.map(l=>({"TARİH":l.date,"KULLANICI":l.user,"AÇIKLAMA":l.action,"NOT":l.note||""})); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(list),"Stok Listesi"); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(cust),"Müşteriler"); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(logs),"Loglar"); XLSX.writeFile(wb,"Focus_Medikal_Full_Data.xlsx"); }
